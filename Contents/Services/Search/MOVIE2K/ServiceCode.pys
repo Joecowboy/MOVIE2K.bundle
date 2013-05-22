@@ -1,0 +1,403 @@
+####################################################################################################
+#  This Search Service Not because can't pass back DirectoryObject...  
+
+####################################################################################################
+# Setting up imports
+
+import os, sys
+path = os.getcwd().split("?\\")[1].split('Plug-in Support')[0]+"Plug-ins\MOVIE2K.bundle\Contents\Services\URL\MOVIE2K"
+sys.path.append(path)
+
+import requests
+import urllib
+import re
+import time
+
+ICON = 'icon-default.png'
+
+
+####################################################################################################
+def Search(query):
+
+	# Create a container to hold the results
+	oc = ObjectContainer()
+
+	url = 'http://www.movie2k.to/movies.php?list=search'
+	payload = {'search': query}
+	files = {}
+	cookies = {}
+	headers = {
+		'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+		'Accept-Charset': 'ISO-8859-1,utf-8;q=0.7,*;q=0.3',
+		'Accept-Encoding': 'gzip,deflate,sdch',
+		'Accept-Language': 'en-US,en;q=0.8',
+		'Cache-Control': 'max-age=0',
+		'Connection': 'keep-alive',
+		'Host': 'www.movie2k.to',
+		'Origin': 'http://http://www.movie2k.to',
+		'Referer': 'http://www.movie2k.to/movies.php?list=search',
+		'Content-Type': 'application/x-www-form-urlencoded',
+		'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.22 (KHTML, like Gecko) Chrome/25.0.1364.152 Safari/537.22'
+		}
+
+	SEARCH_PAGE = requests.post(url, data=payload, headers=headers, files=files, allow_redirects=True, cookies=cookies)
+
+	try:
+		GET_THUMB = SEARCH_PAGE.content.split('<TABLE id="tablemoviesindex">')[1].split('<script type="text/javascript">')[1]
+	except:
+		GET_THUMB = None
+
+	Movie =  SEARCH_PAGE.content.split('<TABLE id="tablemoviesindex">')[1].split('<TR id="coverPreview')
+
+	i = 1
+	while (i < len(Movie)):
+		MOVIES_TD = Movie[i].split('id="tdmovies"')
+		MOVIES_TITLE = re.sub('\t', '', MOVIES_TD[1].split('<a')[1].split('">')[1].split('</a>')[0]).replace('  ', '')
+
+		try:
+			MOVIES_YEAR = MOVIES_TD[2].split('<div')[9].split('>')[1].split('<')[0]
+			if MOVIES_YEAR == None:
+				MOVIES_YEAR = "N/A"
+		except:
+			MOVIES_YEAR = "N/A"
+		try:
+			MOVIES_LANG = GetLang(lang=MOVIES_TD[5].split('src="')[1].split('"')[0].split('/')[4].split('.')[0])
+		except:
+			MOVIES_LANG = "N/A"
+		MOVIES_SUMMARY = "Year: "+MOVIES_YEAR+" | Lang: "+MOVIES_LANG+" | Part of the search line up on Movie2k."
+		MOVIES_PAGE = MOVIES_TD[1].split('<a href="')[1].split('"')[0]
+		try:
+			MOVIES_THUMB = GET_THUMB.split(Movie[i].split('"')[0])[1].split("img src='")[1].split("'")[0]
+		except:
+			MOVIES_THUMB = None
+		oc.add(DirectoryObject(key=Callback(SubMoviePageAdd, title=MOVIES_TITLE, page=MOVIES_PAGE, date=MOVIES_YEAR, thumb=MOVIES_THUMB), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=Callback(GetThumb, url=MOVIES_THUMB)))
+		i += 1
+
+	return oc
+
+
+####################################################################################################
+def SubMoviePageAdd(title, page, date, thumb):
+
+	oc = ObjectContainer(title2=title)
+
+	MOVIE2K_URL = "http://www.movie2k.to/"
+	MOVIE_PAGE_HTML = HTML.ElementFromURL(MOVIE2K_URL+page)
+	NumHostListing1 = len(MOVIE_PAGE_HTML.xpath('//div[@id="menu"]//tr[@id="tablemoviesindex2"]'))
+	StringListing = MOVIE_PAGE_HTML.xpath('//div[@id="menu"]//script[@type="text/javascript"]')
+	NumStringListing = len(StringListing) - 1
+	NumHostListing2 = 0
+	nsl = 0
+	while nsl < NumStringListing:
+		NumHosts = len(StringListing[nsl].text.split('links[')) - 2
+		Log("Len"+str(nsl)+": "+str(NumHosts)+" "+StringListing[nsl].text.split('links[')[1].split(']')[0]+" "+StringListing[nsl].text.split('links[')[2].split(']')[0]+" "+StringListing[nsl].text.split('links[')[3].split(']')[0])
+		NumHostListing2 = NumHostListing2 + NumHosts
+		nsl += 1
+
+	if NumHostListing1 > 4:
+		p = (float(NumHostListing1)+float(NumHostListing2))/4.0 - (NumHostListing1+NumHostListing2)/4
+		jj = (NumHostListing1+NumHostListing2)/4
+		if p > 0:
+			jj += 1
+	else:
+		jj = 1
+	i = 1
+
+	while i <= jj:
+		MOVIES_SUMMARY = "Page - " + str(i) + " of hosting sites."
+		oc.add(DirectoryObject(key=Callback(TheMovieListings, title=title, page=page, date=date, thumb=thumb, hostpage=i), title=title, summary=MOVIES_SUMMARY, thumb=Callback(GetThumb, url=thumb)))
+		i += 1
+
+	return oc
+
+
+####################################################################################################
+def TheMovieListings(title, page, date, thumb, hostpage=None):
+
+	oc = ObjectContainer(title2=title)
+
+	MOVIE2K_URL = "http://www.movie2k.to/"
+	MOVIE_PAGE_HTML = HTML.ElementFromURL(MOVIE2K_URL+page)
+	
+	if thumb == None:
+		thumb = " "
+	summary = MOVIE_PAGE_HTML.xpath('//div[@class="moviedescription"]')[0].text
+	if summary.strip() == "":
+		summary = "Description not given..."
+	try:
+		rating = float(MOVIE_PAGE_HTML.xpath('//div[@id="details"]/a')[0].text)
+	except:
+		rating = 0.0
+	if date == "N/A":
+		date = time.asctime(time.localtime(time.time()))
+	date = Datetime.ParseDate(date)
+	source_title = "Movie2k"
+	genres = MOVIE_PAGE_HTML.xpath('//div[@id="details"]/a')[2].text
+	duration = None
+	Log(MOVIE_PAGE_HTML.xpath('//div[@id="details"]/a')[3].text)
+	#duration = int(float(MOVIE_PAGE_HTML.xpath('//div[@id="details"]/a')[2].text)*1000)
+	#directors = MOVIE_PAGE_HTML.xpath('//div[@id="details"]/a')[1].text
+	try:
+		content_rating = MOVIE_PAGE_HTML.xpath('//div[@id="details"]/b')[0].text
+	except:
+		content_ration = None
+	try:
+		season = int(title.split(': ')[1].split(',')[0])
+		index = int(title.split(': ')[2])
+		type = 'TV Shows'
+	except:
+		season = None
+		index = None
+		type = 'Movies'
+	
+	Listing = MOVIE_PAGE_HTML.xpath('//div[@id="menu"]//tr[@id="tablemoviesindex2"]')
+	ListingLen = len(Listing)
+	
+	Listing2 = MOVIE_PAGE_HTML.xpath('//div[@id="menu"]//script[@type="text/javascript"]')
+	ListingLen2 = len(Listing2) - 1
+
+	TotalLen = ListingLen + ListingLen2
+
+	if (hostpage == None) or (TotalLen <= 4):
+		i = 0
+		jj = TotalLen
+	else:
+		jj = 4 * int(hostpage)
+		if jj > TotalLen:
+			i = TotalLen - (4 - (jj - TotalLen))
+			#jj = TotalLen
+		else:
+			i = jj - 4
+
+	Log("i: "+str(i))
+	Log("ListingLen: "+str(ListingLen))
+	Log("ListingLen2: "+str(ListingLen2))
+	Log("jj: "+str(jj))
+	Log("TotalLen: "+str(TotalLen))
+	Log("hostpage: "+str(hostpage))
+
+	TotalHosts = 0
+	THP = 0
+	sll = 1
+	P = ListingLen/4
+	R = ListingLen - (P)*4
+	NP = 4 - R
+	if R > 0:
+		P += 1
+
+	if int(P) == int(hostpage):
+		k = ListingLen2 - (TotalLen - i)
+	else:
+		Log("I SHOULD NOT BE HERE")
+		k = 0
+		ii = 0
+		RO = 0
+		TotalNumHosts = 0
+		while ii < ListingLen2:
+			ScriptListing = Listing2[ii].text.split('links[')
+			NumHosts = (len(ScriptListing) - 2)
+			TotalNumHosts = TotalNumHosts + NumHosts
+			HR = TotalNumHosts - (TotalNumHosts/4)*4
+			if HR > 0:
+				HR = 1		
+
+			if NP != 4:
+				if RO == 0:
+					RO = NumHosts - NP
+					if RO < 0:
+						ii += 1
+					else:
+						sll = RO
+						THP = (TotalNumHosts/4) + HR + P
+				elif RO < 0:
+					RO = NumHosts + RO
+					if RO < 0:
+						ii += 1
+					else:
+						sll = RO
+						THP = (TotalNumHosts/4) + HR + P
+				else:
+					sll = 1
+					THP = (TotalNumHosts/4) + HR + P
+			else:
+				THP = (TotalNumHosts/4) + HR + P
+			
+			Log("THP: "+str(THP))
+			Log(str(ii)+" Frogs Fly")
+
+			if int(THP) == int(hostpage):
+				k = ii
+				ii = ListingLen2
+
+			else:
+				ii += 1
+
+	Log("THP1: "+str(THP))
+	Log("k: "+str(k))
+	Log("NP: "+str(NP))
+	Log("P: "+str(P))
+
+
+	while i < jj:
+		if (i >= ListingLen) and (ListingLen2 != 0):
+
+			ScriptListing = Listing2[k].text.split('links[')
+			NumHosts = len(ScriptListing) - 2	
+			Log("NumHosts: "+str(NumHosts))
+			k += 1
+
+			while sll <= NumHosts:
+				if TotalHosts < 4:
+					Host = ScriptListing[sll].split('title=\\"')[1].split('\\"')[0].split(' ')[0].capitalize()
+					MOVIE_PAGE = MOVIE2K_URL + ScriptListing[sll].split('href=\\"')[1].split('\\"')[0]
+					DateAdded = ScriptListing[sll].split('href=\\"')[1].split('\\">')[1].split(' <')[0]
+					Quality = ScriptListing[sll].split('title=\\"')[2].split('\\"')[0]
+
+					if Host == 'N/A' or Host == 'DivX' or Host == 'Flash':
+						Host = GetHost(Host=Host, url=MOVIE_PAGE)
+
+					show = "DATE ADDED: "+ DateAdded +" -- HOST: "+ Host + " -- QUALITY: " + Quality
+					TotalHosts += 1
+					
+					url = MOVIE_PAGE+"?title="+title+"&summary="+summary+"&show="+show+"&date="+str(date)+"&thumb="+thumb+"&host="+Host+"&season="+str(season)+"&index="+str(index)+"&type="+type+"&content_rating="+content_rating
+
+					if type == 'TV Shows':
+						oc.add(EpisodeObject(
+								url = url,
+								title = title,
+								summary = summary,
+								duration = duration,
+								rating = rating,
+								season = season,
+								index = index,
+								show = show,
+								rating = rating,
+								content_rating = content_rating,
+								source_title = source_title,
+								originally_available_at = date,
+								thumb = Callback(GetThumb, url=thumb)))
+					else:
+						oc.add(MovieObject(
+								url = url,
+								title = title,
+								summary = summary,
+								duration = duration,
+								rating = rating,
+								#genres = genres,
+								content_rating = content_rating,
+								source_title = show,
+								originally_available_at = date,
+								thumb = Callback(GetThumb, url=thumb)))
+
+				elif TotalHosts == 4:
+					i = jj
+
+				sll += 1
+		else:
+			Host = Listing[i].xpath("./td/a/img")[0].get('title').split(' ')[0].capitalize()
+			MOVIE_PAGE = MOVIE2K_URL + Listing[i].xpath("./td/a")[0].get('href')
+			DateAdded = Listing[i].xpath("./td/a")[0].text
+			try:
+				Quality = Listing[i].xpath("./td/img")[0].get('title')
+			except:
+				Quality = "DVDRip/BDRip"
+
+			if Host == 'N/A' or Host == 'DivX' or Host == 'Flash':
+				Host = GetHost(Host=Host, url=MOVIE_PAGE)
+
+			show = "DATE ADDED: "+ DateAdded +" -- HOST: "+ Host + " -- QUALITY: " + Quality 
+			TotalHosts += 1
+
+			url = MOVIE_PAGE+"?title="+title+"&summary="+summary+"&show="+show+"&date="+str(date)+"&thumb="+thumb+"&host="+Host+"&season="+str(season)+"&index="+str(index)+"&type="+type+"&content_rating="+content_rating
+
+			if type == 'TV Shows':
+				oc.add(EpisodeObject(
+						url = url,
+						title = title,
+						summary = summary,
+						duration = duration,
+						rating = rating,
+						season = season,
+						show = show,
+						index = index,
+						content_rating = content_rating,
+						source_title = source_title,
+						originally_available_at = date,
+						thumb = Callback(GetThumb, url=thumb)))
+			else:
+				oc.add(MovieObject(
+						url = url,
+						title = title,
+						summary = summary,
+						duration = duration,
+						rating = rating,
+						#genres = genres,
+						content_rating = content_rating,
+						source_title = show,
+						originally_available_at = date,
+						thumb = Callback(GetThumb, url=thumb)))
+
+		i += 1
+
+	if len(oc) < 1:
+		oc = ObjectContainer(header="Sorry", message="This section does not contain any videos")
+
+	return oc
+
+
+####################################################################################################
+def GetHost(Host, url):
+
+	#
+	#Check for Real Video Hoster if set to N/A or DivX Hoster or Flash Hoster is set
+	#
+
+	try:
+		HostPage = HTML.ElementFromURL(url).xpath('//div[@id="maincontent5"]/div/a[@target="_blank"]')[0].get('href')
+	except:
+		HostPage = HTML.ElementFromURL(url).xpath('//div[@id="emptydiv"]/iframe')[0].get('src')
+	Host = HostPage.split('.')[1].capitalize()
+	
+	return Host
+
+
+####################################################################################################
+def GetLang(lang):
+	if lang == "us_flag_small":
+		r = "English"
+	elif lang == "us_ger_small":
+		r = "German"
+	elif lang == "flag_japan":
+		r = "Japanese"
+	elif lang == "flag_spain":
+		r = "Spanish"
+	elif lang == "flag_turkey":
+		r = "Turkish"
+	elif lang == "flag_poland":
+		r = "Polish"
+	elif lang == "flag_greece":
+		r = "Greek"
+	elif lang == "flag_russia":
+		r = "Russian"
+	elif lang == "flag_india":
+		r = "Hindi"
+	elif lang == "flag_italy":
+		r = "Italian"
+	elif lang == "flag_france":
+		r = "French"
+	elif lang == "flag_netherlands":
+		r = "Dutch"
+	else:
+		r = "N/A"
+
+	return r
+
+
+####################################################################################################
+def GetThumb(url):
+
+	try:
+		data = HTTP.Request(url, cacheTime=CACHE_1MONTH).content
+		return DataObject(data, 'image/jpeg')
+	except:
+		return Redirect(R(ICON))

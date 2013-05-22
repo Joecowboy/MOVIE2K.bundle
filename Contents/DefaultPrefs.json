@@ -1,0 +1,120 @@
+[
+	{
+		"id": "videoerror",
+		"type": "enum",
+		"label": "Play Error Video",
+		"values": [
+			"Disabled",
+			"Enabled",
+		],
+		"default": "Enabled" 
+	},
+	{
+		"id": "disabledadult",
+		"type": "enum",
+		"label": "Adult Content",
+		"values": [
+			"Disabled",
+			"Enabled",
+		],
+		"default": "Disabled" 
+	},
+	{
+		"id": "movie2k_language",
+		"type": "enum",
+		"label": "Preferred Language",
+		"values": [
+			"All",
+			"Dutch",
+			"English",
+			"French",
+			"Greek",
+			"Hindi",
+			"Italian",
+			"Japanese",
+			"Polish",
+			"Russian",
+			"Spanish",
+			"Turkish"
+		],
+		"default": "English" 
+	},
+	{
+		"id": "username",
+		"type": "text",
+		"label": "Username",
+		"default": ""
+	},
+	{
+		"id": "password",
+		"type": "text",
+		"label": "Password",
+		"default": "",
+		"option": "hidden"
+	},
+	{
+		"id": "disabledTorProxy",
+		"type": "enum",
+		"label": "Connect to Tor Network",
+		"values": [
+			"Disabled",
+			"Enabled",
+		],
+		"default": "Disabled" 
+	},
+	{
+		"id": "disabledgetTorIP",
+		"type": "enum",
+		"label": "Get New Tor IP Address",
+		"values": [
+			"Disabled",
+			"Enabled",
+		],
+		"default": "Disabled" 
+	},
+	{
+		"id": "GenerateHashedPassword",
+		"type": "enum",
+		"label": "Generate Tor Hashed Password",
+		"values": [
+			"Disabled",
+			"Enabled",
+		],
+		"default": "Disabled" 
+	},
+	{
+		"id": "HashedControlPassword",
+		"type": "text",
+		"label": "Tor Control Password",
+		"default": "",
+		"option": "hidden"
+	},
+	{
+		"id": "experimental",
+		"type": "enum",
+		"label": "Debug Options",
+		"values": [
+			"Disabled",
+			"Enabled",
+		],
+		"default": "Disabled" 
+	},
+	{
+		"id": "hostoverride",
+		"type": "text",
+		"label": "Debug Host Name",
+		"default": ""
+	},
+	{
+		"id": "hosturl",
+		"type": "text",
+		"label": "Debug Host URL",
+		"default": ""
+	},
+	{
+		"id": "movie2kurl",
+		"type": "text",
+		"label": "Debug Movie2k URL",
+		"default": ""
+	}
+]

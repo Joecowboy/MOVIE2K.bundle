@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>URL</key>
+	<dict>
+		<key>MOVIE2K</key>
+		<dict>
+			<key>URLPatterns</key>
+			<array>
+				<string>http://www\.movie2k\.to/genre-movies+</string>
+				<string>http://www\.movie2k\.to/movies-genre+</string>
+				<string>http://www\.movie2k\.to/genre-xxx+</string>
+				<string>http://www\.movie2k\.to/xxx-genre-+</string>
+				<string>http://www\.movie2k\.to/genre-tvshows+</string>
+				<string>http://www\.movie2k\.to/tvshows-genre+</string>
+				<string>http://www\.movie2k\.to/tvshows-season+</string>
+				<string>http://www\.movie2k\.to/+</string>
+			</array>
+		</dict>
+	</dict>
+	<key>PlexFrameworkFlags</key>
+	<array>
+		<string>UseRealRTMP</string>
+	</array>
+	<key>Search</key>
+	<dict>
+		<key>MOVIE2K</key>
+		<dict>
+			<key>Identifier</key>
+			<string>com.plexapp.plugins.movie2k</string>
+		</dict>
+	</dict>
+</dict>
+</plist>
