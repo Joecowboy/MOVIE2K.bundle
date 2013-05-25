@@ -21,14 +21,22 @@ from PIL import Image
 from PIL import TiffImagePlugin
 from PIL import ImageEnhance
 import cStringIO
-import urllib2
+import requests
+import hashlib
+import time
+
 
 ####################################################################################################
-def GetImgValue(url, txheaders, split=None):
+def GetImgValue(url, UserAgent, cookies, split=None):
 
-	txdata = None
-	req = urllib2.Request(url, txdata, txheaders)
-	imgData = urllib2.urlopen(req).read()
+	headers = {}
+	headers['Accept'] = 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
+	headers['Accept-Encoding'] = 'gzip, deflate'
+	headers['Connection'] = 'keep-alive'
+	headers['Host'] = url.split('/')[2]
+	headers['User-Agent'] = UserAgent
+
+	imgData = requests.get(url, headers=headers, cookies=cookies).content
 	im = cStringIO.StringIO(imgData)
 	img = Image.open(im)
 	img = img.convert("RGBA")
@@ -59,8 +67,6 @@ def GetImgValue(url, txheaders, split=None):
 	if split == 'LR' or split == 'TB':
 		img1 = Crop(img=img, split=split, half=1)
 		img2 = Crop(img=img, split=split, half=2)
-		img1 = SeperateLetters(img=img1)
-		img2 = SeperateLetters(img=img2)
 		img1.save("input-black1.gif", "GIF")
 		img2.save("input-black2.gif", "GIF")
 
@@ -84,7 +90,9 @@ def GetImgValue(url, txheaders, split=None):
 		recaptcha2 = image_to_string(image2)
 		recaptcha = recaptcha1 + " " + recaptcha2
 	else:
-		img = SeperateLetters(img=img)
+		if split == 'TOP':
+			img = Crop(img=img, split=split)
+
 		img.save("input-black.gif", "GIF")
 
 		#  Make the image bigger (needed for OCR)
@@ -101,7 +109,7 @@ def GetImgValue(url, txheaders, split=None):
 
 
 ####################################################################################################
-def Crop(img, split, half):
+def Crop(img, split, half=0):
 
 	#  get the image's width and height in pixels
 	width, height = img.size
@@ -128,11 +136,32 @@ def Crop(img, split, half):
 			upper = height/2
 			right = width
 			lower = height
+	if split == 'TOP':
+		left = 0
+		upper = 15
+		right = width
+		lower = height
 
 	box = (left, upper, right, lower)
 	area = img.crop(box)
 
 	return area
+
+
+####################################################################################################
+def SplitImageLetters(img):
+	letters = SeperateLetters(img=img)
+
+	# New code is here. We just extract each image and save it to disk with
+	# what is hopefully a unique name
+  
+	count = 0
+	for letter in letters:
+		m = hashlib.md5()
+		im3 = img.crop(( letter[0] , 0, letter[1],img.size[1] ))
+		m.update("%s%s"%(time.time(),count))
+		im3.save("./%s.gif"%(m.hexdigest()))
+		count += 1
 
 
 ####################################################################################################
@@ -174,4 +203,4 @@ def SeperateLetters(img):
 			end_or = 0
 		inletter=False
 
-	return img
+	return letters

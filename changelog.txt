@@ -1,2 +1,4 @@
+[B]Version 1.0.1[/B]
+- Worked on Captcha for 180upload
 [B]Version 1.0.0[/B]
 - Initial Release.

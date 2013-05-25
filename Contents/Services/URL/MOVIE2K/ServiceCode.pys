@@ -299,7 +299,7 @@ def GetMovie(Host, HostPage, url, LinkType):
 	#
 	if Host == "180upload":
 		try:
-			VideoPage = SecondButtonPress(url=url, HostPage=HostPage)
+			VideoPage = SolveMediaCaptcha(url=url, HostPage=HostPage, wScript=2)
 			VideoInfo = VideoPage.content.split('<div id="player_code">')[1].split("<script type='text/javascript'>")[1].split("</script>")[0]
 			VideoStream = ScriptConvert(script=VideoInfo)
 		except:
@@ -384,14 +384,8 @@ def GetMovie(Host, HostPage, url, LinkType):
 			VideoStream = ErrorMessage(Host=Host, LogError=1)
 	elif Host == "Clicktoview":
 		try:
-			VideoPage = SecondButtonPress(url=url, HostPage=HostPage, addkey={"referer": url})
-			GoogleImgLink = "http://www.google.com/recaptcha/api/image?c="
-			Googleurl = VideoPage.content.split('<div id="recaptcha_widget"')[1].split('<script type="text/javascript" src="')[1].split(' ">')[0]
-			headers = {'User-Agent': UserAgent[UserAgentNum]}
-			VideoInfo = requests.get(Googleurl, headers=headers)
-			GoogleKey = VideoInfo.content.split("challenge : '")[1].split("'")[0]
-			captchaimg = GoogleImgLink + GoogleKey
-			VideoInfo = SecondButtonPress(url=url, HostPage=HostPage, page=VideoPage.content, addkey={"recaptcha_challenge_field": GoogleKey, "referer": url, "down_direct": 1, "method_premium": ""}, captchakey="recaptcha_response_field", captchaimg=captchaimg, split='LR')
+			VideoInfo = SecondButtonPress(url=url, HostPage=HostPage, addkey={"referer": url})
+			VideoPage = GoogleCaptcha(url=url, HostPage=HostPage, VideoInfo=VideoInfo.content)
 			VideoScript = VideoInfo.content.split('<div id="player_code">')[1].split("<script type='text/javascript'>")[1].split('</script>')[0]
 			VideoStream = ScriptConvert(script=VideoScript)
 		except:
@@ -891,7 +885,6 @@ def GetMovie(Host, HostPage, url, LinkType):
 			VideoPage = SecondButtonPress(url=url, HostPage=HostPage, cookies=cookies, addkey={'referer': urllib.quote_plus(url), 'imhuman': 'Proceed+to+video'})
 			VideoStream = VideoPage.content.split('file: "')[1].split('"')[0]
 		except:
-			#Example - http://tubecloud.net/wboaeoyqb4bh/Gangster_Squad_2013_German_Dl_Ts_Ac3MD_tt1321870.mp4.html
 			VideoStream = ErrorMessage(Host=Host, LogError=3)
 	elif Host == "Undergroundflix":
 		try:
@@ -955,13 +948,7 @@ def GetMovie(Host, HostPage, url, LinkType):
 			VideoStream = ErrorMessage(Host=Host, LogError=1)
 	elif Host == "Vidbux":
 		try:
-			headers = {'User-Agent': UserAgent[UserAgentNum]}
-			OpenUrl =  requests.get(HostPage, headers=headers)
-			VideoInfo = OpenUrl.content.split('<noscript>')[1].split('src="')[1].split('"')[0]
-			VideoID = HTML.ElementFromURL(VideoInfo).xpath('//div[@id="adcopy-outer"]/table/tr/td/img')[0].get('src')
-			adcopy_challenge = VideoID.split('=')[1]
-			captchaimg = "http://api.solvemedia.com" + VideoID
-			VideoPage = SecondButtonPress(url=url, HostPage=HostPage, addkey={"adcopy_challenge": adcopy_challenge, "referer": HostPage}, captchakey="adcopy_response", captchaimg=captchaimg)
+			VideoPage = SolveMediaCaptcha(url=url, HostPage=HostPage)
 			VideoScript = VideoPage.content.split('<div id="embedcontmvshre"')[1].split("<script type='text/javascript'>")[1].split('</script>')[0]
 			VideoStream = ScriptConvert(script=VideoScript)
 		except:
@@ -1054,13 +1041,7 @@ def GetMovie(Host, HostPage, url, LinkType):
 			VideoStream = ErrorMessage(Host=Host, LogError=1)
 	elif Host == "Vidxden":
 		try:
-			headers = {'User-Agent': UserAgent[UserAgentNum]}
-			OpenUrl =  requests.get(HostPage, headers=headers)
-			VideoInfo = OpenUrl.content.split('<noscript>')[1].split('src="')[1].split('"')[0]
-			VideoID = HTML.ElementFromURL(VideoInfo).xpath('//div[@id="adcopy-outer"]/table/tr/td/img')[0].get('src')
-			adcopy_challenge = VideoID.split('=')[1]
-			captchaimg = "http://api.solvemedia.com" + VideoID
-			VideoPage = SecondButtonPress(url=url, HostPage=HostPage, addkey={"adcopy_challenge": adcopy_challenge, "referer": HostPage}, captchakey="adcopy_response", captchaimg=captchaimg)
+			VideoPage = SolveMediaCaptcha(url=url, HostPage=HostPage)
 			VideoScript = VideoPage.content.split('<div id="embedcontmvshre"')[1].split("<script type='text/javascript'>")[1].split('</script>')[0]
 			VideoStream = ScriptConvert(script=VideoScript)
 		except:
@@ -1275,7 +1256,7 @@ def ScriptDecode(url):
 
 
 ##################################################################################################################
-def SecondButtonPress(url, HostPage, page=None, elm="", wform=0, addkey=None, cookies={}, wait=0, captchakey=None, captchaimg=None, split=None):
+def SecondButtonPress(url, HostPage, page=None, elm="", wform=0, addkey=None, cookies={}, wait=0, captchakey=None, captchaimg=None, captchacookies={}, split=None):
 	domain = HostPage.split('/')[2]
 	payload = OrderedDict()
 	headers = OrderedDict()
@@ -1318,11 +1299,8 @@ def SecondButtonPress(url, HostPage, page=None, elm="", wform=0, addkey=None, co
 					payload[key] = value
 
 	if captchakey != None:
-		txheaders = {}
-		#txheaders['Referer'] = 'http://api.solvemedia.com/papi/challenge.noscript?k=a9P0IXFCBW4I3MBD6jhOqaI2-tG7KEKl' #url
-		txheaders['User-Agent'] = UserAgent[UserAgentNum]
 		Log('Captcha: '+captchaimg)
-		payload[captchakey] = GetImgValue(url=captchaimg, txheaders=txheaders, split=split)
+		payload[captchakey] = GetImgValue(url=captchaimg, UserAgent=UserAgent[UserAgentNum], cookies=captchacookies, split=split)
 
 	if addkey != None:
 		payload.update(addkey)
@@ -1361,6 +1339,39 @@ def SoftCaptcha(VideoPage):
 	Log("captchavalue: "+captchavalue)
 
 	return captchavalue
+
+
+####################################################################################################
+def SolveMediaCaptcha(url, HostPage, wScript=1):
+
+	captchacookies = {}
+	headers = {'User-Agent': UserAgent[UserAgentNum]}
+	OpenUrl =  requests.get(HostPage, headers=headers)
+	VideoInfo = OpenUrl.content.split('<noscript>')[wScript].split('src="')[1].split('"')[0]
+	session = requests.session()
+	req = session.get(VideoInfo, headers=headers)
+	for key, value in session.cookies.items():
+		captchacookies[key] = value
+	VideoID = HTML.ElementFromString(req.content).xpath('//div[@id="adcopy-outer"]/table/tr/td/img')[0].get('src')
+	adcopy_challenge = VideoID.split('=')[1]
+	captchaimg = "http://api.solvemedia.com" + VideoID
+	VideoPage = SecondButtonPress(url=url, HostPage=HostPage, addkey={"adcopy_challenge": adcopy_challenge, "referer": url}, captchakey="adcopy_response", captchaimg=captchaimg, captchacookies=captchacookies, split='TOP')
+
+	return VideoPage
+
+
+####################################################################################################
+def GoogleCaptcha(url, HostPage, VideoInfo):
+
+	GoogleImgLink = "http://www.google.com/recaptcha/api/image?c="
+	Googleurl = VideoInfo.split('<div id="recaptcha_widget"')[1].split('<script type="text/javascript" src="')[1].split(' ">')[0]
+	headers = {'User-Agent': UserAgent[UserAgentNum]}
+	VideoID = requests.get(Googleurl, headers=headers)
+	GoogleKey = VideoID.content.split("challenge : '")[1].split("'")[0]
+	captchaimg = GoogleImgLink + GoogleKey
+	VideoPage = SecondButtonPress(url=url, HostPage=HostPage, page=VideoInfo, addkey={"recaptcha_challenge_field": GoogleKey, "referer": url, "down_direct": 1, "method_premium": ""}, captchakey="recaptcha_response_field", captchaimg=captchaimg, split='LR')
+
+	return VideoPage
 
 
 ####################################################################################################
@@ -1521,7 +1532,8 @@ def GetMovieDebugger(Host, HostPage, url, LinkType):
 	####################################################################################################################
 
 	elif Host == "180upload":
-		VideoPage = SecondButtonPress(url=url, HostPage=HostPage)
+		#Example - http://180upload.com/3shfq5fxy3qn
+		VideoPage = SolveMediaCaptcha(url=url, HostPage=HostPage, wScript=2)
 		VideoInfo = VideoPage.content.split('<div id="player_code">')[1].split("<script type='text/javascript'>")[1].split("</script>")[0]
 		VideoStream = ScriptConvert(script=VideoInfo)
 	elif Host == "2gb-hosting":
@@ -1584,15 +1596,9 @@ def GetMovieDebugger(Host, HostPage, url, LinkType):
 		VideoPage = SecondButtonPress(url=url, HostPage=HostPage, addkey={addkey: addvalue}) 
 		VideoStream = VideoPage.content.split("clip: {")[1].split("url: '")[1].split("'")[0]
 	elif Host == "Clicktoview":
-		VideoPage = SecondButtonPress(url=url, HostPage=HostPage, addkey={"referer": url})
-		GoogleImgLink = "http://www.google.com/recaptcha/api/image?c="
-		Googleurl = VideoPage.content.split('<div id="recaptcha_widget"')[1].split('<script type="text/javascript" src="')[1].split(' ">')[0]
-		headers = {'User-Agent': UserAgent[UserAgentNum]}
-		VideoInfo = requests.get(Googleurl, headers=headers)
-		GoogleKey = VideoInfo.content.split("challenge : '")[1].split("'")[0]
-		captchaimg = GoogleImgLink + GoogleKey
-		VideoInfo = SecondButtonPress(url=url, HostPage=HostPage, page=VideoPage.content, addkey={"recaptcha_challenge_field": GoogleKey, "referer": url, "down_direct": 1, "method_premium": ""}, captchakey="recaptcha_response_field", captchaimg=captchaimg, split='LR')
-		VideoScript = VideoInfo.content.split('<div id="player_code">')[1].split("<script type='text/javascript'>")[1].split('</script>')[0]
+		VideoInfo = SecondButtonPress(url=url, HostPage=HostPage, addkey={"referer": url})
+		VideoPage = GoogleCaptcha(url=url, HostPage=HostPage, VideoInfo=VideoInfo.content)
+		VideoScript = VideoPage.content.split('<div id="player_code">')[1].split("<script type='text/javascript'>")[1].split('</script>')[0]
 		VideoStream = ScriptConvert(script=VideoScript)
 	elif Host == "Cubtv":
 		VideoStream = HTML.ElementFromURL(HostPage).xpath('//head/script')[3].text.split("'file':'")[1].split("'")[0]
@@ -2006,13 +2012,7 @@ def GetMovieDebugger(Host, HostPage, url, LinkType):
 		VideoStream = VideoPage.split("hq_video_file = '")[1].split("'")[0]
 	elif Host == "Vidbux":
 		#Image process problem do to recaptcha text enter -- Example:
-		headers = {'User-Agent': UserAgent[UserAgentNum]}
-		OpenUrl =  requests.get(HostPage, headers=headers)
-		VideoInfo = OpenUrl.content.split('<noscript>')[1].split('src="')[1].split('"')[0]
-		VideoID = HTML.ElementFromURL(VideoInfo).xpath('//div[@id="adcopy-outer"]/table/tr/td/img')[0].get('src')
-		adcopy_challenge = VideoID.split('=')[1]
-		captchaimg = "http://api.solvemedia.com" + VideoID
-		VideoPage = SecondButtonPress(url=url, HostPage=HostPage, addkey={"adcopy_challenge": adcopy_challenge, "referer": HostPage}, captchakey="adcopy_response", captchaimg=captchaimg)
+		VideoPage = SolveMediaCaptcha(url=url, HostPage=HostPage)
 		VideoScript = VideoPage.content.split('<div id="embedcontmvshre"')[1].split("<script type='text/javascript'>")[1].split('</script>')[0]
 		VideoStream = ScriptConvert(script=VideoScript)
 	elif Host == 'Videoize':
@@ -2079,14 +2079,7 @@ def GetMovieDebugger(Host, HostPage, url, LinkType):
 		VideoStream = ScriptConvert(script=VideoInfo)
 	elif Host == "Vidxden":
 		#Image process problem do to recaptcha text enter -- Example:
-		headers = {'User-Agent': UserAgent[UserAgentNum]}
-		OpenUrl =  requests.get(HostPage, headers=headers)
-		VideoInfo = OpenUrl.content.split('<noscript>')[1].split('src="')[1].split('"')[0]
-		VideoID = HTML.ElementFromURL(VideoInfo).xpath('//div[@id="adcopy-outer"]/table/tr/td/img')[0].get('src')
-		adcopy_challenge = VideoID.split('=')[1]
-		captchaimg = "http://api.solvemedia.com" + VideoID
-		VideoURL = OpenUrl.content.replace('<form id="captchaForm"', '<Form name="F1"')
-		VideoPage = SecondButtonPress(url=url, HostPage=HostPage, page=VideoURL, addkey={"adcopy_challenge": adcopy_challenge, "referer": HostPage}, captchakey="adcopy_response", captchaimg=captchaimg)
+		VideoPage = SolveMediaCaptcha(url=url, HostPage=HostPage)
 		VideoScript = VideoPage.content.split('<div id="embedcontmvshre"')[1].split("<script type='text/javascript'>")[1].split('</script>')[0]
 		VideoStream = ScriptConvert(script=VideoScript)
 	elif Host == "Vureel":
