@@ -94,6 +94,10 @@ def MainMenu():
 	SEARCH_TITLE = "Search the Database"
 	SEARCH_SUMMARY ="Find a TV Show or Movie from the Movie2k database!"
 	SEARCH_THUMB = R(ICON_SEARCH)
+	ICON_TRAILERSEARCH = "icon-trailer-addict.png"
+	TRAILERSEARCH_TITLE = "Search for Your Daily Dose of Hi-Res Movie Trailers"
+	TRAILERSEARCH_SUMMARY ="Find a Movie Trailer from the Trailer Addict database!"
+	TRAILERSEARCH_THUMB = R(ICON_TRAILERSEARCH)
 	ICON_PREFS = "icon-preferences.png"
 	PREFS_TITLE = "Preferences"
 	PREFS_SUMMARY = "Update login and channel information!"
@@ -111,7 +115,8 @@ def MainMenu():
 		oc.add(DirectoryObject(key=Callback(Movies, title=XXXMOVIES_TITLE, type='XXX Movies'), title=XXXMOVIES_TITLE, summary=XXXMOVIES_SUMMARY, thumb=XXXMOVIES_THUMB))
 	oc.add(DirectoryObject(key = Callback(MyMovie2k, title=MYMOVIE2K_TITLE), title=MYMOVIE2K_TITLE, summary=MYMOVIE2K_SUMMARY, thumb=MYMOVIE2K_THUMB))
 	oc.add(InputDirectoryObject(key=Callback(Search), title=SEARCH_TITLE, summary=SEARCH_SUMMARY, prompt="Search for", thumb=SEARCH_THUMB))
-	#oc.add(SearchDirectoryObject(identifier="com.plexapp.plugins.movie2k", title=SEARCH_TITLE, prompt=SEARCH_SUMMARY, thumb=SEARCH_THUMB))
+	oc.add(InputDirectoryObject(key=Callback(SearchTrailers), title=TRAILERSEARCH_TITLE, summary=TRAILERSEARCH_SUMMARY, prompt="Search for", thumb=TRAILERSEARCH_THUMB))
+	#oc.add(SearchDirectoryObject(identifier="com.plexapp.plugins.movie2k", title=TRAILERSEARCH_TITLE, prompt=TRAILERSEARCH_SUMMARY, thumb=TRAILERSEARCH_THUMB))
 	oc.add(PrefsObject(title=PREFS_TITLE, summary=PREFS_SUMMARY, thumb=PREFS_THUMB))
 
 	return oc
@@ -997,6 +1002,141 @@ def GetThumb(url):
 		return DataObject(data, 'image/jpeg')
 	except:
 		return Redirect(R(ICON))
+
+
+####################################################################################################
+# This section is for Trailer Addict Search
+####################################################################################################
+@route(PREFIX + '/SearchTrailers')
+def SearchTrailers(query):
+
+	# Create a container to hold the results
+	oc = ObjectContainer()
+
+	url = 'http://www.traileraddict.com/search.php'
+	website = 'http://www.traileraddict.com'
+	params = {}
+	cookies = {}
+	headers = {
+		'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+		'Accept-Charset': 'ISO-8859-1,utf-8;q=0.7,*;q=0.3',
+		'Accept-Encoding': 'gzip,deflate,sdch',
+		'Accept-Language': 'en-US,en;q=0.8',
+		'Cache-Control': 'max-age=0',
+		'Connection': 'keep-alive',
+		'Host': 'www.traileraddict.com',
+		'Referer': 'http://www.traileraddict.com/',
+		'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.22 (KHTML, like Gecko) Chrome/25.0.1364.152 Safari/537.22'
+		}
+	session = requests.session()
+
+	s = session.get(website, headers=headers)
+	for key, value in session.cookies.items():
+			cookies[key] = value
+	form = HTML.ElementFromString(s.content)
+
+	for input in form.xpath('//form[@method="get"]/input'):
+		if input.get('name') != None:
+			key = input.get('name')
+			value = input.get('value')
+			params[key] = value
+	params['q'] = query
+
+	SEARCH_PAGE = requests.get(url, params=params, headers=headers, cookies=cookies)
+	SEARCH_PAGE2 = SEARCH_PAGE.content.decode('cp1252').encode('utf-8')
+
+	MovieTrailer = HTML.ElementFromString(SEARCH_PAGE2).xpath('//div[@class="leftcolumn"]/div')
+	TotalTrailers = len(MovieTrailer) - 1
+	i = 1
+	while i < TotalTrailers:
+		MOVIES_GET_THUMB = MovieTrailer[i].xpath('./div/center/div[@class="searchthumb"]')[0].get('style')
+		try:
+			MOVIES_THUMB = website + re.sub("\s", "", MOVIES_GET_THUMB.split('=')[1].split(')')[0])
+		except:
+			MOVIES_THUMB = website + MOVIES_GET_THUMB.split('url(')[1].split(')')[0]
+		MOVIES_TITLE = MovieTrailer[i].xpath('./a')[0].text
+		MOVIES_PAGE = website + MovieTrailer[i].xpath('./a')[0].get('href')
+		MOVIES_DATE_RELEASE = MovieTrailer[i].xpath('./span')[0].text
+		MOVIES_CONDENSED_CAST = MovieTrailer[i].text_content().split('Cast:')[1].split('Trailers')[0]
+		MOVIES_SUMMARY = 'Release: ' + MOVIES_DATE_RELEASE + " | Cast: " + MOVIES_CONDENSED_CAST
+		i += 1
+		oc.add(DirectoryObject(key=Callback(TrailerResults, page=MOVIES_PAGE, title=MOVIES_TITLE, website=website), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=Callback(GetThumb, url=MOVIES_THUMB)))
+
+
+	if len(oc) < 1:
+		oc = ObjectContainer(header="Sorry", message="This Trailer Search did not contain any videos")
+
+	return oc
+
+
+####################################################################################################
+@route(PREFIX + '/TrailerResults')
+def TrailerResults(page, title, website):
+	oc = ObjectContainer(title2=title)
+
+	GetMovieTrailers = HTML.ElementFromURL(page)
+			
+	studio = re.sub("\s", " ", GetMovieTrailers.xpath('//div[@id="filmcontent"]/div')[2].text_content().split('Studio:')[1])
+	writer = GetMovieTrailers.xpath('//div[@id="filmcontent"]/div')[5].text_content().split('Writer:')[1]
+	cast = GetMovieTrailers.xpath('//div[@id="filmcontent"]/div')[6].text_content().split('Cast:')[1]
+	director = re.sub("\s", " ", GetMovieTrailers.xpath('//div[@id="filmcontent"]/div')[4].text_content().split('Director: ')[1])
+	genre = ''
+	getgenres = GetMovieTrailers.xpath('//div[@id="filmcontent"]/div')[7]
+	for aofgenres in getgenres.xpath('./a'):
+		genre = genre + aofgenres.text + ','
+	getrating = GetMovieTrailers.xpath('//div[@class="leftcolumn"]/center/div')[1]
+	try:
+		rating = getrating.xpath('./a/img')[0].get('src').split('front')[1].split('.')[0]
+		if rating == 'na':
+			rating = 0.0
+	except:
+		rating = 0.0
+	date = GetMovieTrailers.xpath('//div[@id="filmcontent"]/div')[3].text_content().split('Release: ')[1]
+	getthumb = GetMovieTrailers.xpath('//div[@id="filmcontent"]/div')[1]
+ 	thumb = website + re.sub("\s", "", getthumb.xpath('./a/img')[0].get('src').split('=')[1].split('"')[0])
+
+	directors = []
+	directors.append(director)
+	genres = []
+	genres = genre.split(',')
+	content_rating = 'NR'
+	show = 'Trailer Addict'
+	Host = 'TrailerAddict'
+	rating = float(rating)
+	date = Datetime.ParseDate(date)
+	type = 'Movies'
+	season = 0
+	index = 0
+	actors = ','
+
+	AllMovieTrailers = GetMovieTrailers.xpath('//div[@class="leftcolumn"]/div[@class="info"]')
+
+	for Trailers in AllMovieTrailers:
+		subtrailerurl = website + Trailers.xpath('./a')[0].get('href')
+		TrailerText = Trailers.xpath('./div[@class="abstract"]')[0].text_content()
+		TrailerDesc = TrailerText.split('Posted')[0]
+		dateposted = re.sub("\s", " ", TrailerText.split('Posted ')[1].split('Tags:')[0])
+		TrailerRuntime = TrailerText.split('Runtime: ')[1].split(' |')[0]
+		duration = int((float(TrailerRuntime.split('m')[0])+float(TrailerRuntime.split('m')[1].split('s')[0])/60)*60*1000)
+		trailertitle = Trailers.xpath('./div[@class="abstract"]/h2/a')[0].text
+
+		summary = 'Posted: ' + dateposted + '| Studio: ' + studio + ' | Cast: ' + cast + ' | Desc: ' + TrailerDesc + ' | Writer: ' + writer
+
+		url = subtrailerurl +"?title="+String.Quote(trailertitle, usePlus=True)+"&summary="+String.Quote(summary, usePlus=True)+"&show="+String.Quote(show, usePlus=True)+"&date="+String.Quote(str(date), usePlus=True)+"&thumb="+String.Quote(thumb, usePlus=True)+"&host="+Host+"&season="+str(season)+"&index="+str(index)+"&type="+String.Quote(type, usePlus=True)+"&genres="+String.Quote(genre, usePlus=True)+"&director="+String.Quote(director, usePlus=True)+"&actors="+String.Quote(actors, usePlus=True)+"&duration="+str(duration)+"&rating="+str(rating)+"&content_rating="+content_rating
+
+		oc.add(MovieObject(
+			url = url,
+			title = trailertitle,
+			summary = summary,
+			directors = directors,
+			genres = genres,
+			duration = duration,
+			rating = rating,
+			content_rating = content_rating,
+			source_title = show,
+			originally_available_at = date,
+			thumb = Callback(GetThumb, url=thumb)))
+	return oc
 
 
 ####################################################################################################

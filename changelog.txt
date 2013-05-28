@@ -1,3 +1,5 @@
+[B]Version 1.1.0[/B]
+- Added Trailer Addict Website search engine.
 [B]Version 1.0.1[/B]
 - Worked on Captcha for 180upload
 [B]Version 1.0.0[/B]

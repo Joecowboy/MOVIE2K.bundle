@@ -35,6 +35,7 @@ def GetItemInfo(url, itemInfo):
 	summary = String.Unquote(url.split("summary=")[1].split("&")[0], usePlus=True)
 	show = String.Unquote(url.split("show=")[1].split("&")[0], usePlus=True)
 	getdate = String.Unquote(url.split("date=")[1].split("&")[0], usePlus=True)
+	Log(getdate)
 	date = Datetime.ParseDate(getdate, "%Y")
 	thumb = String.Unquote(url.split("thumb=")[1].split("&")[0], usePlus=True)
 	Host = url.split("host=")[1].split("&")[0]
@@ -43,15 +44,12 @@ def GetItemInfo(url, itemInfo):
 	index = int(url.split("index=")[1].split("&")[0])
 	type = String.Unquote(url.split("type=")[1].split("&")[0], usePlus=True)
 	genres = []
-	genre = String.Unquote(url.split("genres=")[1].split("&")[0], usePlus=True).split(',')
-	genres = genre
+	genres = String.Unquote(url.split("genres=")[1].split("&")[0], usePlus=True).split(',')
 	content_rating = url.split("content_rating=")[1].split("&")[0]
 	directors = []
-	director = String.Unquote(url.split("director=")[1].split("&")[0], usePlus=True).split(',')
-	directors = director
+	directors.append(String.Unquote(url.split("director=")[1].split("&")[0], usePlus=True))
 	guest_stars = []
-	actors = String.Unquote(url.split("actors=")[1].split("&")[0], usePlus=True).split(',')
-	guest_stars = actors
+	guest_stars = String.Unquote(url.split("actors=")[1].split("&")[0], usePlus=True).split(',')
 	rating = float(url.split("rating=")[1].split("&")[0])
 	duration = url.split("duration=")[1].split("&")[0]
 	if duration != "None":
@@ -91,7 +89,11 @@ def GetItemInfo(url, itemInfo):
 					originally_available_at = date,
 					thumb = Callback(GetThumb, url=thumb))
 	elif itemInfo == "MediaObject":
-		VideoStream_URL = CheckforMultiPart(Host=Host, url=Movie2k_url)
+		if Host == 'TrailerAddict':
+			VideoStream_URL = []
+			VideoStream_URL.append(GetMovie(Host=Host, HostPage=Movie2k_url, url=Movie2k_url, LinkType=0))
+		else:
+			VideoStream_URL = CheckforMultiPart(Host=Host, url=Movie2k_url)
 		FileType = None
 		parts = []
 
@@ -220,7 +222,7 @@ def PlayVideo(url):
 	))
 
 	return oc
-	#return IndirectResponse(VideoClipObject, key=HTTPLiveStreamURL(url=m3u8_url))
+
 
 ####################################################################################################
 def GetThumb(url):
@@ -294,10 +296,25 @@ def GetHostPage(Host, url):
 ####################################################################################################
 def GetMovie(Host, HostPage, url, LinkType):
 
-	#
-	#Select Vodieo Hoster
-	#
-	if Host == "180upload":
+	#################################
+	#Trailer Addict
+	#################################
+	if Host == 'TrailerAddict':
+		headers = {'User-Agent': UserAgent[UserAgentNum], 'Referer': HostPage}
+		cookies = {}
+		session = requests.session()
+		req = session.get(HostPage, headers=headers)
+		for key, value in session.cookies.items():
+			cookies[key] = value
+		trailerurlID = req.content.split('name="movie" value="')[1].split('"')[0].split('/')[4]
+		trailerurlCFG = 'http://www.traileraddict.com/fvar.php?tid=' + trailerurlID
+		trailer_url = requests.get(trailerurlCFG, headers=headers).content.split('fileurl=')[1].split('&')[0]
+		VideoStream = trailer_url + "?cookies="+String.Quote(str(cookies), usePlus=True)+"&headers="+String.Quote(str(headers), usePlus=True)
+
+	#################################
+	#Select Movide2k Vodieo Hoster
+	#################################
+	elif Host == "180upload":
 		try:
 			VideoPage = SolveMediaCaptcha(url=url, HostPage=HostPage, wScript=2)
 			VideoInfo = VideoPage.content.split('<div id="player_code">')[1].split("<script type='text/javascript'>")[1].split("</script>")[0]
@@ -1415,9 +1432,9 @@ def HostOverride():
 ####################################################################################################
 def GetMovieDebugger(Host, HostPage, url, LinkType):
 
-	#
-	#Select Vodieo Hoster
-	#
+	#################################
+	#Select Movide2k Vodieo Hoster
+	#################################
 
 	Log("Testing Host: "+Host)
 	Log("Testing HostPage: "+HostPage)
