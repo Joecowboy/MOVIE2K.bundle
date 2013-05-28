@@ -1093,7 +1093,10 @@ def TrailerResults(page, title, website):
 		rating = 0.0
 	date = GetMovieTrailers.xpath('//div[@id="filmcontent"]/div')[3].text_content().split('Release: ')[1]
 	getthumb = GetMovieTrailers.xpath('//div[@id="filmcontent"]/div')[1]
- 	thumb = website + re.sub("\s", "", getthumb.xpath('./a/img')[0].get('src').split('=')[1].split('"')[0])
+	try:
+	 	thumb = website + re.sub("\s", "", getthumb.xpath('./a/img')[0].get('src').split('=')[1].split('"')[0])
+	except:
+		thumb = website + getthumb.xpath('./img')[0].get('src')
 
 	directors = []
 	directors.append(director)
