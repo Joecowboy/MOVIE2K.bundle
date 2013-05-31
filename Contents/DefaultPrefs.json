@@ -4,13 +4,13 @@
 		"type": "enum",
 		"label": "Site URL",
 		"values": [
-			"http://www.movie2k.to",
-			"http://www.movie2k.com",
-			"http://www.movie4k.to",
-			"http://proxymovie2k.com",
-			"http://movie2kproxy.org"
+			"www.movie2k.to",
+			"www.movie2k.com",
+			"www.movie4k.to",
+			"proxymovie2k.com",
+			"movie2kproxy.org"
 		],
-		"default": "http://www.movie2k.to"
+		"default": "www.movie2k.to"
 	},
 	{
 		"id": "videoerror",

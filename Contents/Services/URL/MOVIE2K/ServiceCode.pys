@@ -248,7 +248,7 @@ def CheckforMultiPart(Host, url):
 	while i < len(PartNext):
 		if PartNext[i].get('id') != "underplayer" and PartNext[i].get('id') != "emptydiv":
 			PartNext_Info = PartNext[i].xpath('./a')[0].get('href')
-			PartNext_Link = MOVIE2K_URL + "/"+PartNext_Info
+			PartNext_Link = "http://" + MOVIE2K_URL + "/"+PartNext_Info
 			VideoStream.append(GetHostPage(Host=Host, url=PartNext_Link))
 			i += 1
 		else:
