@@ -22,10 +22,15 @@ UserAgentNum = random.randrange(0, len(UserAgent)-1, 1)
 # Default Icon
 ICON = 'icon-default.png'
 
+# Default Movie2k URL
+MOVIE2K_URL = Prefs['movie2k_url']
+
+
 ####################################################################################################
 def NormalizeURL(url):
 
 	return url
+
 
 ####################################################################################################
 def GetItemInfo(url, itemInfo):
@@ -35,7 +40,6 @@ def GetItemInfo(url, itemInfo):
 	summary = String.Unquote(url.split("summary=")[1].split("&")[0], usePlus=True)
 	show = String.Unquote(url.split("show=")[1].split("&")[0], usePlus=True)
 	getdate = String.Unquote(url.split("date=")[1].split("&")[0], usePlus=True)
-	Log(getdate)
 	date = Datetime.ParseDate(getdate, "%Y")
 	thumb = String.Unquote(url.split("thumb=")[1].split("&")[0], usePlus=True)
 	Host = url.split("host=")[1].split("&")[0]
@@ -244,7 +248,7 @@ def CheckforMultiPart(Host, url):
 	while i < len(PartNext):
 		if PartNext[i].get('id') != "underplayer" and PartNext[i].get('id') != "emptydiv":
 			PartNext_Info = PartNext[i].xpath('./a')[0].get('href')
-			PartNext_Link = "http://www.movie2k.to/"+PartNext_Info
+			PartNext_Link = MOVIE2K_URL + "/"+PartNext_Info
 			VideoStream.append(GetHostPage(Host=Host, url=PartNext_Link))
 			i += 1
 		else:
@@ -488,6 +492,15 @@ def GetMovie(Host, HostPage, url, LinkType):
 			VideoStream = ErrorMessage(Host=Host, LogError=1)
 	elif Host == "Dotsemper":
 		VideoStream = ErrorMessage(Host=Host, LogError=3)
+	elif Host == "Dwn":
+		try:
+			VideoPage = HTML.ElementFromURL(HostPage).xpath('//div[@id="query"]/div/iframe')[0].get('src')
+			VideoID = HTML.ElementFromURL(VideoPage).xpath('//body/div/script')[1].text.split("SWFObject('")[1].split("'")[0]
+			VideoInfo = "http://st.dwn.so/xml/videolink.php?v="+VideoID.split('v=')[1].split('&')[0]+"&yk="+VideoID.split('yk=')[1].split('&')[0]+"&width=850&id="+str(time.time())+"&u=undefined"
+			headers = {'User-Agent': UserAgent[UserAgentNum], 'Referer': VideoID}
+			VideoStream = "http://" + requests.get(VideoInfo, headers=headers).content.split('un="')[1].split('"')[0]
+		except:
+			VideoStream = ErrorMessage(Host=Host, LogError=1)
 	elif Host == "Entroupload":
 		try:
 			cookies = {'lang': 'english', 'ref_url': urllib.quote_plus(url)}
@@ -1464,7 +1477,6 @@ def GetMovieDebugger(Host, HostPage, url, LinkType):
 		VideoStream = None
 
 
-
 	######################################  These use Proxy.swf ###################################
 
 	elif Host == "Stream2k.eu":
@@ -1676,6 +1688,14 @@ def GetMovieDebugger(Host, HostPage, url, LinkType):
 	elif Host == "Dotsemper":
 		Log(Host+" -- is currently offline")
 		VideoStream = None
+	elif Host == "Dwn":
+		#Example: http://dwn.so/v/DSBAA55FE7
+		#http://st.dwn.so/xml/videolink.php?v=DSBAA55FE7&yk=edaafcdc03389ec79c46d27295479c50881783e3&width=1730&id=1369941342712&u=undefined
+		VideoPage = HTML.ElementFromURL(HostPage).xpath('//div[@id="query"]/div/iframe')[0].get('src')
+		VideoID = HTML.ElementFromURL(VideoPage).xpath('//body/div/script')[1].text.split("SWFObject('")[1].split("'")[0]
+		VideoInfo = "http://st.dwn.so/xml/videolink.php?v="+VideoID.split('v=')[1].split('&')[0]+"&yk="+VideoID.split('yk=')[1].split('&')[0]+"&width=850&id="+str(time.time())+"&u=undefined"
+		headers = {'User-Agent': UserAgent[UserAgentNum], 'Referer': VideoID}
+		VideoStream = "http://" + requests.get(VideoInfo, headers=headers).content.split('un="')[1].split('"')[0]
 	elif Host == "Entroupload":
 		cookies = {'lang': 'english', 'ref_url': urllib.quote_plus(url)}
 		VideoPage = SecondButtonPress(url=url, HostPage=HostPage, cookies=cookies, addkey={"referer": url})
@@ -1989,7 +2009,7 @@ def GetMovieDebugger(Host, HostPage, url, LinkType):
 		VideoStream = ScriptConvert(script=VideoInfo)
 	elif Host == "Userporn":
 		#Testing info -- Need to find missing token for &c=
-		#http://s.userporn.com/s?v=W8NpBX9zyNlR&r=2&t=1365932411&u=&c=23807ccfcdcd823778492fc5ae25b2b1163855e2f570268f7cc7278b3c00897e74882878500d5bc7b8c3bb6ecddbe7cd&start=0
+		#http://s.userporn.com/s?v=W8NpBX9zyNlR&r=2&t=1369767803&u=&c=23807ccfcdcd823778492fc5ae25b2b1163855e2f570268f7cc7278b3c00897e74882878500d5bc7b8c3bb6ecddbe7cd&start=0
 		#http://www.userporn.com/player_control/settings.php?v=W8NpBX9zyNlR&em=TRUE&fv=v1.1.55
 		#HostPage = "http://www.userporn.com/e/1pk9A3hcrLaJ"
 		

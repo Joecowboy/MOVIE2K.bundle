@@ -1,5 +1,18 @@
 [
 	{
+		"id": "movie2k_url",
+		"type": "enum",
+		"label": "Site URL",
+		"values": [
+			"http://www.movie2k.to",
+			"http://www.movie2k.com",
+			"http://www.movie4k.to",
+			"http://proxymovie2k.com",
+			"http://movie2kproxy.org"
+		],
+		"default": "http://www.movie2k.to"
+	},
+	{
 		"id": "videoerror",
 		"type": "enum",
 		"label": "Play Error Video",
