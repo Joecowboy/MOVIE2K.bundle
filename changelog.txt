@@ -1,4 +1,6 @@
-[B]Version 1.1.0[/B]
+[B]Version 1.1.2[/B]
+- Updated/fixed Plugin to Match site move to movie4k.to and updated and added Hosts
+[B]Version 1.1.1[/B]
 - Added in Preferences Site URL select
 [B]Version 1.1.0[/B]
 - Added Trailer Addict Website search engine.

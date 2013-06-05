@@ -128,21 +128,22 @@ def Movie2kLogin():
 
 	username = Prefs["username"]
 	password = Prefs["password"]
-	cookiejar = {"xxx2": "ok", "domain": ".movie2k.to", "path": "/", "onlylanguage": "deleted", "lang": "us"}
+	cookiejar = {"xxx2": "ok", "domain": ".movie4k.to", "path": "/", "onlylanguage": "deleted", "lang": "en"}
 	Dict['_movie2k_uid'] = cookiejar
+	HTTP.Headers['Cookie'] = cookiejar
 
 	if (username != None) and (password != None):
 		try:
 			files = {}
+			cookies = {}
 			session = requests.session()
-			url = "http://"+MOVIE2K_URL + "/login.php?ua=login"
+			url = "http://" + MOVIE2K_URL + "/login.php?ua=login"
 			authentication_values = {"username": username, "password": password}
 			authentication_headers = {"Host": MOVIE2K_URL, "Referer": url, "User-Agent": UserAgent[UserAgentNum]}
 			req = session.post(url, data=authentication_values, headers=authentication_headers, files=files, allow_redirects=True)
 			data = req.content.split('<div id="maincontent4">')[1].split('<STRONG>')[1].split('</STRONG>')[0]
 
-			if data == "Logged in!":
-				cookies = {}			
+			if data == "Logged in!":			
 				for key, value in session.cookies.items():
 					cookies[key] = value
 				cookiejar.update(cookies)
@@ -161,7 +162,7 @@ def Movie2kLogin():
 @route(PREFIX + '/Search')
 def Search(query):
 
-	#Search movie2k.to for movies using user input, and populate a list with the results
+	#Search movie4k.to for movies using user input, and populate a list with the results
 
 	# Create a container to hold the results
 	oc = ObjectContainer(title2="Search Results", view_group="InfoList")
@@ -175,7 +176,8 @@ def Search(query):
 	type = 'N/A'
 	dateadd = 'N/A'
 	ads = 'ads.affbuzzads.com'
-	url = "http://" + MOVIE2K_URL + '/movies.php?list=search'
+	Log("MOVIE2k: "+MOVIE2K_URL)
+	url = 'http://' + MOVIE2K_URL + '/movies.php?list=search'
 	payload = {'search': query}
 	files = {}
 	cookies = Dict['_movie2k_uid']
@@ -208,14 +210,18 @@ def Search(query):
 		MOVIES_TITLE = re.sub('\t', '', MOVIES_TD[1].split('<a')[1].split('">')[1].split('</a>')[0]).replace('  ', '')
 
 		try:
-			MOVIES_YEAR = MOVIES_TD[2].split('<div')[9].split('>')[1].split('<')[0]
+			MOVIES_YEAR = MOVIES_TD[2].split('<div')[8].split('>')[1].split('<')[0]
 			if MOVIES_YEAR == "":
 				MOVIES_YEAR = "N/A"
 		except:
 			MOVIES_YEAR = "N/A"
 
 		try:
-			MOVIES_LANG = GetLang(lang=MOVIES_TD[5].split('src="')[1].split('"')[0].split('/')[4].split('.')[0])
+			LANGUAGE_URL = MOVIES_TD[5].split('src="')[1].split('"')[0]
+			try:
+				MOVIES_LANG = GetLang(lang=LANGUAGE_URL.split('/')[5].split('.')[0])
+			except:
+				MOVIES_LANG = GetLang(lang=LANGUAGE_URL.split('/')[4].split('.')[0])
 		except:
 			MOVIES_LANG = "N/A"
 		MOVIES_SUMMARY = "Year: "+MOVIES_YEAR+" | Lang: "+MOVIES_LANG+" | Part of the search line up on Movie2k."
@@ -383,7 +389,11 @@ def TVShowsList(title, page, genre, type):
 	for List in HTML.ElementFromURL(page).xpath('//div[@id="maincontent4"]/table[@id="tablemoviesindex"]/tr'):
 		MOVIES_TD = List.xpath('./td[@id="tdmovies"]')
 		try:
-			MOVIES_LANG = GetLang(lang=MOVIES_TD[1].xpath("./img")[0].get('src').split('/')[4].split('.')[0])
+			LANGUAGE_URL = MOVIES_TD[1].xpath("./img")[0].get('src')
+			try:
+				MOVIES_LANG = GetLang(lang=LANGUAGE_URL.split('/')[5].split('.')[0])
+			except:
+				MOVIES_LANG = GetLang(lang=LANGUAGE_URL.split('/')[4].split('.')[0])
 		except:
 			MOVIES_LANG = "N/A"
 		ICON_MOVIES = "icon-"+genre.lower()+".png"
@@ -419,7 +429,11 @@ def FeaturedTVShowsPageAdd(title, page, type):
 		TVSHOW_TITLE = TVSHOWS_DIV[i].xpath("./a/img")[0].get('title')
 		i += 1
 		TVSHOW_YEAR = re.sub('\s', '', TVSHOWS_DIV[i].xpath('./div[@class="beschreibung"]')[0].text_content().split('Land/Year: ')[1].split('/')[1].split(' ')[0])
-		TVSHOW_LANG = GetLang(lang=TVSHOWS_DIV[i].xpath("./h2//img")[0].get('src').split('/')[4].split('.')[0])
+		LANGUAGE_URL = TVSHOWS_DIV[i].xpath("./h2//img")[0].get('src')
+		try:
+			TVSHOW_LANG = GetLang(lang=LANGUAGE_URL.split('/')[5].split('.')[0])
+		except:
+			TVSHOW_LANG = GetLang(lang=LANGUAGE_URL.split('/')[4].split('.')[0])
 		TVSHOW_SUMMARY = "Year: "+TVSHOW_YEAR+" | Lang: "+TVSHOW_LANG+" | Part of the Featured TV Show line up on Movie2k."
 		i += 2
 		oc.add(DirectoryObject(key=Callback(SubMoviePageAdd, title=TVSHOW_TITLE, page=TVSHOW_PAGE, date=TVSHOW_YEAR, dateadd=dateadd, thumbck=TVSHOW_THUMB, type=type), title=TVSHOW_TITLE, summary=TVSHOW_SUMMARY, thumb=Callback(GetThumb, url=TVSHOW_THUMB)))
@@ -436,7 +450,11 @@ def TVShowSeasons(title, page, genre, type):
 	for Seasons in HTML.ElementFromURL(page).xpath('//div[@id="maincontent4"]/table[@id="tablemoviesindex"]/tr'):
 		MOVIES_TD = Seasons.xpath('./td[@id="tdmovies"]')
 		try:
-			MOVIES_LANG = GetLang(lang=MOVIES_TD[1].xpath("./img")[0].get('src').split('/')[4].split('.')[0])
+			LANGUAGE_URL = MOVIES_TD[1].xpath("./img")[0].get('src')
+			try:
+				MOVIES_LANG = GetLang(lang=LANGUAGE_URL.split('/')[5].split('.')[0])
+			except:
+				MOVIES_LANG = GetLang(lang=LANGUAGE_URL.split('/')[4].split('.')[0])
 		except:
 			MOVIES_LANG = "N/A"
 		ICON_MOVIES = "icon-"+genre.lower()+".png"
@@ -461,7 +479,11 @@ def TVShowEpisodes(title, page, genre, type):
 	for Episodes in HTML.ElementFromURL(page).xpath('//div[@id="maincontent4"]/table[@id="tablemoviesindex"]/tr'):
 		MOVIES_TD = Episodes.xpath('./td[@id="tdmovies"]')
 		try:
-			MOVIES_LANG = GetLang(lang=MOVIES_TD[4].xpath("./img")[0].get('src').split('/')[4].split('.')[0])
+			LANGUAGE_URL = MOVIES_TD[4].xpath("./img")[0].get('src')
+			try:
+				MOVIES_LANG = GetLang(lang=LANGUAGE_URL.split('/')[5].split('.')[0])
+			except:
+				MOVIES_LANG = GetLang(lang=LANGUAGE_URL.split('/')[4].split('.')[0])
 		except:
 			MOVIES_LANG = "N/A"
 		DATE_ADDED = MOVIES_TD[3].text
@@ -470,7 +492,7 @@ def TVShowEpisodes(title, page, genre, type):
 		MOVIES_SUMMARY = "Added: "+DATE_ADDED+" | Lang: "+MOVIES_LANG+" | Part of the "+genre+" TV Shows episode line up on Movie2k."
 		MOVIES_PAGE = MOVIES_TD[0].xpath('./a')[0].get('href')
 		if THUMB == 0:
-			GET_THUMB = HTML.ElementFromURL("http://"+MOVIE2K_URL+"/"+MOVIES_PAGE).xpath('//div[@id="maincontent5"]/div/div')[1]
+			GET_THUMB = HTML.ElementFromURL("http://"+MOVIE2K_URL+"/"+MOVIES_PAGE).xpath('//div[@id="maincontent5"]/div/div')[0]
 			MOVIES_THUMB = GET_THUMB.xpath('./a/img')[0].get('src')
 			THUMB = 1
 
@@ -520,7 +542,7 @@ def Movies(title, type):
 	
 	NotSkip = True
 	cookies = Dict['_movie2k_uid']
-	headers = {"Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8", "Accept-Charset": "ISO-8859-1,utf-8;q=0.7,*;q=0.3", "Accept-Encoding": "gzip,deflate,sdch", "Accept-Language": "en-US,en;q=0.8", "Connection": "keep-alive", "Host": MOVIE2K_URL, "Referer": "http://"+MOVIE2K_URL, "User-Agent": "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.31 (KHTML, like Gecko) Chrome/26.0.1410.64 Safari/537.31"}
+	headers = {"Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8", "Accept-Charset": "ISO-8859-1,utf-8;q=0.7,*;q=0.3", "Accept-Encoding": "gzip,deflate,sdch", "Accept-Language": "en-US,en;q=0.8", "Connection": "keep-alive", "Host": MOVIE2K_URL, "Referer": "http://"+MOVIE2K_URL, "User-Agent": UserAgent[UserAgentNum]}
 	req = requests.get(GENRE_PAGE, headers=headers, cookies=cookies)
 
 	for Genre in HTML.ElementFromString(req.content).xpath('//div[@id="content"]/table[@id="tablemovies"]/tr'):
@@ -554,7 +576,7 @@ def MovieGenres(title, page, genre, thumb, type):
 	i = 1
 	MOVIES = page+"1.html"
 	cookies = Dict['_movie2k_uid']
-	headers = {"Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8", "Accept-Charset": "ISO-8859-1,utf-8;q=0.7,*;q=0.3", "Accept-Encoding": "gzip,deflate,sdch", "Accept-Language": "en-US,en;q=0.8", "Connection": "keep-alive", "Host": MOVIE2K_URL, "Referer": "http://"+MOVIE2K_URL, "User-Agent": "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.31 (KHTML, like Gecko) Chrome/26.0.1410.64 Safari/537.31"}
+	headers = {"Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8", "Accept-Charset": "ISO-8859-1,utf-8;q=0.7,*;q=0.3", "Accept-Encoding": "gzip,deflate,sdch", "Accept-Language": "en-US,en;q=0.8", "Connection": "keep-alive", "Host": MOVIE2K_URL, "Referer": "http://"+MOVIE2K_URL, "User-Agent": UserAgent[UserAgentNum]}
 	req = requests.get(MOVIES, headers=headers, cookies=cookies)
 	NUMPAGES = len(HTML.ElementFromString(req.content).xpath('//div[@id="maincontent4"]/div[@id="boxgrey"]')) + 1
 	
@@ -578,7 +600,7 @@ def CinemaMoviePageAdd(title, page, type):
 	oc = ObjectContainer(title2=title)
 	
 	cookies = Dict['_movie2k_uid']
-	headers = {"Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8", "Accept-Charset": "ISO-8859-1,utf-8;q=0.7,*;q=0.3", "Accept-Encoding": "gzip,deflate,sdch", "Accept-Language": "en-US,en;q=0.8", "Connection": "keep-alive", "Host": MOVIE2K_URL, "Referer": "http://"+MOVIE2K_URL, "User-Agent": "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.31 (KHTML, like Gecko) Chrome/26.0.1410.64 Safari/537.31"}
+	headers = {"Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8", "Accept-Charset": "ISO-8859-1,utf-8;q=0.7,*;q=0.3", "Accept-Encoding": "gzip,deflate,sdch", "Accept-Language": "en-US,en;q=0.8", "Connection": "keep-alive", "Host": MOVIE2K_URL, "Referer": "http://"+MOVIE2K_URL, "User-Agent": UserAgent[UserAgentNum]}
 	req = requests.get(page, headers=headers, cookies=cookies)
 	CINEMA_MOVIE_PAGE = HTML.ElementFromString(req.content)
 	dateadd = 'N/A'
@@ -608,13 +630,13 @@ def CinemaMoviePageAdd(title, page, type):
 def MoviePageAdd(title, page, genre, type):
 	
 	oc = ObjectContainer(title2=title)
-	cookies = Dict['_movie2k_uid']
-	headers = {"Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8", "Accept-Charset": "ISO-8859-1,utf-8;q=0.7,*;q=0.3", "Accept-Encoding": "gzip,deflate,sdch", "Accept-Language": "en-US,en;q=0.8", "Connection": "keep-alive", "Host": MOVIE2K_URL, "Referer": "http://"+MOVIE2K_URL, "User-Agent": "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.31 (KHTML, like Gecko) Chrome/26.0.1410.64 Safari/537.31"}
 
+	cookies = Dict['_movie2k_uid']
+	headers = {"Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8", "Accept-Charset": "ISO-8859-1,utf-8;q=0.7,*;q=0.3", "Accept-Encoding": "gzip,deflate,sdch", "Accept-Language": "en-US,en;q=0.8", "Connection": "keep-alive", "Host": MOVIE2K_URL, "Referer": "http://"+MOVIE2K_URL, "User-Agent": UserAgent[UserAgentNum]}
 	GENRE_PAGE = page+".html"
 	req = requests.get(GENRE_PAGE, headers=headers, cookies=cookies)
 	GENRE_MOVIE_PAGE = HTML.ElementFromString(req.content)
-	Log(req.cookies)
+
 	try:
 		GET_THUMB = GENRE_MOVIE_PAGE.xpath('//div[@id="maincontent4"]/script')[0].text
 	except:
@@ -628,13 +650,22 @@ def MoviePageAdd(title, page, genre, type):
 		else:
 			dateadd = 'N/A'
 		try:
-			MOVIES_YEAR = MOVIES_TD[1].xpath("./div")[8].text
+			MOVIES_YEAR = MOVIES_TD[1].xpath("./div")[7].text
 			if MOVIES_YEAR == None:
 				MOVIES_YEAR = "N/A"
 		except:
 			MOVIES_YEAR = "N/A"
+
 		try:
-			MOVIES_LANG = GetLang(lang=MOVIES_TD[4].xpath("./img")[0].get('src').split('/')[4].split('.')[0])
+			LANGUAGE_URL = MOVIES_TD[4].xpath("./img")[0].get('src')
+		except:
+			LANGUAGE_URL = MOVIES_TD[2].xpath("./img")[0].get('src')
+
+		try:
+			try:
+				MOVIES_LANG = GetLang(lang=LANGUAGE_URL.split('/')[5].split('.')[0])
+			except:
+				MOVIES_LANG = GetLang(lang=LANGUAGE_URL.split('/')[4].split('.')[0])
 		except:
 			MOVIES_LANG = "N/A"
 		MOVIES_SUMMARY = "Year: "+MOVIES_YEAR+" | Lang: "+MOVIES_LANG+" | Part of the "+genre+" "+type+" line up on Movie2k."
@@ -668,9 +699,9 @@ def SubMoviePageAdd(title, page, date, dateadd, thumbck, type):
 
 	oc = ObjectContainer(title2=title)
 
-	MOVIE_PAGE_HTML = HTML.ElementFromURL("http://"+MOVIE2K_URL+page)
+	MOVIE_PAGE_HTML = HTML.ElementFromURL("http://"+MOVIE2K_URL+"/"+page)
 
-	GET_THUMB = MOVIE_PAGE_HTML.xpath('//div[@id="maincontent5"]/div/div')[1]
+	GET_THUMB = MOVIE_PAGE_HTML.xpath('//div[@id="maincontent5"]/div/div')[0]
 	thumb = GET_THUMB.xpath('./a/img')[0].get('src')
 
 	if thumb.split('/')[4] == "noposter.gif":
@@ -679,7 +710,7 @@ def SubMoviePageAdd(title, page, date, dateadd, thumbck, type):
 
 	NumHostListing1 = len(MOVIE_PAGE_HTML.xpath('//div[@id="menu"]//tr[@id="tablemoviesindex2"]'))
 	StringListing = MOVIE_PAGE_HTML.xpath('//div[@id="menu"]//script[@type="text/javascript"]')
-	NumStringListing = len(StringListing) - 1
+	NumStringListing = len(StringListing)
 	NumHostListing2 = 0
 	nsl = 0
 	i = 1
@@ -709,7 +740,7 @@ def TheMovieListings(title, page, date, dateadd, thumb, type, PageOfHosts):
 
 	oc = ObjectContainer(title2=title)
 
-	MOVIE_PAGE_HTML = HTML.ElementFromURL("http://"+MOVIE2K_URL+page)
+	MOVIE_PAGE_HTML = HTML.ElementFromURL("http://"+MOVIE2K_URL+"/"+page)
 	MOVIE_INFO = MOVIE_PAGE_HTML.xpath('//div[@id="details"]')[0].text_content()
 	source_title = "Movie2k"
 
@@ -744,7 +775,7 @@ def TheMovieListings(title, page, date, dateadd, thumb, type, PageOfHosts):
 	date = Datetime.ParseDate(date, "%Y")
 	
 	genres = []
-	genre = re.sub("\s", "", MOVIE_INFO.split('Genre: ')[1].split('|')[0])
+	genre = re.sub("\s", "", MOVIE_INFO.split('Genre:')[1].split('|')[0])
 	genres = genre.split(',')
 
 	try:
@@ -761,10 +792,10 @@ def TheMovieListings(title, page, date, dateadd, thumb, type, PageOfHosts):
 	directors = []
 	try:
 		try:
-			director = MOVIE_INFO.split('Director: ')[1].split('|')[0]
+			director = MOVIE_INFO.split('Director:')[1].split('|')[0]
 			directors = director.split(',')
 		except:
-			director = MOVIE_INFO.split('Regie: ')[1].split('|')[0]
+			director = MOVIE_INFO.split('Regie:')[1].split('|')[0]
 			directors = director.split(',')
 	except:
 		director = 'Not Available'
@@ -773,10 +804,10 @@ def TheMovieListings(title, page, date, dateadd, thumb, type, PageOfHosts):
 	guest_stars = []
 	try:
 		try:
-			actors = MOVIE_INFO.split('Actors: ')[1]
+			actors = MOVIE_INFO.split('Actors:')[1]
 			guest_stars = actors.split(',')
 		except:
-			actors = MOVIE_INFO.split('Schauspieler: ')[1]
+			actors = MOVIE_INFO.split('Schauspieler:')[1]
 			guest_stars = actors.split(',')
 	except:
 		actors = None
@@ -803,7 +834,7 @@ def TheMovieListings(title, page, date, dateadd, thumb, type, PageOfHosts):
 			content_rating = 'NR'
 
 	try:
-		subtitle = MOVIE_PAGE_HTML.xpath('//div[@id="maincontent5"]/div/div')[2]
+		subtitle = MOVIE_PAGE_HTML.xpath('//div[@id="maincontent5"]/div/div')[1]
 		try:
 			season = int(subtitle.xpath('./span/h1/a/span')[0].text.split('Season ')[1].split(',')[0].replace(' ', ''))
 			index = int(subtitle.xpath('./span/h1/a/span')[0].text.split('Episode ')[1].replace(' ', ''))
@@ -821,7 +852,7 @@ def TheMovieListings(title, page, date, dateadd, thumb, type, PageOfHosts):
 	Listing = MOVIE_PAGE_HTML.xpath('//div[@id="menu"]//tr[@id="tablemoviesindex2"]')
 	StringListing = MOVIE_PAGE_HTML.xpath('//div[@id="menu"]//script[@type="text/javascript"]')
 	NumHostListing1 = len(Listing)
-	NumStringListing = len(StringListing) - 1
+	NumStringListing = len(StringListing)
 	NumHostListing2 = 0
 	CreatePage = True
 	CurrentPage = 1
@@ -854,7 +885,7 @@ def TheMovieListings(title, page, date, dateadd, thumb, type, PageOfHosts):
 	while CreatePage:
 		if i < NumHostListing1:
 			Host = Listing[i].xpath("./td/a/img")[0].get('title').split(' ')[0].capitalize()
-			MOVIE_PAGE = "http://" + MOVIE2K_URL + Listing[i].xpath("./td/a")[0].get('href')
+			MOVIE_PAGE = "http://" + MOVIE2K_URL + "/" + Listing[i].xpath("./td/a")[0].get('href')
 			if type == 'TV Shows':
 				DateAdded = dateadd
 				Quality = "DVDRip/BDRip"
@@ -869,7 +900,7 @@ def TheMovieListings(title, page, date, dateadd, thumb, type, PageOfHosts):
 			NumHosts = len(ScriptListing) - 2	
 
 			Host = ScriptListing[sll].split('title=\\"')[1].split('\\"')[0].split(' ')[0].capitalize()
-			MOVIE_PAGE = "http://" + MOVIE2K_URL + ScriptListing[sll].split('href=\\"')[1].split('\\"')[0]
+			MOVIE_PAGE = "http://" + MOVIE2K_URL + "/" + ScriptListing[sll].split('href=\\"')[1].split('\\"')[0]
 			if type == 'TV Shows':
 				DateAdded = dateadd
 				Quality = "DVDRip/BDRip"

@@ -8,14 +8,30 @@
 		<dict>
 			<key>URLPatterns</key>
 			<array>
-				<string>http://www\.movie2k\.to/genre-movies+</string>
-				<string>http://www\.movie2k\.to/movies-genre+</string>
-				<string>http://www\.movie2k\.to/genre-xxx+</string>
-				<string>http://www\.movie2k\.to/xxx-genre-+</string>
-				<string>http://www\.movie2k\.to/genre-tvshows+</string>
-				<string>http://www\.movie2k\.to/tvshows-genre+</string>
-				<string>http://www\.movie2k\.to/tvshows-season+</string>
-				<string>http://www\.movie2k\.to/+</string>
+				<string>http://www\.movie4k\.to/genre-movies+</string>
+				<string>http://www\.movie4k\.to/movies-genre+</string>
+				<string>http://www\.movie4k\.to/genre-xxx+</string>
+				<string>http://www\.movie4k\.to/xxx-genre-+</string>
+				<string>http://www\.movie4k\.to/genre-tvshows+</string>
+				<string>http://www\.movie4k\.to/tvshows-genre+</string>
+				<string>http://www\.movie4k\.to/tvshows-season+</string>
+				<string>http://www\.movie4k\.to/+</string>
+				<string>http://www\.movie2kproxy\.org/genre-movies+</string>
+				<string>http://www\.movie2kproxy\.org/movies-genre+</string>
+				<string>http://www\.movie2kproxy\.org/genre-xxx+</string>
+				<string>http://www\.movie2kproxy\.org/xxx-genre-+</string>
+				<string>http://www\.movie2kproxy\.org/genre-tvshows+</string>
+				<string>http://www\.movie2kproxy\.org/tvshows-genre+</string>
+				<string>http://www\.movie2kproxy\.org/tvshows-season+</string>
+				<string>http://www\.movie2kproxy\.org/+</string>
+				<string>http://www\.proxymovie2k\.com/genre-movies+</string>
+				<string>http://www\.proxymovie2k\.com/movies-genre+</string>
+				<string>http://www\.proxymovie2k\.com/genre-xxx+</string>
+				<string>http://www\.proxymovie2k\.com/xxx-genre-+</string>
+				<string>http://www\.proxymovie2k\.com/genre-tvshows+</string>
+				<string>http://www\.proxymovie2k\.com/tvshows-genre+</string>
+				<string>http://www\.proxymovie2k\.com/tvshows-season+</string>
+				<string>http://www\.proxymovie2k\.com/+</string>
 				<string>http://media31\.traileraddict\.com/+</string>
 				<string>http://www\.traileraddict\.com/clip+</string>
 			</array>
