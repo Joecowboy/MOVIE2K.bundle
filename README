@@ -1,0 +1,12 @@
+This is a Plex channel that pulls in Movie and TV Episodes on it from the website Movie2k.to now moved to Movie4k.to.
+
+To use Tor proxy you will have to download and install Tor on your Plex Media Server machine (Should work for fine Windows, OSX, Linux).  To get the IP changer to work you will need to put in a password and enable Generate Tor Hashed Password.  You will need to next look in your com.plexapp.plugins.movie2k.log file to get your hashed password, copy and past it into the torrc file found in the Tor Browser folder \Data\Tor...  Just past it at to bottom of the file.  You will see a log statment with - Example:
+HashedControlPassword 16:C66BF3B72C28938B607CE71CC9949A2AF2AE579A0A54A8182439BFD982
+
+To get the Plex transcoder to use Tor proxy server on Windows use an app like Proxifier it forces all net traffic to Tor when set up.  For OSX and Linux not real sure at the moment for a redirect method for Plex transcoder to Tor proxy.
+
+Also, added the two proxy servers that where set up for movie2k.to.  They are still in use.  You can now change the Site URL in the Preferences to one of the two proxy servers.  This can be used if the www.movie4k.to site URL is being blocked.  This has no effect on Host site URLs only MOVIE4k.  Only proxy effects on Host sites will be using the Tor setup.
+
+The User Name and Password for My Movie4k does not work at the moment they have login disabled on the site.
+
+The Debug Options are for testing Host sites.  You will have to put in the "Debug Host Name" with either the "Debug Host URL" or "Debug Movie2k URL".  This will allow you to see what errors are thrown in the log file if a Host site has changed their code structure.
