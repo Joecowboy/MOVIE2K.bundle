@@ -5,8 +5,16 @@ HashedControlPassword 16:C66BF3B72C28938B607CE71CC9949A2AF2AE579A0A54A8182439BFD
 
 To get the Plex transcoder to use Tor proxy server on Windows use an app like Proxifier it forces all net traffic to Tor when set up.  For OSX and Linux not real sure at the moment for a redirect method for Plex transcoder to Tor proxy.
 
+Make sure you have Tor Proxy server running before you try to use the plugin if it's enabled.
+
 Also, added the two proxy servers that where set up for movie2k.to.  They are still in use.  You can now change the Site URL in the Preferences to one of the two proxy servers.  This can be used if the www.movie4k.to site URL is being blocked.  This has no effect on Host site URLs only MOVIE4k.  Only proxy effects on Host sites will be using the Tor setup.
 
-The User Name and Password for My Movie4k does not work at the moment they have login disabled on the site.
+The User Name and Password for My Movie4k allows you to get your messages and see your current uploads.  If the uploads are accecpted you can watch them.
 
 The Debug Options are for testing Host sites.  You will have to put in the "Debug Host Name" with either the "Debug Host URL" or "Debug Movie2k URL".  This will allow you to see what errors are thrown in the log file if a Host site has changed their code structure.
+
+Sometimes the plugin might error and this could be do to a timeout error trying to load the content.  Try to load it again and it might take a few tries depending on the internet connection.  Also, it might take bit to load the content so be patient and allow the content to load.
+
+On the Roku change the Transcoder from Expermental to Stable under Roku Plex Channel Advanced Preferences.  Not sure why it's not working at the moment.  Could be related to the issue with trying to display the "Summary Page" on Plex Web and it errors.  Issue occures after processing the URL Services but displays no errors in the plugin log or Plex Media Server log.
+
+The Trailer Addict search does not show up in Plex Web do to the way search is handled but works fine on the Roku.  Only search function in Plex Web is Movie4k.  The Expermental Transcoder does work for Trailer Addict on the Roku.  

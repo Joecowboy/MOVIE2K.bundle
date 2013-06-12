@@ -1,3 +1,5 @@
+[B]Version 1.1.3[/B]
+- Fixed "My Movie4k", added code to process TV Shows, Moives on My Uploads, fixed issue with date and added some more Hosts
 [B]Version 1.1.2[/B]
 - Updated/fixed Plugin to Match site move to movie4k.to and updated and added Hosts
 [B]Version 1.1.1[/B]

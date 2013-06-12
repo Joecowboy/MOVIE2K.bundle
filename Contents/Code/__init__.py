@@ -128,7 +128,7 @@ def Movie2kLogin():
 
 	username = Prefs["username"]
 	password = Prefs["password"]
-	cookiejar = {"xxx2": "ok", "domain": ".movie4k.to", "path": "/", "onlylanguage": "deleted", "lang": "en"}
+	cookiejar = {"xxx": "ok", "xxx2": "ok", "domain": ".movie4k.to", "path": "/", "onlylanguage": "deleted", "lang": "en"}
 	Dict['_movie2k_uid'] = cookiejar
 	HTTP.Headers['Cookie'] = cookiejar
 
@@ -176,7 +176,6 @@ def Search(query):
 	type = 'N/A'
 	dateadd = 'N/A'
 	ads = 'ads.affbuzzads.com'
-	Log("MOVIE2k: "+MOVIE2K_URL)
 	url = 'http://' + MOVIE2K_URL + '/movies.php?list=search'
 	payload = {'search': query}
 	files = {}
@@ -228,7 +227,6 @@ def Search(query):
 		MOVIES_PAGE = MOVIES_TD[1].split('<a href="')[1].split('"')[0]
 		try:
 			MOVIES_THUMB = GET_THUMB.split(Movie[i].split('id="cover')[1].split('"')[0])[1].split("img src='")[1].split("'")[0]
-			Log("THUMB NAIL: "+MOVIES_THUMB)
 		except:
 			MOVIES_THUMB = None
 		try:
@@ -274,13 +272,45 @@ def Queue(title):
 	ICON_MYUPLOADS = "icon-myuploads.png"
 	MYUPLOADS_THUMB = R(ICON_MYUPLOADS)
 	MYUPLOADS_PAGE = "http://" + MOVIE2K_URL + "/ui.php?ua=myuploads&filter=no"
+	TempMovie = None
 
 	session_cookies = Dict['_movie2k_uid']
-	session_headers = {"Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8", "Accept-Charset": "ISO-8859-1,utf-8;q=0.7,*;q=0.3", "Accept-Encoding": "gzip,deflate,sdch", "Accept-Language": "en-US,en;q=0.8", "Connection": "keep-alive", "Host": MOVIE2k_URL, "Referer": "http://"+MOVIE2k_URL, "User-Agent": UserAgent[UserAgentNum]}
+	session_headers = {"Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8", "Accept-Charset": "ISO-8859-1,utf-8;q=0.7,*;q=0.3", "Accept-Encoding": "gzip,deflate,sdch", "Accept-Language": "en-US,en;q=0.8", "Connection": "keep-alive", "Host": MOVIE2K_URL, "Referer": "http://"+MOVIE2K_URL, "User-Agent": UserAgent[UserAgentNum]}
 	values = dict(session_token = Dict['_movie2k_uid'])
 	
 	req = requests.get(MYUPLOADS_PAGE, headers=session_headers, cookies=session_cookies)
 	mylist = HTML.ElementFromString(req.content).xpath('//div[@id="maincontent4"]/table')[0]
+	Movies = mylist.xpath('./tr')
+
+	i = 1
+	while i < len(Movies):
+		Movie = Movies[i].xpath('./td/a')[0].text
+		Host = Movies[i].xpath('./td')[1].text_content()
+		Status = Movies[i].xpath('./td')[2].text
+		page = Movies[i].xpath('./td/a')[0].get('href')
+		summary = "Hoster: "+Host+" | Status: "+Status
+		title = "My Upload " + str(i) + ": " + Movie
+		
+		try:
+			TitleParts = Movie.split(' ')
+			TitleLen = len(TitleParts) - 1
+			Season = int(TitleParts[TitleLen].split('S')[1].split('E')[0])
+			Episode = int(TitleParts[TitleLen].split('E')[1])
+			if Season >= 0 and Episode >= 0:
+				type = 'TV Shows'
+		except:
+			type = 'Movies'
+
+		if Movie != TempMovie:
+			MOVIE_PAGE_HTML = HTML.ElementFromURL("http://"+MOVIE2K_URL+"/"+page)
+
+			GET_THUMB = MOVIE_PAGE_HTML.xpath('//div[@id="maincontent5"]/div/div')[0]
+			thumb = GET_THUMB.xpath('./a/img')[0].get('src')
+
+		TempMovie = Movie
+
+		oc.add(DirectoryObject(key = Callback(TheMovieListings, title=title, page=page, date='N/A', dateadd='N/A', thumb=thumb, type=type, PageOfHosts=0, Host=Host), title = title, summary=summary, thumb=thumb))
+		i += 1
 
 	return oc
 
@@ -307,7 +337,7 @@ def Messages(title):
 		From = Message[i].xpath('./td')[1].text
 		Date = Message[i].xpath('./td')[2].text
 		Subject = Message[i].xpath('./td/a')[0].text
-		url = "http://" + MOVIE2K_URL + Message[i].xpath('./td/a')[0].get('href')
+		url = "http://" + MOVIE2K_URL + "/" + Message[i].xpath('./td/a')[0].get('href')
 		summary = "From: "+From+" | Date: "+Date+" | Subject: "+Subject
 		summary2 = "Date: "+Date+" | Subject: "+Subject
 		title = "Inbox - Message " + str(i)
@@ -326,6 +356,7 @@ def ShowMessage(title, url, summary):
 	values = dict(session_token = Dict['_movie2k_uid'])
 	
 	req = requests.get(url, headers=session_headers, cookies=session_cookies)
+	Log(req.content)
 	getbody = HTML.ElementFromString(req.content).xpath('//div[@id="maincontent4"]/form')[3]
 	body = getbody.text_content()
 	oc = MessageContainer(summary, body)
@@ -736,7 +767,7 @@ def SubMoviePageAdd(title, page, date, dateadd, thumbck, type):
 
 ####################################################################################################
 @route(PREFIX + '/TVandTheMovieListings')
-def TheMovieListings(title, page, date, dateadd, thumb, type, PageOfHosts):
+def TheMovieListings(title, page, date, dateadd, thumb, type, PageOfHosts, Host=None):
 
 	oc = ObjectContainer(title2=title)
 
@@ -765,10 +796,12 @@ def TheMovieListings(title, page, date, dateadd, thumb, type, PageOfHosts):
 					date = "0001"
 				else:
 					try:
-						date = re.sub("\s", "", MOVIE_INFO.split('Land/Jahr: ')[1].split('/')[1].split(' ')[0])
+						tempdate = int(date)
 					except:
-						date = MOVIE_INFO.split('Land/Jahr: ')[1].split(' ')[1]
-						
+						try:
+							date = re.sub("\s", "", MOVIE_INFO.split('Land/Jahr: ')[1].split('/')[1].split(' ')[0])
+						except:
+							date = MOVIE_INFO.split('Land/Jahr: ')[1].split(' ')[1]
 		except:
 			date = "0001"
 
@@ -883,37 +916,48 @@ def TheMovieListings(title, page, date, dateadd, thumb, type, PageOfHosts):
 	Log("Page of Hosts: "+str(PageOfHosts))
 
 	while CreatePage:
-		if i < NumHostListing1:
-			Host = Listing[i].xpath("./td/a/img")[0].get('title').split(' ')[0].capitalize()
-			MOVIE_PAGE = "http://" + MOVIE2K_URL + "/" + Listing[i].xpath("./td/a")[0].get('href')
+		if int(PageOfHosts) != 0:
+			if i < NumHostListing1:
+				Host = Listing[i].xpath("./td/a/img")[0].get('title').split(' ')[0].capitalize()
+				MOVIE_PAGE = "http://" + MOVIE2K_URL + "/" + Listing[i].xpath("./td/a")[0].get('href')
+				if type == 'TV Shows':
+					DateAdded = dateadd
+					Quality = "DVDRip/BDRip"
+				else:
+					DateAdded = Listing[i].xpath("./td/a")[0].text
+					Quality = Listing[i].xpath("./td/img")[0].get('title').split(' ')[2]
+				
+				i += 1
+
+			elif jj < NumHostListing2:
+				ScriptListing = StringListing[k].text.split('links[')
+				NumHosts = len(ScriptListing) - 2	
+
+				Host = ScriptListing[sll].split('title=\\"')[1].split('\\"')[0].split(' ')[0].capitalize()
+				MOVIE_PAGE = "http://" + MOVIE2K_URL + "/" + ScriptListing[sll].split('href=\\"')[1].split('\\"')[0]
+				if type == 'TV Shows':
+					DateAdded = dateadd
+					Quality = "DVDRip/BDRip"
+				else:
+					DateAdded = ScriptListing[sll].split('href=\\"')[1].split('\\">')[1].split(' <')[0]
+					Quality = ScriptListing[sll].split('title=\\"')[2].split('\\"')[0].split(' ')[2]
+				
+				if sll == NumHosts:
+					k += 1
+					sll = 1
+				else:
+					sll += 1
+				jj += 1
+		else:
+			CurrentPage = 0
+			HostCount = 4
+			DateAdded = dateadd
+			MOVIE_PAGE = "http://" + MOVIE2K_URL + "/" + page
 			if type == 'TV Shows':
-				DateAdded = dateadd
 				Quality = "DVDRip/BDRip"
 			else:
-				DateAdded = Listing[i].xpath("./td/a")[0].text
-				Quality = Listing[i].xpath("./td/img")[0].get('title').split(' ')[2]
-				
-			i += 1
-
-		elif jj < NumHostListing2:
-			ScriptListing = StringListing[k].text.split('links[')
-			NumHosts = len(ScriptListing) - 2	
-
-			Host = ScriptListing[sll].split('title=\\"')[1].split('\\"')[0].split(' ')[0].capitalize()
-			MOVIE_PAGE = "http://" + MOVIE2K_URL + "/" + ScriptListing[sll].split('href=\\"')[1].split('\\"')[0]
-			if type == 'TV Shows':
-				DateAdded = dateadd
-				Quality = "DVDRip/BDRip"
-			else:
-				DateAdded = ScriptListing[sll].split('href=\\"')[1].split('\\">')[1].split(' <')[0]
-				Quality = ScriptListing[sll].split('title=\\"')[2].split('\\"')[0].split(' ')[2]
-				
-			if sll == NumHosts:
-				k += 1
-				sll = 1
-			else:
-				sll += 1
-			jj += 1
+				QualitySub = MOVIE_PAGE_HTML.xpath('//div[@id="maincontent5"]/div/div')[1]
+				Quality = QualitySub.xpath("./span/span/img")[0].get('title').split(' ')[2]
 
 		if CurrentPage == int(PageOfHosts):
 			if Host == 'N/a' or Host == 'Divx' or Host == 'Flash':
