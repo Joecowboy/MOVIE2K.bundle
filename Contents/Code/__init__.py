@@ -356,7 +356,6 @@ def ShowMessage(title, url, summary):
 	values = dict(session_token = Dict['_movie2k_uid'])
 	
 	req = requests.get(url, headers=session_headers, cookies=session_cookies)
-	Log(req.content)
 	getbody = HTML.ElementFromString(req.content).xpath('//div[@id="maincontent4"]/form')[3]
 	body = getbody.text_content()
 	oc = MessageContainer(summary, body)
@@ -664,7 +663,6 @@ def MoviePageAdd(title, page, genre, type):
 	headers = {"Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8", "Accept-Charset": "ISO-8859-1,utf-8;q=0.7,*;q=0.3", "Accept-Encoding": "gzip,deflate,sdch", "Accept-Language": "en-US,en;q=0.8", "Connection": "keep-alive", "Host": MOVIE2K_URL, "Referer": "http://"+MOVIE2K_URL, "User-Agent": UserAgent[UserAgentNum]}
 	GENRE_PAGE = page+".html"
 	req = requests.get(GENRE_PAGE, headers=headers, cookies=cookies)
-	Log(req.content)
 	GENRE_MOVIE_PAGE = HTML.ElementFromString(req.content)
 
 	try:
