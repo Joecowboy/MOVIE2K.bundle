@@ -128,7 +128,7 @@ def Movie2kLogin():
 
 	username = Prefs["username"]
 	password = Prefs["password"]
-	cookiejar = {"xxx": "ok", "xxx2": "ok", "domain": ".movie4k.to", "path": "/", "onlylanguage": "deleted", "lang": "en"}
+	cookiejar = {"xxx2": "ok", "domain": ".movie4k.to", "path": "/", "onlylanguage": "deleted", "lang": "en"}
 	Dict['_movie2k_uid'] = cookiejar
 	HTTP.Headers['Cookie'] = cookiejar
 
@@ -565,11 +565,11 @@ def Movies(title, type):
 		PORN_TITLE = "Newly Added XXX Movies"
 		PORN_SUMMARY = "Your Latest Updates to the XXX Movies database!"
 		PORN_THUMB = R(ICON_UPDATES)
-		PORN_PAGE = "http://" + MOVIE2K_URL + "/xxxcheck.php?confirm=1&uri=%2Fxxx-updates"
+		PORN_PAGE = "http://" + MOVIE2K_URL + "/xxx-updates"
 		oc.add(DirectoryObject(key=Callback(MoviePageAdd, title=PORN_TITLE, page=PORN_PAGE, genre=Genre_Type, type=type), title=PORN_TITLE, summary=PORN_SUMMARY, thumb=PORN_THUMB))
 
 		#Add Genre Pages to XXX Movies Page
-		GENRE_PAGE = "http://" + MOVIE2K_URL + "/xxxcheck.php?confirm=1&uri=%2Fgenres-xxx.html"
+		GENRE_PAGE = "http://" + MOVIE2K_URL + "/genres-xxx.html"
 	
 	NotSkip = True
 	cookies = Dict['_movie2k_uid']
@@ -583,10 +583,8 @@ def Movies(title, type):
 		MOVIES_SUMMARY = "Your "+Genre_Type+" Movie database!"
 		MOVIES_THUMB = R(ICON_MOVIES)
 		MOVIES_PAGE_PART = Genre.xpath('./td[@id="tdmovies"]/a')[0].get('href').split(Genre_Type.replace(' ','+'))[0]
-		if type == 'XXX Movies':
-			MOVIES_PAGE = "http://" + MOVIE2K_URL + "/xxxcheck.php?confirm=1&uri=%2F"+MOVIES_PAGE_PART
-		else:
-			MOVIES_PAGE = "http://" + MOVIE2K_URL + "/"+MOVIES_PAGE_PART
+
+		MOVIES_PAGE = "http://" + MOVIE2K_URL + "/"+MOVIES_PAGE_PART
 
 		if DisableAdult() != True and Genre_Type.lower() == 'adult':
 			NotSkip = False
@@ -666,6 +664,7 @@ def MoviePageAdd(title, page, genre, type):
 	headers = {"Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8", "Accept-Charset": "ISO-8859-1,utf-8;q=0.7,*;q=0.3", "Accept-Encoding": "gzip,deflate,sdch", "Accept-Language": "en-US,en;q=0.8", "Connection": "keep-alive", "Host": MOVIE2K_URL, "Referer": "http://"+MOVIE2K_URL, "User-Agent": UserAgent[UserAgentNum]}
 	GENRE_PAGE = page+".html"
 	req = requests.get(GENRE_PAGE, headers=headers, cookies=cookies)
+	Log(req.content)
 	GENRE_MOVIE_PAGE = HTML.ElementFromString(req.content)
 
 	try:

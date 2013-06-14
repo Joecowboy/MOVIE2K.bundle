@@ -16,6 +16,14 @@
 				<string>http://www\.movie4k\.to/tvshows-genre+</string>
 				<string>http://www\.movie4k\.to/tvshows-season+</string>
 				<string>http://www\.movie4k\.to/+</string>
+				<string>http://91\.202\.63\.145/genre-movies+</string>
+				<string>http://91\.202\.63\.145/movies-genre+</string>
+				<string>http://91\.202\.63\.145/genre-xxx+</string>
+				<string>http://91\.202\.63\.145/xxx-genre-+</string>
+				<string>http://91\.202\.63\.145/genre-tvshows+</string>
+				<string>http://91\.202\.63\.145/tvshows-genre+</string>
+				<string>http://91\.202\.63\.145/tvshows-season+</string>
+				<string>http://91\.202\.63\.145/+</string>
 				<string>http://www\.movie2kproxy\.org/genre-movies+</string>
 				<string>http://www\.movie2kproxy\.org/movies-genre+</string>
 				<string>http://www\.movie2kproxy\.org/genre-xxx+</string>
@@ -24,14 +32,14 @@
 				<string>http://www\.movie2kproxy\.org/tvshows-genre+</string>
 				<string>http://www\.movie2kproxy\.org/tvshows-season+</string>
 				<string>http://www\.movie2kproxy\.org/+</string>
-				<string>http://www\.proxymovie2k\.com/genre-movies+</string>
-				<string>http://www\.proxymovie2k\.com/movies-genre+</string>
-				<string>http://www\.proxymovie2k\.com/genre-xxx+</string>
-				<string>http://www\.proxymovie2k\.com/xxx-genre-+</string>
-				<string>http://www\.proxymovie2k\.com/genre-tvshows+</string>
-				<string>http://www\.proxymovie2k\.com/tvshows-genre+</string>
-				<string>http://www\.proxymovie2k\.com/tvshows-season+</string>
-				<string>http://www\.proxymovie2k\.com/+</string>
+				<string>http://www\.movie2kproxy\.com/genre-movies+</string>
+				<string>http://www\.movie2kproxy\.com/movies-genre+</string>
+				<string>http://www\.movie2kproxy\.com/genre-xxx+</string>
+				<string>http://www\.movie2kproxy\.com/xxx-genre-+</string>
+				<string>http://www\.movie2kproxy\.com/genre-tvshows+</string>
+				<string>http://www\.movie2kproxy\.com/tvshows-genre+</string>
+				<string>http://www\.movie2kproxy\.com/tvshows-season+</string>
+				<string>http://www\.movie2kproxy\.com/+</string>
 				<string>http://media31\.traileraddict\.com/+</string>
 				<string>http://www\.traileraddict\.com/clip+</string>
 			</array>

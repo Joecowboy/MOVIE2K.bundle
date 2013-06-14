@@ -1,3 +1,5 @@
+[B]Version 1.1.4[/B]
+- Added IP address and changed a Proxy address for Site URL in Preferences
 [B]Version 1.1.3[/B]
 - Fixed "My Movie4k", added code to process TV Shows, Moives on My Uploads, fixed issue with date and added some more Hosts
 [B]Version 1.1.2[/B]

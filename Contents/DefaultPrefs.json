@@ -5,8 +5,9 @@
 		"label": "Site URL",
 		"values": [
 			"www.movie4k.to",
+			"91.202.63.145",
 			"www.movie2kproxy.org",
-			"www.proxymovie2k.com"
+			"www.movie2kproxy.com"
 		],
 		"default": "www.movie4k.to"
 	},
