@@ -458,7 +458,7 @@ def FeaturedTVShowsPageAdd(title, page, type):
 		TVSHOW_THUMB = TVSHOWS_DIV[i].xpath("./a/img")[0].get('src')
 		TVSHOW_TITLE = TVSHOWS_DIV[i].xpath("./a/img")[0].get('title')
 		i += 1
-		TVSHOW_YEAR = re.sub('\s', '', TVSHOWS_DIV[i].xpath('./div[@class="beschreibung"]')[0].text_content().split('Land/Year: ')[1].split('/')[1].split(' ')[0])
+		TVSHOW_YEAR = re.sub('[^0-9]', '', TVSHOWS_DIV[i].xpath('./div[@class="beschreibung"]/span')[0].text_content().split('| : ')[1])
 		LANGUAGE_URL = TVSHOWS_DIV[i].xpath("./h2//img")[0].get('src')
 		try:
 			TVSHOW_LANG = GetLang(lang=LANGUAGE_URL.split('/')[5].split('.')[0])
@@ -639,7 +639,7 @@ def CinemaMoviePageAdd(title, page, type):
 				MOVIES_TD = Movie.xpath('./div')[0]
 			except:
 				MOVIES_TD = Movie
-			MOVIES_TITLE = MOVIES_TD.xpath("./a/img")[0].get('title')
+			MOVIES_TITLE = MOVIES_TD.xpath("./a/img")[0].get('title').replace(' kostenlos','')
 			MOVIES_PAGE = MOVIES_TD.xpath("./a")[0].get('href')
 			MOVIES_THUMB = MOVIES_TD.xpath("./a/img")[0].get('src')
 			MOVIES_YEAR = time.strftime("%Y", time.localtime(time.time()))
