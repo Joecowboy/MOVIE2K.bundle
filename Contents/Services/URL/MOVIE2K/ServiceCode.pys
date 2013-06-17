@@ -534,7 +534,7 @@ def GetMovie(Host, HostPage, url, LinkType):
 			VideoStream = VideoURL + "?cookies="+String.Quote(str(cookies), usePlus=True)+"&headers="+String.Quote(str(headers), usePlus=True)
 		except:
 			VideoStream = ErrorMessage(Host=Host, LogError=1)
-	elif Host == "Faststream":
+	elif Host == "Faststream" or Host == "Fastsream.in":
 		try:
 			VideoPage = SecondButtonPress(url=url, HostPage=HostPage, wform=1, wait=5, addkey={'referer': url})
 			VideoStream = VideoPage.content.split('<div id="player_code">')[1].split("<script type='text/javascript'>")[1].split('file: "')[1].split('"')[0]
@@ -680,6 +680,18 @@ def GetMovie(Host, HostPage, url, LinkType):
 			cookies = {'ref_url': urllib.quote_plus(url), 'domain': '.hugefiles.net', 'path': '/'}
 			headers = {'User-Agent': UserAgent[UserAgentNum], 'Host': VideoURL.split('/')[2], 'Referer': HostPage}
 			VideoStream = VideoURL + "?cookies="+String.Quote(str(cookies), usePlus=True)+"&headers="+String.Quote(str(headers), usePlus=True)
+		except:
+			VideoStream = ErrorMessage(Host=Host, LogError=1)
+
+	elif Host == "Ishared":
+		try:
+			VideoPage = HTML.ElementFromURL(HostPage)
+			if LinkType == 4:
+				VideoInfo = VideoPage.xpath('//body/script')[2].text
+			elif LinkType == 1:
+				VideoInfo = VideoPage.xpath('//body/script')[0].text
+			VideoStream = VideoInfo.split('file:"')[1].split('"')[0]
+			
 		except:
 			VideoStream = ErrorMessage(Host=Host, LogError=1)
 	elif Host == "Limevideo":
@@ -868,7 +880,11 @@ def GetMovie(Host, HostPage, url, LinkType):
 			NS = {'media':'http://search.yahoo.com/mrss/'}
 			VideoPage = SecondButtonPress(url=url, HostPage=HostPage, addkey={'confirm': 'Continue as Free User'})
 			VideoPageXML = "http://www.putlocker.com" + VideoPage.content.split("playlist: '")[1].split("'")[0]
-			VideoStream = XML.ElementFromURL(VideoPageXML).xpath('//item/media:content', namespaces=NS)[0].get('url').replace('&amp;', '&')
+			VideoInfo = XML.ElementFromURL(VideoPageXML)
+			try:
+				VideoStream = VideoInfo.xpath('//item/media:content', namespaces=NS)[1].get('url').replace('&amp;', '&')
+			except:
+				VideoStream = VideoInfo.xpath('//item/media:content', namespaces=NS)[0].get('url').replace('&amp;', '&')
 		except:
 			VideoStream = ErrorMessage(Host=Host, LogError=1)
 	elif Host == "Putme":
@@ -1836,8 +1852,8 @@ def GetMovieDebugger(Host, HostPage, url, LinkType):
 		VideoURL = ScriptConvert(script=VideoID)
 		headers = {'User-Agent': UserAgent[UserAgentNum], 'Host': VideoURL.split('/')[2], 'Referer': HostPage}
 		VideoStream = VideoURL + "?cookies="+String.Quote(str(cookies), usePlus=True)+"&headers="+String.Quote(str(headers), usePlus=True)
-	elif Host == "Faststream":
-		#Form Process issue -- Returns you to same page -- Example - http://faststream.in/ec8x24kybu6c
+	elif Host == "Faststream" or Host == "Fastsream.in":
+		#Example - http://faststream.in/ec8x24kybu6c
 		VideoPage = SecondButtonPress(url=url, HostPage=HostPage, wform=1, wait=5, addkey={'referer': url})
 		VideoURL = VideoPage.content.split('<div id="player_code">')[1].split("<script type='text/javascript'>")[1].split('file: "')[1].split('"')[0]
 		cookies = {'lang': 'english'}
@@ -1950,6 +1966,13 @@ def GetMovieDebugger(Host, HostPage, url, LinkType):
 		cookies = {'ref_url': urllib.quote_plus(url), 'domain': '.hugefiles.net', 'path': '/'}
 		headers = {'User-Agent': UserAgent[UserAgentNum], 'Host': VideoURL.split('/')[2], 'Referer': HostPage}
 		VideoStream = VideoURL + "?cookies="+String.Quote(str(cookies), usePlus=True)+"&headers="+String.Quote(str(headers), usePlus=True)
+	elif Host == "Ishared":
+		VideoPage = HTML.ElementFromURL(HostPage)
+		if LinkType == 4:
+			VideoInfo = VideoPage.xpath('//body/script')[2].text
+		elif LinkType == 1:
+			VideoInfo = VideoPage.xpath('//body/script')[0].text
+		VideoStream = VideoInfo.split('file:"')[1].split('"')[0]
 	elif Host == "Limevideo":
 		VideoPage = SecondButtonPress(url=url, HostPage=HostPage, addkey={"referer": url})
 		VideoInfo = SecondButtonPress(url=HostPage, HostPage=HostPage, page=VideoPage.content, addkey={"down_direct": 1, "referer": url, "method_premium": ""})
@@ -2073,7 +2096,11 @@ def GetMovieDebugger(Host, HostPage, url, LinkType):
 		NS = {'media':'http://search.yahoo.com/mrss/'}
 		VideoPage = SecondButtonPress(url=url, HostPage=HostPage, addkey={'confirm': 'Continue as Free User'})
 		VideoPageXML = "http://www.putlocker.com" + VideoPage.content.split("playlist: '")[1].split("',")[0]
-		VideoStream = XML.ElementFromURL(VideoPageXML).xpath('//item/media:content', namespaces=NS)[0].get('url').replace('&amp;', '&')
+		VideoInfo = XML.ElementFromURL(VideoPageXML)
+		try:
+			VideoStream = VideoInfo.xpath('//item/media:content', namespaces=NS)[1].get('url').replace('&amp;', '&')
+		except:
+			VideoStream = VideoInfo.xpath('//item/media:content', namespaces=NS)[0].get('url').replace('&amp;', '&')
 	elif Host == "Putme":
 		VideoPage = SecondButtonPress(url=url, HostPage=HostPage, addkey={"referer": url})
 		VideoInfo = SecondButtonPress(url=HostPage, HostPage=HostPage, page=VideoPage.content, addkey={"referer": url})
