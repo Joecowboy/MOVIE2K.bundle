@@ -41,7 +41,8 @@ def GetItemInfo(url, itemInfo):
 	show = String.Unquote(url.split("show=")[1].split("&")[0], usePlus=True)
 	getdate = String.Unquote(url.split("date=")[1].split("&")[0], usePlus=True)
 	date = Datetime.ParseDate(getdate, "%Y")
-	thumb = String.Unquote(url.split("thumb=")[1].split("&")[0], usePlus=True)
+	thumbget = String.Unquote(url.split("thumb=")[1].split("&")[0], usePlus=True)
+	thumb = Callback(GetThumb, url=thumbget)
 	Host = url.split("host=")[1].split("&")[0]
 	source_title = "Movie2k"
 	season = int(url.split("season=")[1].split("&")[0])
@@ -60,6 +61,7 @@ def GetItemInfo(url, itemInfo):
 		duration = int(duration)
 	else:
 		duration = None
+
 	
 	if itemInfo == "Metadata":
 		if type == "TV Shows":
@@ -67,9 +69,9 @@ def GetItemInfo(url, itemInfo):
 					url = url,
 					title = title,
 					summary = summary,
-					directors = directors,
-					guest_stars = guest_stars,
-					genres=genres,
+					#directors = directors,
+					#guest_stars = guest_stars,
+					#genres=genres,
 					duration = duration,
 					rating = rating,
 					show = show,
@@ -78,20 +80,21 @@ def GetItemInfo(url, itemInfo):
 					content_rating = content_rating,
 					source_title = source_title,
 					originally_available_at = date,
-					thumb = Callback(GetThumb, url=thumb))
+					thumb = thumb)
 		else:
 			obj = MovieObject(
 					url = url,
 					title = title,
 					summary = summary,
-					directors = directors,
-					genres = genres,
+					#directors = directors,
+					#genres = genres,
 					duration = duration,
 					rating = rating,
 					content_rating = content_rating,
 					source_title = source_title,
 					originally_available_at = date,
-					thumb = Callback(GetThumb, url=thumb))
+					thumb = thumb)
+
 	elif itemInfo == "MediaObject":
 		if Host == 'TrailerAddict':
 			VideoStream_URL = []

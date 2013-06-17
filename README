@@ -1,4 +1,4 @@
-This is a Plex channel that pulls in Movie and TV Episodes on it from the website Movie2k.to now moved to Movie4k.to.
+This is a Plex channel plugin that pulls in Movie and TV Episodes from the website Movie2k.to now moved to Movie4k.to.
 
 To use Tor proxy you will have to download and install Tor on your Plex Media Server machine (Should work for fine Windows, OSX, Linux).  To get the IP changer to work you will need to put in a password and enable Generate Tor Hashed Password.  You will need to next look in your com.plexapp.plugins.movie2k.log file to get your hashed password, copy and past it into the torrc file found in the Tor Browser folder \Data\Tor...  Just past it at to bottom of the file.  You will see a log statment with - Example:
 HashedControlPassword 16:C66BF3B72C28938B607CE71CC9949A2AF2AE579A0A54A8182439BFD982
@@ -15,6 +15,6 @@ The Debug Options are for testing Host sites.  You will have to put in the "Debu
 
 Sometimes the plugin might error and this could be do to a timeout error trying to load the content.  Try to load it again and it might take a few tries depending on the internet connection.  Also, it might take bit to load the content so be patient and allow the content to load.
 
-On the Roku change the Transcoder from Expermental to Stable under Roku Plex Channel Advanced Preferences.  Not sure why it's not working at the moment.  Could be related to the issue with trying to display the "Summary Page" on Plex Web and it errors.  Issue occures after processing the URL Services but displays no errors in the plugin log or Plex Media Server log.
+This plugin has been tested fully on the Roku and the Expermental Transcoder works properly now.
 
 The Trailer Addict search does not show up in Plex Web do to the way search is handled but works fine on the Roku.  Only search function in Plex Web is Movie4k.  The Expermental Transcoder does work for Trailer Addict on the Roku.  
