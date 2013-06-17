@@ -642,6 +642,7 @@ def CinemaMoviePageAdd(title, page, type):
 			MOVIES_TITLE = MOVIES_TD.xpath("./a/img")[0].get('title').replace(' kostenlos','')
 			MOVIES_PAGE = MOVIES_TD.xpath("./a")[0].get('href')
 			MOVIES_THUMB = MOVIES_TD.xpath("./a/img")[0].get('src')
+			Log(MOVIES_THUMB)
 			MOVIES_YEAR = time.strftime("%Y", time.localtime(time.time()))
 			MOVIES_LANG = "English"
 			MOVIES_SUMMARY = "Year: "+MOVIES_YEAR+" | Lang: "+MOVIES_LANG+" | Part of the Cinema Movies line up on Movie2k."
@@ -805,8 +806,8 @@ def TheMovieListings(title, page, date, dateadd, thumb, type, PageOfHosts, Host=
 	date = Datetime.ParseDate(date, "%Y")
 	
 	genres = []
-	genre = re.sub("\s", "", MOVIE_INFO.split('Genre:')[1].split('|')[0])
-	genres = genre.split(',')
+	genre = MOVIE_INFO.split('Genre:')[1].split('|')[0]
+	genres = StripArray(arraystrings=genre.split(','))
 
 	try:
 		try:
@@ -823,10 +824,10 @@ def TheMovieListings(title, page, date, dateadd, thumb, type, PageOfHosts, Host=
 	try:
 		try:
 			director = MOVIE_INFO.split('Director:')[1].split('|')[0]
-			directors = director.split(',')
+			directors = StripArray(arraystrings=director.split(','))
 		except:
 			director = MOVIE_INFO.split('Regie:')[1].split('|')[0]
-			directors = director.split(',')
+			directors = StripArray(arraystrings=director.split(','))
 	except:
 		director = 'Not Available'
 		directors.append(director)
@@ -835,10 +836,10 @@ def TheMovieListings(title, page, date, dateadd, thumb, type, PageOfHosts, Host=
 	try:
 		try:
 			actors = MOVIE_INFO.split('Actors:')[1]
-			guest_stars = actors.split(',')
+			guest_stars = StripArray(arraystrings=actors.split(','))
 		except:
 			actors = MOVIE_INFO.split('Schauspieler:')[1]
-			guest_stars = actors.split(',')
+			guest_stars = StripArray(arraystrings=actors.split(','))
 	except:
 		actors = None
 
@@ -908,14 +909,17 @@ def TheMovieListings(title, page, date, dateadd, thumb, type, PageOfHosts, Host=
 
 	Log("Listing Length: "+str(NumHostListing1))
 	Log("Listing Script Length: "+str(NumStringListing))
-	Log("NumPages: "+str(NumPages))
+	Log("Number of Pages: "+str(NumPages))
 	Log("Total Hosts: "+str(TotalHosts))
 	Log("Page of Hosts: "+str(PageOfHosts))
 
 	while CreatePage:
 		if int(PageOfHosts) != 0:
 			if i < NumHostListing1:
-				Host = Listing[i].xpath("./td/a/img")[0].get('title').split(' ')[0].capitalize()
+				try:
+					Host = Listing[i].xpath("./td/a/img")[0].get('title').split(' ')[0].split('.')[0].capitalize()
+				except:
+					Host = Listing[i].xpath("./td/a/img")[0].get('title').split(' ')[0].capitalize()
 				MOVIE_PAGE = "http://" + MOVIE2K_URL + "/" + Listing[i].xpath("./td/a")[0].get('href')
 				if type == 'TV Shows':
 					DateAdded = dateadd
@@ -929,8 +933,10 @@ def TheMovieListings(title, page, date, dateadd, thumb, type, PageOfHosts, Host=
 			elif jj < NumHostListing2:
 				ScriptListing = StringListing[k].text.split('links[')
 				NumHosts = len(ScriptListing) - 2	
-
-				Host = ScriptListing[sll].split('title=\\"')[1].split('\\"')[0].split(' ')[0].capitalize()
+				try:
+					Host = ScriptListing[sll].split('title=\\"')[1].split('\\"')[0].split(' ')[0].split('.')[0].capitalize()
+				except:
+					Host = ScriptListing[sll].split('title=\\"')[1].split('\\"')[0].split(' ')[0].capitalize()
 				MOVIE_PAGE = "http://" + MOVIE2K_URL + "/" + ScriptListing[sll].split('href=\\"')[1].split('\\"')[0]
 				if type == 'TV Shows':
 					DateAdded = dateadd
@@ -1012,6 +1018,18 @@ def TheMovieListings(title, page, date, dateadd, thumb, type, PageOfHosts, Host=
 		oc = ObjectContainer(header="Sorry", message="This section does not contain any videos")
 
 	return oc
+
+
+####################################################################################################
+def StripArray(arraystrings):
+
+	temparraystring = []
+	
+	for array_elem in arraystrings:
+		elem = re.sub("[\n\t\xa0]", "", array_elem).strip()
+		temparraystring.append(elem)
+
+	return temparraystring
 
 
 ####################################################################################################

@@ -1,3 +1,5 @@
+[B]Version 1.1.7[/B]
+- Fixed the Directors, Actors and Genres bad characters that caused the previous fix error.  Also, added new host and fixed another one
 [B]Version 1.1.6[/B]
 - Fixed long time error of Summary Page on Plex Web and Roku Expermental Transcoder not working
 [B]Version 1.1.5[/B]

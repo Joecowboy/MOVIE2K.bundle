@@ -49,12 +49,12 @@ def GetItemInfo(url, itemInfo):
 	index = int(url.split("index=")[1].split("&")[0])
 	type = String.Unquote(url.split("type=")[1].split("&")[0], usePlus=True)
 	genres = []
-	genres = String.Unquote(url.split("genres=")[1].split("&")[0], usePlus=True).split(',')
+	genres = StripArray(arraystrings=String.Unquote(url.split("genres=")[1].split("&")[0], usePlus=True).split(','))
 	content_rating = url.split("content_rating=")[1].split("&")[0]
 	directors = []
-	directors.append(String.Unquote(url.split("director=")[1].split("&")[0], usePlus=True))
+	directors = StripArray(arraystrings=String.Unquote(url.split("director=")[1].split("&")[0], usePlus=True).split(','))
 	guest_stars = []
-	guest_stars = String.Unquote(url.split("actors=")[1].split("&")[0], usePlus=True).split(',')
+	guest_stars = StripArray(arraystrings=String.Unquote(url.split("actors=")[1].split("&")[0], usePlus=True).split(','))
 	rating = float(url.split("rating=")[1].split("&")[0])
 	duration = url.split("duration=")[1].split("&")[0]
 	if duration != "None":
@@ -62,16 +62,14 @@ def GetItemInfo(url, itemInfo):
 	else:
 		duration = None
 
-	
 	if itemInfo == "Metadata":
 		if type == "TV Shows":
 			obj = EpisodeObject(
 					url = url,
 					title = title,
 					summary = summary,
-					#directors = directors,
-					#guest_stars = guest_stars,
-					#genres=genres,
+					directors = directors,
+					guest_stars = guest_stars,
 					duration = duration,
 					rating = rating,
 					show = show,
@@ -86,8 +84,8 @@ def GetItemInfo(url, itemInfo):
 					url = url,
 					title = title,
 					summary = summary,
-					#directors = directors,
-					#genres = genres,
+					directors = directors,
+					genres = genres,
 					duration = duration,
 					rating = rating,
 					content_rating = content_rating,
@@ -442,8 +440,10 @@ def GetMovie(Host, HostPage, url, LinkType):
 			VideoStream = ErrorMessage(Host=Host, LogError=1)
 	elif Host == "Daclips":
 		try:
-			VideoPage = HTML.ElementFromURL(HostPage).xpath('//div[@id="player_code"]/script')[2].text
-			VideoStream = VideoPage.split('file: "')[1].split('"')[0]
+			cookies = {'ad_referer': url+str(time.time()), 'path': '/', 'domain': '.movpod.in'}
+			VideoPage = SecondButtonPress(url=url, HostPage=HostPage, cookies=cookies, wform=1, wait=5, addkey={'referer': url})
+			VideoInfo = HTML.ElementFromString(VideoPage.content).xpath('//div[@id="player_code"]/script')[2].text
+			VideoStream = VideoInfo.split('file: "')[1].split('"')[0]
 		except:
 			VideoStream = ErrorMessage(Host=Host, LogError=1)
 	elif Host == "Datacloud":
@@ -537,7 +537,7 @@ def GetMovie(Host, HostPage, url, LinkType):
 			VideoStream = VideoURL + "?cookies="+String.Quote(str(cookies), usePlus=True)+"&headers="+String.Quote(str(headers), usePlus=True)
 		except:
 			VideoStream = ErrorMessage(Host=Host, LogError=1)
-	elif Host == "Faststream" or Host == "Fastsream.in":
+	elif Host == "Faststream" or Host == "Fastsream":
 		try:
 			VideoPage = SecondButtonPress(url=url, HostPage=HostPage, wform=1, wait=5, addkey={'referer': url})
 			VideoStream = VideoPage.content.split('<div id="player_code">')[1].split("<script type='text/javascript'>")[1].split('file: "')[1].split('"')[0]
@@ -770,6 +770,14 @@ def GetMovie(Host, HostPage, url, LinkType):
 			VideoStream = ScriptConvert(script=VideoInfo)
 		except:
 			VideoStream = ErrorMessage(Host=Host, LogError=1)
+	elif Host == "Movpod":
+		try:
+			cookies = {'ad_referer': url+str(time.time()), 'path': '/', 'domain': '.movpod.in'}
+			VideoPage = SecondButtonPress(url=url, HostPage=HostPage, cookies=cookies, wform=1, wait=5, addkey={'referer': url})
+			VideoInfo = HTML.ElementFromString(VideoPage.content).xpath('//div[@id="player_code"]/script')[2].text
+			VideoStream = VideoInfo.split('file: "')[1].split('"')[0]
+		except:
+			VideoStream = ErrorMessage(Host=Host, LogError=2)
 	elif Host == "Movreel":
 		try:
 			VideoPage = SecondButtonPress(url=url, HostPage=HostPage, addkey={'method_free': 'Free Download'})
@@ -852,7 +860,7 @@ def GetMovie(Host, HostPage, url, LinkType):
 			VideoStream = ScriptConvert(script=VideoInfo)
 		except:
 			VideoStream = ErrorMessage(Host=Host, LogError=1)
-	elif Host == "Primeshare" or Host == "Primeshare.tv":
+	elif Host == "Primeshare":
 		try:
 			VideoPage = SecondButtonPress(url=url, HostPage=HostPage, wait=8)
 			VideoStream = VideoPage.content.split('<div id="player"')[1].split("url: '")[3].split("'")[0]
@@ -1303,6 +1311,18 @@ def ErrorMessage(Host, LogError):
 		Log(Host+" -- Not in list!!!")
 
 	return ErrorVideo()
+
+
+####################################################################################################
+def StripArray(arraystrings):
+
+	temparraystring = []
+	
+	for array_elem in arraystrings:
+		elem = re.sub("[\n\t\xa0]", "", array_elem).strip()
+		temparraystring.append(elem)
+
+	return temparraystring
 
 
 ####################################################################################################
@@ -1775,8 +1795,10 @@ def GetMovieDebugger(Host, HostPage, url, LinkType):
 			VideoInfo = VideoPage.content.split('<div id="player_code">')[1].split("<script type='text/javascript'>")[1].split("</script>")[0]
 		VideoStream = ScriptConvert(script=VideoInfo)
 	elif Host == "Daclips":
-		VideoPage = HTML.ElementFromURL(HostPage).xpath('//div[@id="player_code"]/script')[2].text
-		VideoStream = VideoPage.split('file: "')[1].split('"')[0]
+		cookies = {'ad_referer': url+str(time.time()), 'path': '/', 'domain': '.movpod.in'}
+		VideoPage = SecondButtonPress(url=url, HostPage=HostPage, cookies=cookies, wform=1, wait=5, addkey={'referer': url})
+		VideoInfo = HTML.ElementFromString(VideoPage.content).xpath('//div[@id="player_code"]/script')[2].text
+		VideoStream = VideoInfo.split('file: "')[1].split('"')[0]
 	elif Host == "Datacloud":
 		session = requests.session()
 		url = HostPage+"/r"
@@ -1853,7 +1875,7 @@ def GetMovieDebugger(Host, HostPage, url, LinkType):
 		VideoURL = ScriptConvert(script=VideoID)
 		headers = {'User-Agent': UserAgent[UserAgentNum], 'Host': VideoURL.split('/')[2], 'Referer': HostPage}
 		VideoStream = VideoURL + "?cookies="+String.Quote(str(cookies), usePlus=True)+"&headers="+String.Quote(str(headers), usePlus=True)
-	elif Host == "Faststream" or Host == "Fastsream.in":
+	elif Host == "Faststream" or Host == "Fastsream":
 		#Example - http://faststream.in/ec8x24kybu6c
 		VideoPage = SecondButtonPress(url=url, HostPage=HostPage, wform=1, wait=5, addkey={'referer': url})
 		VideoURL = VideoPage.content.split('<div id="player_code">')[1].split("<script type='text/javascript'>")[1].split('file: "')[1].split('"')[0]
@@ -2022,6 +2044,11 @@ def GetMovieDebugger(Host, HostPage, url, LinkType):
 		VideoPage = SecondButtonPress(url=url, HostPage=HostPage)
 		VideoInfo = VideoPage.content.split("<script type='text/javascript'>")[2].split('</script>')[0]
 		VideoStream = ScriptConvert(script=VideoInfo)
+	elif Host == "Movpod":
+		cookies = {'ad_referer': url+str(time.time()), 'path': '/', 'domain': '.movpod.in'}
+		VideoPage = SecondButtonPress(url=url, HostPage=HostPage, cookies=cookies, wform=1, wait=5, addkey={'referer': url})
+		VideoInfo = HTML.ElementFromString(VideoPage.content).xpath('//div[@id="player_code"]/script')[2].text
+		VideoStream = VideoInfo.split('file: "')[1].split('"')[0]
 	elif Host == "Movreel":
 		VideoPage = SecondButtonPress(url=url, HostPage=HostPage, addkey={'method_free': 'Free Download'})
 		VideoPage = SecondButtonPress(url=HostPage, HostPage=HostPage, page=VideoPage.content, addkey={'referer': HostPage})
@@ -2078,7 +2105,7 @@ def GetMovieDebugger(Host, HostPage, url, LinkType):
 		VideoScr = HTML.ElementFromURL(HostPage).xpath('//div[@id="Playerholder"]/iframe')[0].get('src')
 		VideoInfo = HTML.ElementFromURL(VideoScr).xpath('//div[@id="player_code"]/script')[1].text
 		VideoStream = ScriptConvert(script=VideoInfo)
-	elif Host == "Primeshare" or Host == "Primeshare.tv":
+	elif Host == "Primeshare":
 		VideoPage = SecondButtonPress(url=url, HostPage=HostPage, wait=8)
 		VideoStream = VideoPage.content.split("url: '")[3].split("'")[0]
 	elif Host == "Project-free-upload":
