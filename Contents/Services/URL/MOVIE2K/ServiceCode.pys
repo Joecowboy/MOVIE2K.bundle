@@ -682,7 +682,6 @@ def GetMovie(Host, HostPage, url, LinkType):
 			VideoStream = VideoURL + "?cookies="+String.Quote(str(cookies), usePlus=True)+"&headers="+String.Quote(str(headers), usePlus=True)
 		except:
 			VideoStream = ErrorMessage(Host=Host, LogError=1)
-
 	elif Host == "Ishared":
 		try:
 			VideoPage = HTML.ElementFromURL(HostPage)
@@ -691,7 +690,6 @@ def GetMovie(Host, HostPage, url, LinkType):
 			elif LinkType == 1:
 				VideoInfo = VideoPage.xpath('//body/script')[0].text
 			VideoStream = VideoInfo.split('file:"')[1].split('"')[0]
-			
 		except:
 			VideoStream = ErrorMessage(Host=Host, LogError=1)
 	elif Host == "Limevideo":
@@ -1257,7 +1255,7 @@ def GetMovie(Host, HostPage, url, LinkType):
 		try:
 			VideoPage = SecondButtonPress(url=url, HostPage=HostPage, addkey={"method_free": "Slow access", "referer": url})
 			VideoInfo = HTML.ElementFromString(VideoPage.content).xpath('//div[@id="player_code"]/script')[0].text
-			VideoStream = VideoInfo.split("'file','")[1].split("'")[0]
+			VideoStream = ScriptConvert(script=VideoInfo)
 		except:
 			VideoStream = ErrorMessage(Host=Host, LogError=1)
 	elif Host == "Zinwa":
@@ -2367,10 +2365,9 @@ def GetMovieDebugger(Host, HostPage, url, LinkType):
 			HostPage = "http://youwatch.org/embed-"+HostPage.split('/')[3]+"-720x480.html"
 		VideoStream = HTML.ElementFromURL(HostPage).xpath('//div[@id="player_code"]/script[@type=\'text/javascript\']')[1].text.split('file: "')[1].split('"')[0]
 	elif Host == "Zalaa":
-		#HostPage = "http://www.zalaa.com/23wzaux8zoqc/013.CAM.XViD.READNFO-FANTAEnter_your_zip_code_here.avi.htm"
 		VideoPage = SecondButtonPress(url=url, HostPage=HostPage, addkey={"method_free": "Slow access", "referer": url})
 		VideoInfo = HTML.ElementFromString(VideoPage.content).xpath('//div[@id="player_code"]/script')[0].text
-		VideoStream = VideoInfo.split("'file','")[1].split("'")[0]
+		VideoStream = ScriptConvert(script=VideoInfo)
 	elif Host == "Zinwa":
 		VideoInfo = HTML.ElementFromURL(HostPage).xpath('//div[@id="player_code"]/script')[1].text
 		VideoStream = VideoInfo.split("jwplayer().load('")[1].split("'")[0]
