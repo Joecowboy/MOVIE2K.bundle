@@ -1,3 +1,5 @@
+[B]Version 1.1.8[/B]
+- Fixed one of the Host Sites
 [B]Version 1.1.7[/B]
 - Fixed the Directors, Actors and Genres bad characters that caused the previous fix error.  Also, added new host and fixed another one
 [B]Version 1.1.6[/B]

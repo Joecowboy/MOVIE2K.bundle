@@ -1048,13 +1048,25 @@ def GetMovie(Host, HostPage, url, LinkType):
 		try:
 			if LinkType == 4:
 				VideoID = HostPage.split('=')[1]
-			else:
+			elif LinkType == 2:
 				VideoID = HostPage.split('/')[4]
+
 			url = "http://www.userporn.com/player_control/settings.php?v="+VideoID+"&em=TRUE&fv=v1.1.55"
-			headers = {'User-Agent': UserAgent[UserAgentNum]}
-			OpenUrl = requests.get(url, headers=headers)
+			url2 = "http://www.userporn.com/player/player.swf?v="+VideoID+"&em=TRUE&sd=www.userporn.com"
+			HOSTER_KEY1 = "NTI2NzI5Cgo="
+			headers = {'User-Agent': UserAgent[UserAgentNum], 'Host': 'www.userporn.com', 'Referer': url2}
+			cookies = {'UP_disclaim': '1'}
+			session = requests.session()
+			OpenUrl = session.get(url, headers=headers, cookies=cookies)
 			VideoPage = OpenUrl.content.split('"token1":"')[1].split('"')[0].decode('base64', 'strict')
-			VideoStream = VideoPage+"&c="+"what_token_goes_here"+"&start=1"
+			KeyString = OpenUrl.content.split('"time":"')[1].split('"')[0]
+			KeyOne = int(OpenUrl.content.split('"rkts":')[1].split(',')[0])
+			KeyTwo = int(HOSTER_KEY1.decode('base64', 'strict'))
+			VideoKey = zDecrypt(KeyString, KeyOne, KeyTwo, 82, 84669, 48779, 32, 65598, 115498)
+			VideoURL = VideoPage+"&c="+VideoKey+"&start=0"
+			for key, value in session.cookies.items():
+				cookies[key] = value
+			VideoStream = VideoURL + "?cookies="+String.Quote(str(cookies), usePlus=True)+"&headers="+String.Quote(str(headers), usePlus=True)
 		except:
 			VideoStream = ErrorMessage(Host=Host, LogError=1)
 	elif Host == "Veevr":
@@ -1547,6 +1559,129 @@ def GoogleCaptcha(url, HostPage, VideoInfo):
 	VideoPage = SecondButtonPress(url=url, HostPage=HostPage, page=VideoInfo, addkey={"recaptcha_challenge_field": GoogleKey, "referer": url, "down_direct": 1, "method_premium": ""}, captchakey="recaptcha_response_field", captchaimg=captchaimg, split='LR')
 
 	return VideoPage
+
+
+####################################################################################################
+def zDecrypt(cipher, keyOne, keyTwo, arg0, arg1, arg2, arg3, arg4, arg5):	
+	x = 0
+	y = 0
+	B = []
+
+	result = ""
+	i = 0
+	while i < len(cipher):
+		result = result + convertStr2Bin(cipher[i])
+		i += 1
+	
+	C = list(result)
+	longitud = len(C) * 2
+
+	i = 0
+	while i < longitud * 1.5:
+		keyOne = ((keyOne * arg0) + arg1) % arg2
+		keyTwo = ((keyTwo * arg3) + arg4) % arg5
+		B.append((keyOne + keyTwo) % (longitud / 2))
+		i += 1
+  
+	i = longitud
+	while i >= 0:
+		x = B[i]
+		y = i % (longitud / 2)
+		z = C[x]
+		C[x] = C[y]
+		C[y] = z
+		i = i - 1
+
+	i = 0
+	while i < longitud/2:
+		C[i] = str(int(C[i]) ^ (B[i + longitud] & 1))
+		i += 1
+
+	result = ""
+	CC = ""
+	CC = CC.join(C)
+	i = 0
+	while i < len(CC):
+		result = result + convertBin2Str(CC[i:i+4])
+		i = i + 4
+
+	return result
+
+
+####################################################################################################
+def convertBin2Str(s):
+	if s == "0000":
+		dev = "0"
+	elif s == "0001":
+		dev = "1"
+	elif s == "0010":
+		dev = "2"
+	elif s == "0011":
+		dev = "3"
+	elif s == "0100":
+		dev = "4"
+	elif s == "0101":
+		dev = "5"
+	elif s == "0110":
+		dev = "6"
+	elif s == "0111":
+		dev = "7"
+	elif s == "1000":
+		dev = "8"
+	elif s == "1001":
+		dev = "9"
+	elif s == "1010":
+		dev = "a"
+	elif s == "1011":
+		dev = "b"
+	elif s == "1100":
+		dev = "c"
+	elif s == "1101":
+		dev = "d"
+	elif s == "1110":
+		dev = "e"
+	elif s == "1111":
+		dev = "f"
+
+	return dev
+
+
+####################################################################################################
+def convertStr2Bin(s):
+	if s == "0":
+		result = "0000"
+	elif s == "1":
+		result = "0001"
+	elif s == "2":
+		result = "0010"
+	elif s == "3":
+		result = "0011"
+	elif s == "4":
+		result = "0100"
+	elif s == "5":
+		result = "0101"
+	elif s == "6":
+		result = "0110"
+	elif s == "7":
+		result = "0111"
+	elif s == "8":
+		result = "1000"
+	elif s == "9":
+		result = "1001"
+	elif s == "a":
+		result = "1010"
+	elif s == "b":
+		result = "1011"
+	elif s == "c":
+		result = "1100"
+	elif s == "d":
+		result = "1101"
+	elif s == "e":
+		result = "1110"
+	elif s == "f":
+		result = "1111"
+
+	return result
 
 
 ####################################################################################################
@@ -2245,20 +2380,33 @@ def GetMovieDebugger(Host, HostPage, url, LinkType):
 		#http://www.userporn.com/player_control/settings.php?v=W8NpBX9zyNlR&em=TRUE&fv=v1.1.55
 		#HostPage = "http://www.userporn.com/e/1pk9A3hcrLaJ"
 		
-		#if LinkType == 4:
-		#	url = "http://www.userporn.com/player_control/settings.php?v="+HostPage.split('=')[1]+"&em=TRUE&fv=v1.1.55"
-		#else:
+		if LinkType == 4:
+			VideoID = HostPage.split('=')[1]
+		elif LinkType == 2:
+			VideoID = HostPage.split('/')[4]
 
-		url = "http://www.userporn.com/player_control/settings.php?v="+HostPage.split('/')[4]+"&em=TRUE&fv=v1.1.55"
-		url2 = "http://sc.userporn.com/bwc"
-		headers = {'User-Agent': UserAgent[UserAgentNum], 'Host': 'www.userporn.com', 'Referer': HostPage}
-		cookies = {'UP_disclaim': '1', 'UP_dc':'h516tjq3ivsl'}
+		url = "http://www.userporn.com/player_control/settings.php?v="+VideoID+"&em=TRUE&fv=v1.1.55"
+		url2 = "http://www.userporn.com/player/player.swf?v="+VideoID+"&em=TRUE&sd=www.userporn.com"
+		HOSTER_KEY1 = "NTI2NzI5Cgo="
+		HOSTER_KEY2 = "MjY5NTAyCgo="
+		HOSTER_KEY3 = "MjY0NTIzCgo="
+		HOSTER_KEY4 = "MTMwNjIyCgo="
+		HOSTER_KEY5 = "NTc1ODY5Cgo="
+		headers = {'User-Agent': UserAgent[UserAgentNum], 'Host': 'www.userporn.com', 'Referer': url2}
+		cookies = {'UP_disclaim': '1'}
 		session = requests.session()
 		OpenUrl = session.get(url, headers=headers, cookies=cookies)
-		Log(OpenUrl.content)
 		VideoPage = OpenUrl.content.split('"token1":"')[1].split('"')[0].decode('base64', 'strict')
-		VideoKey = "TRY+TO+FIND" #VideoInfo.split('"euno":"')[1].split('"')[0]
-		VideoStream = VideoPage+"&c="+VideoKey+"&start=0"
+		KeyString = OpenUrl.content.split('"time":"')[1].split('"')[0]
+		KeyOne = int(OpenUrl.content.split('"rkts":')[1].split(',')[0])
+		KeyTwo = int(HOSTER_KEY1.decode('base64', 'strict'))
+		VideoKey = zDecrypt(KeyString, KeyOne, KeyTwo, 82, 84669, 48779, 32, 65598, 115498)
+		VideoURL = VideoPage+"&c="+VideoKey+"&start=0"
+		VideoID = session.head(VideoURL, headers=headers)
+		Log(VideoID.headers)
+		for key, value in session.cookies.items():
+			cookies[key] = value
+		VideoStream = VideoURL + "?cookies="+String.Quote(str(cookies), usePlus=True)+"&headers="+String.Quote(str(headers), usePlus=True)
 	elif Host == "Veevr":
 		#Example: http://veevr.com/videos/RwsL0GfL
 		headers = {'User-Agent': UserAgent[UserAgentNum], 'Host': 'veevr.com'}
