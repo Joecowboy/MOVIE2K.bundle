@@ -1,3 +1,5 @@
+[B]Version 1.1.9[/B]
+- Fixed a date issue, updated Nowvideo and added Gigabyteupload and Uncapped-downloads
 [B]Version 1.1.8[/B]
 - Fixed one of the Host Sites
 [B]Version 1.1.7[/B]

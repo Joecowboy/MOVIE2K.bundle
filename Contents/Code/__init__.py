@@ -642,7 +642,6 @@ def CinemaMoviePageAdd(title, page, type):
 			MOVIES_TITLE = MOVIES_TD.xpath("./a/img")[0].get('title').replace(' kostenlos','')
 			MOVIES_PAGE = MOVIES_TD.xpath("./a")[0].get('href')
 			MOVIES_THUMB = MOVIES_TD.xpath("./a/img")[0].get('src')
-			Log(MOVIES_THUMB)
 			MOVIES_YEAR = time.strftime("%Y", time.localtime(time.time()))
 			MOVIES_LANG = "English"
 			MOVIES_SUMMARY = "Year: "+MOVIES_YEAR+" | Lang: "+MOVIES_LANG+" | Part of the Cinema Movies line up on Movie2k."
@@ -658,7 +657,7 @@ def CinemaMoviePageAdd(title, page, type):
 @route(PREFIX + '/MovieGenrePage')
 def MoviePageAdd(title, page, genre, type):
 	
-	oc = ObjectContainer(title2=title)
+	oc = ObjectContainer(title2=title, view_group='InfoList')
 
 	cookies = Dict['_movie2k_uid']
 	headers = {"Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8", "Accept-Charset": "ISO-8859-1,utf-8;q=0.7,*;q=0.3", "Accept-Encoding": "gzip,deflate,sdch", "Accept-Language": "en-US,en;q=0.8", "Connection": "keep-alive", "Host": MOVIE2K_URL, "Referer": "http://"+MOVIE2K_URL, "User-Agent": UserAgent[UserAgentNum]}
@@ -726,7 +725,7 @@ def MoviePageAdd(title, page, genre, type):
 @route(PREFIX + '/TVandMovieHostPage')
 def SubMoviePageAdd(title, page, date, dateadd, thumbck, type):
 
-	oc = ObjectContainer(title2=title)
+	oc = ObjectContainer(title2=title, view_group="InfoList")
 
 	MOVIE_PAGE_HTML = HTML.ElementFromURL("http://"+MOVIE2K_URL+"/"+page)
 
@@ -767,7 +766,7 @@ def SubMoviePageAdd(title, page, date, dateadd, thumbck, type):
 @route(PREFIX + '/TVandTheMovieListings')
 def TheMovieListings(title, page, date, dateadd, thumb, type, PageOfHosts, Host=None):
 
-	oc = ObjectContainer(title2=title)
+	oc = ObjectContainer(title2=title, view_group="InfoList")
 
 	MOVIE_PAGE_HTML = HTML.ElementFromURL("http://"+MOVIE2K_URL+"/"+page)
 	MOVIE_INFO = MOVIE_PAGE_HTML.xpath('//div[@id="details"]')[0].text_content()
@@ -788,6 +787,11 @@ def TheMovieListings(title, page, date, dateadd, thumb, type, PageOfHosts, Host=
 				date = re.sub("\s", "", MOVIE_INFO.split('Land/Year: ')[1].split('/')[1].split(' ')[0])
 				if date == "N/A":
 					date =  "0001"
+				else:
+					try:
+						tempdate = int(date)
+					except:
+						date = re.sub("\s", "", MOVIE_INFO.split('Land/Year: ')[1].split(' ')[1])
 			except:
 				date = re.sub("\s", "", MOVIE_INFO.split('Land/Jahr: ')[1].split(' ')[0])
 				if date == "N/A":

@@ -629,6 +629,14 @@ def GetMovie(Host, HostPage, url, LinkType):
 			VideoStream = [vidstr, swfurl, rtmpurl, 'rtmp', VideoPage, 'vod']
 		except:
 			VideoStream = ErrorMessage(Host=Host, LogError=1)
+	elif Host == "Gigabyteupload":
+		try:
+			HostPage = "http://www.gigabytevideo.com/"+ HostPage.split('/')[3]
+			VideoPage = SecondButtonPress(url=url, HostPage=HostPage)
+			VideoInfo = HTML.ElementFromString(VideoPage.content).xpath('//div[@id="player"]/script')[1].text
+			VideoStream = ScriptConvert(script=VideoInfo)
+		except:
+			VideoStream = ErrorMessage(Host=Host, LogError=1)
 	elif Host == "Ginbig":
 		try:
 			VideoPage = SecondButtonPress(url=url, HostPage=HostPage)
@@ -812,7 +820,10 @@ def GetMovie(Host, HostPage, url, LinkType):
 			VideoStream = ErrorMessage(Host=Host, LogError=1)
 	elif Host == "Nowvideo":
 		try:
-			VideoInfo = HTML.ElementFromURL(HostPage).xpath('//script')[6].text
+			if LinkType == 4:
+				VideoInfo = HTML.ElementFromURL(HostPage).xpath('//script')[4].text
+			elif LinkType == 1:
+				VideoInfo = HTML.ElementFromURL(HostPage).xpath('//script')[6].text
 			VideoID = VideoInfo.split('flashvars.file=')[1].split('"')[1]
 			VideoKey = VideoInfo.split('flashvars.filekey=')[1].split('"')[1]
 			url = "http://www.nowvideo.eu/api/player.api.php?key="+VideoKey+"&pass=undefined&cid2=undefined&cid3=undefined&user=undefined&cid=undefined&file="+VideoID
@@ -1028,6 +1039,13 @@ def GetMovie(Host, HostPage, url, LinkType):
 			VideoStream = VideoPage.content.split('file: "')[1].split('"')[0]
 		except:
 			VideoStream = ErrorMessage(Host=Host, LogError=3)
+	elif Host == "Uncapped-downloads":
+		try:
+			VideoPage = SecondButtonPress(url=url, HostPage=HostPage, addkey={'referer': url})
+			VideoInfo = HTML.ElementFromString(VideoPage.content).xpath('//div[@id="player_code"]/script')[0].text
+			VideoStream = ScriptConvert(script=VideoInfo)
+		except:
+			VideoStream = ErrorMessage(Host=Host, LogError=1)
 	elif Host == "Undergroundflix":
 		try:
 			VideoPage = HTML.ElementFromURL(HostPage).xpath("//div[@class='postTabs_divs postTabs_curr_div']/center/iframe")[0].get('src')
@@ -1685,6 +1703,32 @@ def convertStr2Bin(s):
 
 
 ####################################################################################################
+def decodeurl(encodedurl):
+    #encodedurl = "174917781793179d171e172d1762185c189418cd191b19a619d41a821ac11b331b1a1c551cfe1d991e2a1ee11f7f1f9f20fe21eb22bc22de24752554259f275d2848296c2a8d2b9a2c062df02e63301831a13238345335533643380339943ab33cbd3e163f9240f042ba44c2465047ee49574b494da04eee512352fc5547572e594d5b2b5d985f4161af63f565f968576a9b6c896f56714b73da75f278267b0f5628"
+    tempp9 =""
+    tempp4="1071045098811121041051095255102103119"
+    strlen = len(encodedurl)
+    temp5=int(encodedurl[strlen-4:strlen],10)
+    Log(temp5)
+    encodedurl=encodedurl[0:strlen-4]
+    strlen = len(encodedurl)
+    temp6=""
+    temp7=0
+    temp8=0
+    while temp8 < strlen:
+        temp7=temp7+2
+        temp9=encodedurl[temp8:temp8+4]
+        temp9i=int(temp9,16)
+        partlen = ((temp8 / 4) % len(tempp4))
+        partint=int(tempp4[partlen:partlen+1])
+        temp9i=((((temp9i - temp5) - partint) - (temp7 * temp7)) -16)/3
+        temp9=chr(temp9i)
+        temp6=temp6+temp9
+        temp8=temp8+4
+    return temp6
+
+
+####################################################################################################
 # Below Functions are Used for Host Testing and Debugging.....
 # Enable Debug Options in Preferrances Menu
 
@@ -1815,8 +1859,9 @@ def GetMovieDebugger(Host, HostPage, url, LinkType):
 
 	elif Host == "Powvid":
 		#HostPage = "http://powvid.com/watch/video/star-trek-into-darkness-official-teaser-hd/"
-		VideoID = HTML.ElementFromURL(HostPage).xpath('//div[@id="screen"]/object/param')[4].get('value').split('proxy.link=')[1].split('&')[0]
-		VideoPage = VideoID.decode('base64', 'strict')
+		VideoID = HTML.ElementFromURL(HostPage).xpath('//div[@id="screen"]/p/object/param')[4].get('value').split('proxy.link=pow*')[1].split('&')[0]
+		VideoPage = decodeurl(VideoID)
+		Log(VideoPage)
 		Host = VideoPage.split('/')[2].split('.')[1].capitalize()
 		VideoStream = GetMovieDebugger(Host=Host, HostPage=VideoPage, url=url, LinkType=1)
 
@@ -1827,8 +1872,8 @@ def GetMovieDebugger(Host, HostPage, url, LinkType):
 
 	elif Host == "Vuvido":
 		#HostPage = "http://vuvido.com/play/Charlie-and-the-Chocolate-Factory-2005-BRrip-ghrs"
-		VideoID = HTML.ElementFromURL(HostPage).xpath('//div[@class="containerDiv"]/script')[0].text.split('proxy.link=')[1].split('&')[0]
-		VideoPage = VideoID.decode('base64', 'strict')
+		VideoID = HTML.ElementFromURL(HostPage).xpath('//div[@class="containerDiv"]/script')[0].text.split('proxy.link=vuvido*')[1].split('&')[0]
+		VideoPage = decodeurl(VideoID)
 		Host = VideoPage.split('/')[2].split('.')[1].capitalize()
 		VideoStream = GetMovieDebugger(Host=Host, HostPage=VideoPage, url=url, LinkType=1)
 
@@ -1839,8 +1884,8 @@ def GetMovieDebugger(Host, HostPage, url, LinkType):
 
 	elif Host == "Cinestar":
 		#HostPage = "http://www.cinestar.to/video/37071300699"
-		VideoID = HTML.ElementFromURL(HostPage).xpath('//object[@id="flashplayer"]/param')[3].get('value').split('proxy.link=')[1].split('&')[0]
-		VideoPage = VideoID.decode('base64', 'strict')
+		VideoID = HTML.ElementFromURL(HostPage).xpath('//object[@id="flashplayer"]/param')[3].get('value').split('proxy.link=file*')[1].split('&')[0]
+		VideoPage = decodeurl(VideoID)
 		Host = VideoPage.split('/')[2].split('.')[1].capitalize()
 		VideoStream = GetMovieDebugger(Host=Host, HostPage=VideoPage, url=url, LinkType=1)
 
@@ -2089,6 +2134,12 @@ def GetMovieDebugger(Host, HostPage, url, LinkType):
 		swfurl = VideoInfo.split("SWFObject('")[1].split("'")[0]
 		rtmpurl = int(swfurl.split('/')[3].split('.')[0])
 		VideoStream = [vidstr, swfurl, rtmpurl, 'rtmp', VideoPage, 'vod']
+	elif Host == "Gigabyteupload":
+		#http://www.gigabyteupload.com/download-aa79ba4450d40cb32f81dcadc0bb490b
+		HostPage = "http://www.gigabytevideo.com/"+ HostPage.split('/')[3]
+		VideoPage = SecondButtonPress(url=url, HostPage=HostPage)
+		VideoInfo = HTML.ElementFromString(VideoPage.content).xpath('//div[@id="player"]/script')[1].text
+		VideoStream = ScriptConvert(script=VideoInfo)
 	elif Host == "Ginbig":
 		VideoPage = SecondButtonPress(url=url, HostPage=HostPage)
 		VideoInfo = VideoPage.content.split('<div id="player_code">')[1].split("<script type='text/javascript'>")[1].split('</script>')[0]
@@ -2210,7 +2261,11 @@ def GetMovieDebugger(Host, HostPage, url, LinkType):
 		VideoInfo = HTML.ElementFromURL(VideoPage).xpath('//div[@id="main"]/div') 
 		VideoStream = VideoInfo[3].xpath('./script[@type="text/javascript"]')[1].text.split('src: "')[1].split('"')[0]
 	elif Host == "Nowvideo":
-		VideoInfo = HTML.ElementFromURL(HostPage).xpath('//script')[6].text
+		if LinkType == 4:
+			VideoInfo = HTML.ElementFromURL(HostPage).xpath('//script')[4].text
+		elif LinkType == 1:
+			VideoInfo = HTML.ElementFromURL(HostPage).xpath('//script')[6].text
+
 		VideoID = VideoInfo.split('flashvars.file=')[1].split('"')[1]
 		VideoKey = VideoInfo.split('flashvars.filekey=')[1].split('"')[1]
 		url = "http://www.nowvideo.eu/api/player.api.php?key="+VideoKey+"&pass=undefined&cid2=undefined&cid3=undefined&user=undefined&cid=undefined&file="+VideoID
@@ -2360,6 +2415,11 @@ def GetMovieDebugger(Host, HostPage, url, LinkType):
 		VideoPage = SecondButtonPress(url=url, HostPage=HostPage, cookies=cookies, addkey={'referer': url})
 		Log(VideoPage.content)
 		VideoStream = VideoPage.content.split('file: "')[1].split('"')[0]
+	elif Host == "Uncapped-downloads":
+		#http://uncapped-downloads.com/wsfhj2aqbb8o/The.Purge.2013.WEBRip.R6.XViD.AC3_-_W00D.avi.html
+		VideoPage = SecondButtonPress(url=url, HostPage=HostPage, addkey={'referer': url})
+		VideoInfo = HTML.ElementFromString(VideoPage.content).xpath('//div[@id="player_code"]/script')[0].text
+		VideoStream = ScriptConvert(script=VideoInfo)
 	elif Host == "Undergroundflix":
 		#Iframe Links to other sites....
 		#http://undergroundflix.com/person-of-interest-s02e20/
@@ -2375,7 +2435,6 @@ def GetMovieDebugger(Host, HostPage, url, LinkType):
 		VideoInfo = HTML.ElementFromString(VideoPage.content).xpath('//div[@id="player_code"]/script')[0].text
 		VideoStream = VideoInfo.split("'file','")[1].split("'")[0]
 	elif Host == "Userporn":
-		#Testing info -- Need to find missing token for &c=
 		#http://s.userporn.com/s?v=W8NpBX9zyNlR&r=2&t=1369767803&u=&c=23807ccfcdcd823778492fc5ae25b2b1163855e2f570268f7cc7278b3c00897e74882878500d5bc7b8c3bb6ecddbe7cd&start=0
 		#http://www.userporn.com/player_control/settings.php?v=W8NpBX9zyNlR&em=TRUE&fv=v1.1.55
 		#HostPage = "http://www.userporn.com/e/1pk9A3hcrLaJ"
