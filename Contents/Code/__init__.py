@@ -226,7 +226,7 @@ def Search(query):
 		MOVIES_SUMMARY = "Year: "+MOVIES_YEAR+" | Lang: "+MOVIES_LANG+" | Part of the search line up on Movie2k."
 		MOVIES_PAGE = MOVIES_TD[1].split('<a href="')[1].split('"')[0]
 		try:
-			MOVIES_THUMB = GET_THUMB.split(Movie[i].split('id="cover')[1].split('"')[0])[1].split("img src='")[1].split("'")[0]
+			MOVIES_THUMB = GET_THUMB.split(Movie[i].split('id="coverPreview')[1].split('"')[0])[1].split("img src='")[1].split("'")[0]
 		except:
 			MOVIES_THUMB = None
 		try:

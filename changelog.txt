@@ -1,3 +1,5 @@
+[B]Version 1.1.10[/B]
+- Fixed thumb image issue with search function
 [B]Version 1.1.9[/B]
 - Fixed a date issue, updated Nowvideo and added Gigabyteupload and Uncapped-downloads
 [B]Version 1.1.8[/B]
