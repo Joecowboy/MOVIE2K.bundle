@@ -537,8 +537,11 @@ def GetMovie(Host, HostPage, url, LinkType):
 			VideoStream = ErrorMessage(Host=Host, LogError=1)
 	elif Host == "Faststream" or Host == "Fastsream":
 		try:
-			VideoPage = SecondButtonPress(url=url, HostPage=HostPage, wform=1, wait=5, addkey={'referer': url})
-			VideoStream = VideoPage.content.split('<div id="player_code">')[1].split("<script type='text/javascript'>")[1].split('file: "')[1].split('"')[0]
+			if LinkType == 4:
+				VideoPage = SecondButtonPress(url=url, HostPage=HostPage, wform=1, wait=5, addkey={'referer': url})
+				VideoStream = HTML.ElementFromString(VideoPage.content).xpath('//div[@id="player_code"]/script')[1].text.split('file: "')[1].split('"')[0]
+			if LinkType == 1:
+				VideoStream = HTML.ElementFromURL(HostPage).xpath('//div[@id="player_code"]/script')[1].text.split('file: "')[1].split('"')[0]
 		except:
 			VideoStream = ErrorMessage(Host=Host, LogError=1)
 	elif Host == "Filego":
@@ -2075,11 +2078,11 @@ def GetMovieDebugger(Host, HostPage, url, LinkType):
 		VideoStream = VideoURL + "?cookies="+String.Quote(str(cookies), usePlus=True)+"&headers="+String.Quote(str(headers), usePlus=True)
 	elif Host == "Faststream" or Host == "Fastsream":
 		#Example - http://faststream.in/ec8x24kybu6c
-		VideoPage = SecondButtonPress(url=url, HostPage=HostPage, wform=1, wait=5, addkey={'referer': url})
-		VideoURL = VideoPage.content.split('<div id="player_code">')[1].split("<script type='text/javascript'>")[1].split('file: "')[1].split('"')[0]
-		cookies = {'lang': 'english'}
-		headers = {'User-Agent': UserAgent[UserAgentNum], 'Host': VideoURL.split('/')[2], 'Referer': HostPage, 'Range': 'bytes=0-', 'Accept': '*/*', 'Accept-Encoding': 'identity;q=1, *;q=0', 'Connection': 'keep-alive'}
-		VideoStream = VideoURL + "?cookies="+String.Quote(str(cookies), usePlus=True)+"&headers="+String.Quote(str(headers), usePlus=True)
+		if LinkType == 4:
+			VideoPage = SecondButtonPress(url=url, HostPage=HostPage, wform=1, wait=5, addkey={'referer': url})
+			VideoStream = HTML.ElementFromString(VideoPage.content).xpath('//div[@id="player_code"]/script')[1].text.split('file: "')[1].split('"')[0]
+		if LinkType == 1:
+			VideoStream = HTML.ElementFromURL(HostPage).xpath('//div[@id="player_code"]/script')[1].text.split('file: "')[1].split('"')[0]
 	elif Host == "Filego":
 		#Example - http://filego.org/?d=5102D5E112
 		VideoPage = 'http://www.filego.org/fgflash.php?id=' + HostPage.split('=')[1]

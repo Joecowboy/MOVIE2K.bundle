@@ -791,7 +791,14 @@ def TheMovieListings(title, page, date, dateadd, thumb, type, PageOfHosts, Host=
 					try:
 						tempdate = int(date)
 					except:
-						date = re.sub("\s", "", MOVIE_INFO.split('Land/Year: ')[1].split(' ')[1])
+						date = re.sub("\s", "", MOVIE_INFO.split('Land/Year: ')[1].split(' ')[0])
+						if date == "N/A":
+							date =  "0001"
+						else:
+							try:
+								tempdate = int(date)
+							except:
+								date = re.sub("\s", "", MOVIE_INFO.split('Land/Year: ')[1].split(' ')[1])
 			except:
 				date = re.sub("\s", "", MOVIE_INFO.split('Land/Jahr: ')[1].split(' ')[0])
 				if date == "N/A":
