@@ -1,5 +1,5 @@
 [B]Version 1.1.11[/B]
-- Fixed Bestreams, Filego and Vidhog
+- Fixed Bestreams, Bitshare, Filego, Movdivx, Nosvideo and Vidhog. Added Safecloud
 [B]Version 1.1.10[/B]
 - Fixed thumb image issue with search function
 [B]Version 1.1.9[/B]
