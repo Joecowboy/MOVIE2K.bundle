@@ -175,7 +175,6 @@ def Search(query):
 		
 	type = 'N/A'
 	dateadd = 'N/A'
-	ads = 'ads.affbuzzads.com'
 	url = 'http://' + MOVIE2K_URL + '/movies.php?list=search'
 	payload = {'search': query}
 	files = {}
@@ -207,7 +206,6 @@ def Search(query):
 	while (i < len(Movie)):
 		MOVIES_TD = Movie[i].split('id="tdmovies"')
 		MOVIES_TITLE = re.sub('\t', '', MOVIES_TD[1].split('<a')[1].split('">')[1].split('</a>')[0]).replace('  ', '')
-
 		try:
 			MOVIES_YEAR = MOVIES_TD[2].split('<div')[8].split('>')[1].split('<')[0]
 			if MOVIES_YEAR == "":
@@ -229,13 +227,12 @@ def Search(query):
 			MOVIES_THUMB = GET_THUMB.split(Movie[i].split('id="coverPreview')[1].split('"')[0])[1].split("img src='")[1].split("'")[0]
 		except:
 			MOVIES_THUMB = None
-		try:
-			if ads == MOVIES_PAGE.split('/')[2]:
-				Log("Bad search results")
-				oc = MessageContainer("Search Error", "Search did not return any positive results.  Please try another key word search!")
-		except:
-			if MOVIES_LANG == GetLanguage() or MOVIES_LANG == 'N/A' or GetLanguage() == 'All':
-				oc.add(DirectoryObject(key=Callback(SubMoviePageAdd, title=MOVIES_TITLE, page=MOVIES_PAGE, date=MOVIES_YEAR, dateadd=dateadd, thumbck=MOVIES_THUMB, type=type), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=Callback(GetThumb, url=MOVIES_THUMB)))
+
+		MOVIES_HOST = MOVIES_TD[2].split('>')[3].split('</a')[0].replace(' ', '')
+		if MOVIES_HOST == "downloadnow!":
+			oc = MessageContainer("Search Error", "Search did not return any positive results.  Please try another key word search!")
+		elif MOVIES_LANG == GetLanguage() or MOVIES_LANG == 'N/A' or GetLanguage() == 'All':
+			oc.add(DirectoryObject(key=Callback(SubMoviePageAdd, title=MOVIES_TITLE, page=MOVIES_PAGE, date=MOVIES_YEAR, dateadd=dateadd, thumbck=MOVIES_THUMB, type=type), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=Callback(GetThumb, url=MOVIES_THUMB)))
 		i += 1
 
 	return oc

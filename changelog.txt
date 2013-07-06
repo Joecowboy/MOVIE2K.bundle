@@ -1,3 +1,5 @@
+[B]Version 1.1.12[/B]
+- Fixed Royalvids, 2gb-hosting, Flashx and search error result
 [B]Version 1.1.11[/B]
 - Fixed Date issue, Bestreams, Bitshare, Faststream, Filego, Movdivx, Nosvideo and Vidhog. Added Safecloud
 [B]Version 1.1.10[/B]

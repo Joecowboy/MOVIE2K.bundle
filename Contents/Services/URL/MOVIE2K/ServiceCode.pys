@@ -333,7 +333,7 @@ def GetMovie(Host, HostPage, url, LinkType):
 	elif Host == "2gb-hosting":
 		try:
 			VideoPage = SecondButtonPress(url=url, HostPage=HostPage, addkey={'submit': 'Continue'})
-			VideoInfo = VideoPage.content.split("<script type='text/javascript'>")[1].split("</script>")[0]
+			VideoInfo = HTML.ElementFromString(VideoPage.content).xpath('//div[@id="left"]/script')[2].text
 			VideoStream = ScriptConvert(script=VideoInfo)
 		except:
 			VideoStream = ErrorMessage(Host=Host, LogError=1)
@@ -591,33 +591,25 @@ def GetMovie(Host, HostPage, url, LinkType):
 			VideoStream = ErrorMessage(Host=Host, LogError=1)
 	elif Host == "Flashx":
 		session = requests.session()
-		cookies = {'vr_referrer': urllib.quote_plus(url), 'pageredir': urllib.quote_plus(HostPage), path: '/'}
 		headers = {'User-Agent': UserAgent[UserAgentNum], 'Host': 'flashx.tv', 'Referer': url}
 
 		if LinkType == 4:
-			s = session.get(HostPage, headers=headers, cookies=cookies)
-			cookies['refid'] = s.content.split("Set_Cookie( 'refid', '")[1].split("'")[0]
+			s = session.get(HostPage, headers=headers)
 			VideoInfo = HTML.ElementFromString(s.content).xpath('//div[@id="normal_player_cont"]/iframe')[0].get('src')
 		elif LinkType == 1:
 			VideoInfo = HostPage
 
 		try:
-			cookies['pageredir'] = urllib.quote_plus(VideoInfo)
 			headers['Host'] = 'play.flashx.tv'
 			headers['Referer'] = VideoInfo
-			s = session.get(VideoInfo, headers=headers, cookies=cookies)
-			for key, value in session.cookies.items():
-				cookies[key] = value
+			s = session.get(VideoInfo, headers=headers)
 
-			cookies['refid'] = s.content.split("Set_Cookie( 'refid', '")[1].split("'")[0]
 			VideoID = HTML.ElementFromString(s.content).xpath('//span[@class="auto-style6"]/a')[0].get('href')
-			headers['Referer'] = VideoID
 			v = session.get(VideoID, headers=headers)
 			VideoLink = HTML.ElementFromString(v.content).xpath('//head/script')[2].text.split('<object id="nuevoplayer"')[1].split('config=')[1].split('"')[0]
 
-			cookies['pageredir'] = urllib.quote_plus(VideoLink)
 			headers['Referer'] = VideoID
-			xmlreq = session.get(VideoLink, headers=headers, cookies=cookies)
+			xmlreq = session.get(VideoLink, headers=headers)
 			VideoStream = XML.ElementFromString(xmlreq.content).xpath('//file')[0].text
 		except:
 			VideoStream = ErrorMessage(Host=Host, LogError=1)
@@ -929,7 +921,7 @@ def GetMovie(Host, HostPage, url, LinkType):
 	elif Host == "Royalvids":
 		try:
 			HostPage = "http://royalvids.eu/embed-" + HostPage.split('/')[4] + ".html"
-			VideoPage = HTML.ElementFromURL(HostPage).xpath('//div[@id="player_code"]/script')[2].text
+			VideoPage = HTML.ElementFromURL(HostPage).xpath('//div[@id="player_code"]/script')[0].text
 			VideoStream = ScriptConvert(script=VideoPage)
 		except:
 			VideoStream = ErrorMessage(Host=Host, LogError=1)
@@ -1925,7 +1917,7 @@ def GetMovieDebugger(Host, HostPage, url, LinkType):
 		VideoStream = ScriptConvert(script=VideoInfo)
 	elif Host == "2gb-hosting":
 		VideoPage = SecondButtonPress(url=url, HostPage=HostPage, addkey={'submit': 'Continue'})
-		VideoInfo = VideoPage.content.split("<script type='text/javascript'>")[1].split("</script>")[0]
+		VideoInfo = HTML.ElementFromString(VideoPage.content).xpath('//div[@id="left"]/script')[2].text
 		VideoStream = ScriptConvert(script=VideoInfo)
 	elif Host == "Allmyvideos":
 		VideoPage = SecondButtonPress(url=url, HostPage=HostPage)
@@ -2119,32 +2111,24 @@ def GetMovieDebugger(Host, HostPage, url, LinkType):
 		#VideoPage = ScriptDecode(url=VideoID)
 
 		session = requests.session()
-		cookies = {'vr_referrer': urllib.quote_plus(url), 'pageredir': urllib.quote_plus(HostPage), path: '/'}
 		headers = {'User-Agent': UserAgent[UserAgentNum], 'Host': 'flashx.tv', 'Referer': url}
 
 		if LinkType == 4:
-			s = session.get(HostPage, headers=headers, cookies=cookies)
-			cookies['refid'] = s.content.split("Set_Cookie( 'refid', '")[1].split("'")[0]
+			s = session.get(HostPage, headers=headers)
 			VideoInfo = HTML.ElementFromString(s.content).xpath('//div[@id="normal_player_cont"]/iframe')[0].get('src')
 		elif LinkType == 1:
 			VideoInfo = HostPage
 
-		cookies['pageredir'] = urllib.quote_plus(VideoInfo)
 		headers['Host'] = 'play.flashx.tv'
 		headers['Referer'] = VideoInfo
-		s = session.get(VideoInfo, headers=headers, cookies=cookies)
-		for key, value in session.cookies.items():
-			cookies[key] = value
+		s = session.get(VideoInfo, headers=headers)
 
-		cookies['refid'] = s.content.split("Set_Cookie( 'refid', '")[1].split("'")[0]
 		VideoID = HTML.ElementFromString(s.content).xpath('//span[@class="auto-style6"]/a')[0].get('href')
-		headers['Referer'] = VideoID
-		v = session.get(VideoID, headers=headers, cookies=cookies)
+		v = session.get(VideoID, headers=headers)
 		VideoLink = HTML.ElementFromString(v.content).xpath('//head/script')[2].text.split('<object id="nuevoplayer"')[1].split('config=')[1].split('"')[0]
 
-		cookies['pageredir'] = urllib.quote_plus(VideoLink)
 		headers['Referer'] = VideoID
-		xmlreq = session.get(VideoLink, headers=headers, cookies=cookies)
+		xmlreq = session.get(VideoLink, headers=headers)
 		VideoStream = XML.ElementFromString(xmlreq.content).xpath('//file')[0].text	
 	elif Host == "Fleon":
 		VideoPage = "http://fleon.me/videos.php?Id="+HostPage.split('=')[1]
@@ -2355,7 +2339,7 @@ def GetMovieDebugger(Host, HostPage, url, LinkType):
 		VideoStream = XML.ElementFromURL(VideoPageXML).xpath('//cmd')[0].text.split('&file=')[1].split('"')[0]
 	elif Host == "Royalvids":
 		HostPage = "http://royalvids.eu/embed-" + HostPage.split('/')[4] + ".html"
-		VideoPage = HTML.ElementFromURL(HostPage).xpath('//div[@id="player_code"]/script')[2].text
+		VideoPage = HTML.ElementFromURL(HostPage).xpath('//div[@id="player_code"]/script')[0].text
 		VideoStream = ScriptConvert(script=VideoPage)
 	elif Host == "Safecloud":
 		headers = {'User-Agent': UserAgent[UserAgentNum], 'Referer': url}
