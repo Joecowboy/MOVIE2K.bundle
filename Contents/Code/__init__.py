@@ -971,7 +971,7 @@ def TheMovieListings(title, page, date, dateadd, thumb, type, PageOfHosts, Host=
 				Quality = QualitySub.xpath("./span/span/img")[0].get('title').split(' ')[2]
 
 		if CurrentPage == int(PageOfHosts):
-			if Host == 'N/a' or Host == 'Divx' or Host == 'Flash':
+			if Host == 'N/a' or Host == 'Divx' or Host == 'Flash' or Host == 'Embed':
 				Host = GetHost(Host=Host, url=MOVIE_PAGE)
 
 			show = "ADDED: "+ DateAdded +" | HOST: "+ Host + " | QUALITY: " + Quality
@@ -1048,7 +1048,7 @@ def GetHost(Host, url):
 	#
 	HostPageInfo = HTML.ElementFromURL(url)
 	try:
-		HostPage = HostPageInfo.xpath('//div[@id="emptydiv"]/iframe')[0].get('src')
+		HostPage = HostPageInfo.xpath('//div[@id="maincontent5"]/div/iframe')[0].get('src')
 	except:
 		HostPage = HostPageInfo.xpath('//div[@id="maincontent5"]/div/a[@target="_blank"]')[0].get('href')
 	Host = HostPage.split('http://')[1].split('.')[0].capitalize()

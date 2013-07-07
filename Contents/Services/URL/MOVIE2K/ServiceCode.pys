@@ -1067,7 +1067,7 @@ def GetMovie(Host, HostPage, url, LinkType):
 		try:
 			VideoPage = SecondButtonPress(url=url, HostPage=HostPage)
 			VideoInfo = HTML.ElementFromString(VideoPage.content).xpath('//div[@id="player_code"]/script')[0].text
-			VideoStream = VideoInfo.split("'file','")[1].split("'")[0]
+			VideoStream = ScriptConvert(script=VideoInfo)
 		except:
 			VideoStream = ErrorMessage(Host=Host, LogError=1)
 	elif Host == "Userporn":
@@ -1219,8 +1219,11 @@ def GetMovie(Host, HostPage, url, LinkType):
 			VideoStream = ErrorMessage(Host=Host, LogError=1)
 	elif Host == "Vidstream":
 		try:
-			VideoPage = SecondButtonPress(url=url, HostPage=HostPage, wform=1, addkey={'referer': url})
-			VideoStream = VideoPage.content.split('<div id="player_code">')[1].split('file: "')[1].split('"')[0]
+			if LinkType == 4:
+				VideoPage = SecondButtonPress(url=url, HostPage=HostPage, wform=1, addkey={'referer': url})
+				VideoStream = HTML.ElementFromString(VideoPage.content).xpath('//div[@id="player_code"]/script[@type=\'text/javascript\']')[1].text.split('file: "')[1].split('"')[0]
+			elif LinkType == 1:
+				VideoStream = HTML.ElementFromURL(HostPage).xpath('//div[@id="player_code"]/script[@type=\'text/javascript\']')[1].text.split('file: "')[1].split('"')[0]
 		except:
 			VideoStream = ErrorMessage(Host=Host, LogError=1)
 	elif Host == "Vidto":
@@ -2447,7 +2450,7 @@ def GetMovieDebugger(Host, HostPage, url, LinkType):
 	elif Host == "Uploadc":
 		VideoPage = SecondButtonPress(url=url, HostPage=HostPage)
 		VideoInfo = HTML.ElementFromString(VideoPage.content).xpath('//div[@id="player_code"]/script')[0].text
-		VideoStream = VideoInfo.split("'file','")[1].split("'")[0]
+		VideoStream = ScriptConvert(script=VideoInfo)
 	elif Host == "Userporn":
 		#http://s.userporn.com/s?v=W8NpBX9zyNlR&r=2&t=1369767803&u=&c=23807ccfcdcd823778492fc5ae25b2b1163855e2f570268f7cc7278b3c00897e74882878500d5bc7b8c3bb6ecddbe7cd&start=0
 		#http://www.userporn.com/player_control/settings.php?v=W8NpBX9zyNlR&em=TRUE&fv=v1.1.55
@@ -2568,8 +2571,11 @@ def GetMovieDebugger(Host, HostPage, url, LinkType):
 		VideoURL = session.head(VideoID, headers=headers)
 		VideoStream = VideoURL.headers['location'] + "?cookies="+String.Quote(str(cookies), usePlus=True)+"&headers="+String.Quote(str(headers), usePlus=True)
 	elif Host == "Vidstream":
-		VideoPage = SecondButtonPress(url=url, HostPage=HostPage, wform=1, addkey={'referer': url})
-		VideoStream = VideoPage.content.split('<div id="player_code">')[1].split('file: "')[1].split('"')[0]
+		if LinkType == 4:
+			VideoPage = SecondButtonPress(url=url, HostPage=HostPage, wform=1, addkey={'referer': url})
+			VideoStream = HTML.ElementFromString(VideoPage.content).xpath('//div[@id="player_code"]/script[@type=\'text/javascript\']')[1].text.split('file: "')[1].split('"')[0]
+		elif LinkType == 1:
+			VideoStream = HTML.ElementFromURL(HostPage).xpath('//div[@id="player_code"]/script[@type=\'text/javascript\']')[1].text.split('file: "')[1].split('"')[0]
 	elif Host == "Vidto":
 		#Does not process form properly -- <Response [200]> -- Only text returned
 		#Example: http://vidto.me/4uoqsdnijj7j.html
