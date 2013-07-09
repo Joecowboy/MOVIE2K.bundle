@@ -282,7 +282,7 @@ def Queue(title):
 	i = 1
 	while i < len(Movies):
 		Movie = Movies[i].xpath('./td/a')[0].text
-		Host = Movies[i].xpath('./td')[1].text_content()
+		Host = strip_one_space(Movies[i].xpath('./td')[1].text_content())
 		Status = Movies[i].xpath('./td')[2].text
 		page = Movies[i].xpath('./td/a')[0].get('href')
 		summary = "Hoster: "+Host+" | Status: "+Status
@@ -660,6 +660,7 @@ def MoviePageAdd(title, page, genre, type):
 	headers = {"Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8", "Accept-Charset": "ISO-8859-1,utf-8;q=0.7,*;q=0.3", "Accept-Encoding": "gzip,deflate,sdch", "Accept-Language": "en-US,en;q=0.8", "Connection": "keep-alive", "Host": MOVIE2K_URL, "Referer": "http://"+MOVIE2K_URL, "User-Agent": UserAgent[UserAgentNum]}
 	GENRE_PAGE = page+".html"
 	req = requests.get(GENRE_PAGE, headers=headers, cookies=cookies)
+	Log(req.content)
 	GENRE_MOVIE_PAGE = HTML.ElementFromString(req.content)
 
 	try:
@@ -971,7 +972,7 @@ def TheMovieListings(title, page, date, dateadd, thumb, type, PageOfHosts, Host=
 				Quality = QualitySub.xpath("./span/span/img")[0].get('title').split(' ')[2]
 
 		if CurrentPage == int(PageOfHosts):
-			if Host == 'N/a' or Host == 'Divx' or Host == 'Flash' or Host == 'Embed':
+			if Host == 'N/a' or Host == 'Divx' or Host == 'DivX Hoster' or Host == 'Flash' or Host == 'Flash Hoster' or Host == 'Embed':
 				Host = GetHost(Host=Host, url=MOVIE_PAGE)
 
 			show = "ADDED: "+ DateAdded +" | HOST: "+ Host + " | QUALITY: " + Quality
@@ -1038,6 +1039,15 @@ def StripArray(arraystrings):
 		temparraystring.append(elem)
 
 	return temparraystring
+
+
+####################################################################################################
+def strip_one_space(s):
+
+	if s.endswith(" "): s = s[:-1]
+	if s.startswith(" "): s = s[1:]
+
+	return s
 
 
 ####################################################################################################
