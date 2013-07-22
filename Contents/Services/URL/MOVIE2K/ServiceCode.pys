@@ -1408,7 +1408,7 @@ def GetMovie(Host, HostPage, url, LinkType):
 		except:
 			VideoStream = ErrorMessage(Host=Host, LogError=1)
 	elif Host == "Vidbux" or Host == "Vidbux_2":
-			#try:
+		try:
 			if Host == "Vidbux":
 				VideoPage = SolveMediaCaptcha(url=url, HostPage=HostPage, Host=Host)
 			elif Host == "Vidbux_2":
@@ -1422,8 +1422,8 @@ def GetMovie(Host, HostPage, url, LinkType):
 
 			if Host == "Vidbux":
 				VOID = SolveMediaCaptcha(url=url, HostPage=HostPage, Host=Host, RecaptchaResponse=1)
-			#except:
-			#VideoStream = ErrorMessage(Host=Host, LogError=4)
+		except:
+			VideoStream = ErrorMessage(Host=Host, LogError=4)
 	elif Host == 'Videoize':
 		try:
 			VideoPage = HTML.ElementFromURL(HostPage).xpath('//div[@id="player"]/script')[1].text
