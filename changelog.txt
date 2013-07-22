@@ -1,3 +1,5 @@
+[B]Version 1.2.0[/B]
+- Added Captcha input for 180upload, Clicktoview, Vidbux, Vidxden
 [B]Version 1.1.13[/B]
 - Udated check for real host and added Ecostream, Grifthost, Hostingcup, Tudou
 [B]Version 1.1.12[/B]

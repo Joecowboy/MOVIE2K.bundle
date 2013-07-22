@@ -12,6 +12,10 @@ import time
 import socket
 import httplib
 import random
+import HostServices
+from HostServices import StripArray
+from HostServices import LoadData
+from HostServices import JsonWrite
 
 # Import SocksiPy
 import sockschain as socks
@@ -22,11 +26,16 @@ socks.DEBUG = DEBUG
 UserAgent = ['Mozilla/4.0 (compatible; MSIE 5.5; Windows NT)', 'Opera/9.25 (Windows NT 6.0; U; ja)', 'Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 6.0)', 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.31 (KHTML, like Gecko) Chrome/26.0.1410.64 Safari/537.31', 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:20.0) Gecko/20100101 Firefox/20.0', 'Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.1; WOW64; Trident/6.0)', 'Mozilla/4.0 (compatible; MSIE 5.0; Windows 2000) Opera 6.01 [ja]', 'Mozilla/5.0 (Windows; U; Windows NT 5.0; ja-JP; m18) Gecko/20010131 Netscape6/6.01', 'Mozilla/5.0 (Macintosh; U; PPC Mac OS X; ja-jp) AppleWebKit/85.7 (KHTML, like Gecko) Safari/85.7']
 UserAgentNum = random.randrange(0, len(UserAgent)-1, 1)
 
+# Set up Host Services
+HostServices.DEBUG = DEBUG
+HostServices.UserAgent = UserAgent[UserAgentNum]
+
 PREFIX         = "/video/movie2k"
 NAME           = "Movie2k"
 ART            = "art-default.jpg"
 ICON           = "icon-default.png"
 MOVIE2K_URL    = Prefs['movie2k_url']
+CAPTCHA_DATA   = "captcha.data.json"
 
 
 ####################################################################################################
@@ -660,7 +669,7 @@ def MoviePageAdd(title, page, genre, type):
 	headers = {"Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8", "Accept-Charset": "ISO-8859-1,utf-8;q=0.7,*;q=0.3", "Accept-Encoding": "gzip,deflate,sdch", "Accept-Language": "en-US,en;q=0.8", "Connection": "keep-alive", "Host": MOVIE2K_URL, "Referer": "http://"+MOVIE2K_URL, "User-Agent": UserAgent[UserAgentNum]}
 	GENRE_PAGE = page+".html"
 	req = requests.get(GENRE_PAGE, headers=headers, cookies=cookies)
-	Log(req.content)
+
 	GENRE_MOVIE_PAGE = HTML.ElementFromString(req.content)
 
 	try:
@@ -979,36 +988,40 @@ def TheMovieListings(title, page, date, dateadd, thumb, type, PageOfHosts, Host=
 
 			url = MOVIE_PAGE+"?title="+String.Quote(title, usePlus=True)+"&summary="+String.Quote(summary, usePlus=True)+"&show="+String.Quote(show, usePlus=True)+"&date="+String.Quote(str(date), usePlus=True)+"&thumb="+String.Quote(thumb, usePlus=True)+"&host="+Host+"&season="+str(season)+"&index="+str(index)+"&type="+String.Quote(type, usePlus=True)+"&genres="+String.Quote(genre, usePlus=True)+"&director="+String.Quote(director, usePlus=True)+"&actors="+String.Quote(actors, usePlus=True)+"&duration="+str(duration)+"&rating="+str(rating)+"&content_rating="+content_rating
 
-			if type == 'TV Shows':
-				oc.add(EpisodeObject(
-						url = url,
-						title = title,
-						summary = summary,
-						directors = directors,
-						guest_stars = guest_stars,
-						#genres = genres,
-						duration = duration,
-						rating = rating,
-						season = season,
-						index = index,
-						show = show,
-						content_rating = content_rating,
-						source_title = source_title,
-						originally_available_at = date,
-						thumb = Callback(GetThumb, url=thumb)))
+			if Host == '180upload' or Host == 'Clicktoview' or Host == 'Vidbux' or Host == 'Vidxden':
+				show_update = "Click here if you want OCR to try and decode Captcha text."
+				oc.add(DirectoryObject(key=Callback(CaptchaSection, title=title, page=page, date=date, thumb=thumb, type=type, summary=summary, directors=directors, guest_stars=guest_stars, genres=genres, duration=duration, rating=rating, season=season, index=index, show=show_update, content_rating=content_rating, source_title=source_title, url=url, Host=Host), title=title, thumb=Callback(GetThumb, url=thumb), summary=show))
 			else:
-				oc.add(MovieObject(
-						url = url,
-						title = title,
-						summary = summary,
-						directors = directors,
-						genres = genres,
-						duration = duration,
-						rating = rating,
-						content_rating = content_rating,
-						source_title = show,
-						originally_available_at = date,
-						thumb = Callback(GetThumb, url=thumb)))
+				if type == 'TV Shows':
+					oc.add(EpisodeObject(
+							url = url,
+							title = title,
+							summary = summary,
+							directors = directors,
+							guest_stars = guest_stars,
+							#genres = genres,
+							duration = duration,
+							rating = rating,
+							season = season,
+							index = index,
+							show = show,
+							content_rating = content_rating,
+							source_title = source_title,
+							originally_available_at = date,
+							thumb = Callback(GetThumb, url=thumb)))
+				else:
+					oc.add(MovieObject(
+							url = url,
+							title = title,
+							summary = summary,
+							directors = directors,
+							genres = genres,
+							duration = duration,
+							rating = rating,
+							content_rating = content_rating,
+							source_title = show,
+							originally_available_at = date,
+							thumb = Callback(GetThumb, url=thumb)))
 
 		if HostCount == 4:
 			if CurrentPage == int(PageOfHosts):
@@ -1029,16 +1042,120 @@ def TheMovieListings(title, page, date, dateadd, thumb, type, PageOfHosts, Host=
 	return oc
 
 
-####################################################################################################
-def StripArray(arraystrings):
+#####################################################################################################
+# This is the section for Host sites using Captcha
+#@route(PREFIX + '/CaptchaSection2')
+def CaptchaSection(title, page, date, thumb, type, summary, directors, guest_stars, genres, duration, rating, season, index, show, content_rating, source_title, url, Host):
 
-	temparraystring = []
-	
-	for array_elem in arraystrings:
-		elem = re.sub("[\n\t\xa0]", "", array_elem).strip()
-		temparraystring.append(elem)
+	oc = ObjectContainer(title2=title)
 
-	return temparraystring
+	oc.add(DirectoryObject(key=Callback(RokuUsers, title="Special Instructions for Roku Users"), title="Special Instructions for Roku Users", thumb=R(ICON), summary="Click here to see special instructions necessary for Roku Users to add shows to this channel"))
+	if type == 'TV Shows':
+		oc.add(EpisodeObject(
+				url = url,
+				title = title,
+				summary = summary,
+				directors = directors,
+				guest_stars = guest_stars,
+				#genres = genres,
+				duration = duration,
+				rating = rating,
+				season = season,
+				index = index,
+				show = show,
+				content_rating = content_rating,
+				source_title = source_title,
+				originally_available_at = date,
+				thumb = Callback(GetThumb, url=thumb)))
+	else:
+		oc.add(MovieObject(
+				url = url,
+				title = title,
+				summary = summary,
+				directors = directors,
+				genres = genres,
+				duration = duration,
+				rating = rating,
+				content_rating = content_rating,
+				source_title = show,
+				originally_available_at = date,
+				thumb = Callback(GetThumb, url=thumb)))
+
+	url = url.replace(Host,Host+"_2")
+	hosts = LoadData(fp=CAPTCHA_DATA)
+	Log(len(hosts))
+	i = 1
+	for gethost in hosts:
+		if gethost[i]['host'] == Host:
+			captchathumb = gethost[i]['thumb']
+			GetUserAgent = gethost[i]['UserAgent']
+			cookies = gethost[i]['captchacookies']
+			break
+		else:
+			i += 1
+
+	oc.add(InputDirectoryObject(key=Callback(CaptchaInput, title=title, page=page, date=date, thumb=thumb, type=type, summary=summary, directors=directors, guest_stars=guest_stars, genres=genres, duration=duration, rating=rating, season=season, index=index, content_rating=content_rating, source_title=source_title, url=url, Host=Host), title=title, summary="Click here to use input screen for Captcha image.", thumb=Callback(GetThumb, url=captchathumb, GetUserAgent=GetUserAgent, cookies=cookies), prompt="Enter the text from the Captcha image."))
+
+	return oc
+
+
+#####################################################################################################
+# This is captcha input for Roku users
+def CaptchaInput(title, page, date, thumb, type, summary, directors, guest_stars, genres, duration, rating, season, index, content_rating, source_title, url, Host, query):
+
+	oc = ObjectContainer(title2=title)
+
+	show = "Host: " + Host + " - Captcha has been processed"
+	hosts = LoadData(fp=CAPTCHA_DATA)
+
+	i = 1
+	for gethost in hosts:
+		if gethost[i]['host'] == Host:
+			gethost[i]['response'] = query
+			break
+		else:
+			i += 1
+
+	JsonWrite(fp=CAPTCHA_DATA, jsondata=hosts)
+
+	if type == 'TV Shows':
+		oc.add(EpisodeObject(
+				url = url,
+				title = title,
+				summary = summary,
+				directors = directors,
+				guest_stars = guest_stars,
+				#genres = genres,
+				duration = duration,
+				rating = rating,
+				season = season,
+				index = index,
+				show = show,
+				content_rating = content_rating,
+				source_title = source_title,
+				originally_available_at = date,
+				thumb = Callback(GetThumb, url=thumb)))
+	else:
+		oc.add(MovieObject(
+				url = url,
+				title = title,
+				summary = summary,
+				directors = directors,
+				genres = genres,
+				duration = duration,
+				rating = rating,
+				content_rating = content_rating,
+				source_title = show,
+				originally_available_at = date,
+				thumb = Callback(GetThumb, url=thumb)))
+
+	return oc
+
+#####################################################################################################
+# This is special instructions for Roku users
+def RokuUsers(title):
+
+	return ObjectContainer(header="Special Instructions for Roku Users", message="To enter Captcha text, Roku users must be using version 2.6.5 of the Plex Roku Channel (currently the PlexTest channel). You can choose to type in the Captcha image text or allow the OCR to try and deocode it. However, the OCR decode rate is very low.  WARNING: DO NOT DIRECTLY TYPE OR PASTE THE TEXT IN THE INPUT CAPTCHA SECTION USING ROKU PLEX CHANNELS 2.6.4. THAT VERSION USES A SEARCH INSTEAD OF ENTRY SCREEN AND EVERY LETTER OF THE TEXT YOU ENTER WILL PRODUCE A SUBMIT FORM ON EACH CAPTCHA LETTER.")
 
 
 ####################################################################################################
@@ -1100,11 +1217,22 @@ def GetLang(lang):
 
 
 ####################################################################################################
-def GetThumb(url):
+def GetThumb(url, GetUserAgent=None, cookies={}):
 
 	try:
-		data = HTTP.Request(url, cacheTime=CACHE_1MONTH).content
-		return DataObject(data, 'image/jpeg')
+		if GetUserAgent == None:
+			imgData = HTTP.Request(url, cacheTime=CACHE_1MONTH).content
+		else:
+			headers = {}
+			headers['Accept'] = 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
+			headers['Accept-Encoding'] = 'gzip, deflate'
+			headers['Connection'] = 'keep-alive'
+			headers['Host'] = url.split('/')[2]
+			headers['User-Agent'] = GetUserAgent
+
+			imgData = requests.get(url, headers=headers, cookies=cookies).content
+
+		return DataObject(imgData, 'image/jpeg')
 	except:
 		return Redirect(R(ICON))
 

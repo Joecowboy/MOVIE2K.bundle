@@ -17,4 +17,6 @@ Sometimes the plugin might error and this could be do to a timeout error trying 
 
 This plugin has been tested fully on the Roku and the Expermental Transcoder works properly now.
 
-The Trailer Addict search does not show up in Plex Web do to the way search is handled but works fine on the Roku.  Only search function in Plex Web is Movie4k.  The Expermental Transcoder does work for Trailer Addict on the Roku.  
+The Trailer Addict search does not show up in Plex Web do to the way search is handled but works fine on the Roku.  Only search function in Plex Web is Movie4k.  The Expermental Transcoder does work for Trailer Addict on the Roku.
+
+To enter Captcha text, Roku users must be using version 2.6.5 of the Plex Roku Channel (currently the PlexTest channel)
