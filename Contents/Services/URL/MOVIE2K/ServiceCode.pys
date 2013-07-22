@@ -461,11 +461,12 @@ def SolveMediaCaptcha(url, HostPage, Host, wScript=1, RecaptchaResponse=0):
 			if gethost[i]['host'] == Host:
 				RecaptchaResponse = gethost[i]['response']
 				adcopy_challenge = gethost[i]['adcopy_challenge']
+				GetUserAgent = gethost[i]['UserAgent']
 				break
 			else:
 				i += 1
 
-		VideoPage = SecondButtonPress(url=url, HostPage=HostPage, addkey={"adcopy_challenge": adcopy_challenge, "adcopy_response": RecaptchaResponse, "referer": url})
+		VideoPage = SecondButtonPress(url=url, HostPage=HostPage, addkey={"adcopy_challenge": adcopy_challenge, "adcopy_response": RecaptchaResponse, "referer": url}, GetUserAgent=GetUserAgent)
 
 	return VideoPage
 
