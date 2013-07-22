@@ -410,7 +410,7 @@ def SolveMediaCaptcha(url, HostPage, Host, wScript=1, RecaptchaResponse=0):
 	if RecaptchaResponse == 0:
 		captchacookies = {}
 		headers = {'User-Agent': UserAgent[UserAgentNum]}
-		OpenUrl =  requests.get(HostPage, headers=headers)
+		OpenUrl = requests.get(HostPage, headers=headers)
 		VideoInfo = OpenUrl.content.split('<noscript>')[wScript].split('src="')[1].split('"')[0]
 		session = requests.session()
 		req = session.get(VideoInfo, headers=headers)
@@ -420,11 +420,11 @@ def SolveMediaCaptcha(url, HostPage, Host, wScript=1, RecaptchaResponse=0):
 		adcopy_challenge = VideoID.split('=')[1]
 		captchaimg = "http://api.solvemedia.com" + VideoID
 
-		VideoPage = SecondButtonPress(url=url, HostPage=HostPage, addkey={"adcopy_challenge": adcopy_challenge, "referer": url}, captchakey="adcopy_response", captchaimg=captchaimg, captchacookies=captchacookies, split='TOP')
+		VideoPage = SecondButtonPress(url=url, HostPage=HostPage, page=OpenUrl.content, addkey={"adcopy_challenge": adcopy_challenge, "referer": url}, captchakey="adcopy_response", captchaimg=captchaimg, captchacookies=captchacookies, split='TOP')
 	elif RecaptchaResponse == 1:
 		captchacookies = {}
 		headers = {'User-Agent': UserAgent[UserAgentNum]}
-		OpenUrl =  requests.get(HostPage, headers=headers)
+		OpenUrl = requests.get(HostPage, headers=headers)
 		VideoInfo = OpenUrl.content.split('<noscript>')[wScript].split('src="')[1].split('"')[0]
 		session = requests.session()
 		req = session.get(VideoInfo, headers=headers)
@@ -441,6 +441,7 @@ def SolveMediaCaptcha(url, HostPage, Host, wScript=1, RecaptchaResponse=0):
 			if gethost[i]['host'] == Host:
 				gethost[i]['url'] = url
 				gethost[i]['HostPage'] = HostPage
+				gethost[i]['page'] = String.Quote(OpenUrl.content, usePlus=True)
 				gethost[i]['adcopy_challenge'] = adcopy_challenge
 				gethost[i]['UserAgent'] = UserAgent[UserAgentNum]
 				gethost[i]['captchacookies'] = captchacookies
@@ -461,12 +462,14 @@ def SolveMediaCaptcha(url, HostPage, Host, wScript=1, RecaptchaResponse=0):
 			if gethost[i]['host'] == Host:
 				RecaptchaResponse = gethost[i]['response']
 				adcopy_challenge = gethost[i]['adcopy_challenge']
+				VideoInfo = gethost[i]['page']
+				VideoInfo = String.Unquote(VideoInfo, usePlus=True)
 				GetUserAgent = gethost[i]['UserAgent']
 				break
 			else:
 				i += 1
 
-		VideoPage = SecondButtonPress(url=url, HostPage=HostPage, addkey={"adcopy_challenge": adcopy_challenge, "adcopy_response": RecaptchaResponse, "referer": url}, GetUserAgent=GetUserAgent)
+		VideoPage = SecondButtonPress(url=url, HostPage=HostPage, page=VideoInfo, addkey={"adcopy_challenge": adcopy_challenge, "adcopy_response": RecaptchaResponse, "referer": url}, GetUserAgent=GetUserAgent)
 
 	return VideoPage
 
@@ -652,7 +655,7 @@ def GetMovie(Host, HostPage, url, LinkType):
 				VideoPage = GoogleCaptcha(url=url, HostPage=HostPage, Host=Host, VideoInfo=VideoInfo.content)
 			elif Host == "Clicktoview_2":
 				VideoPage = GoogleCaptcha(url=url, HostPage=HostPage, Host=Host, RecaptchaResponse=2)
-				Log(VideoPage.content)
+
 			try:
 				VideoScript = VideoPage.content.split('<div id="player_code">')[1].split("<script type='text/javascript'>")[1].split('</script>')[0]
 				VideoStream = ScriptConvert(script=VideoScript)
@@ -1422,7 +1425,6 @@ def GetMovie(Host, HostPage, url, LinkType):
 				VideoPage = SolveMediaCaptcha(url=url, HostPage=HostPage, Host=Host)
 			elif Host == "Vidbux_2":
 				VideoPage = SolveMediaCaptcha(url=url, HostPage=HostPage, Host=Host, RecaptchaResponse=2)
-				Log(VideoPage.content)
 
 			try:
 				VideoScript = VideoPage.content.split('<div id="embedcontmvshre"')[1].split("<script type='text/javascript'>")[1].split('</script>')[0]
@@ -1548,7 +1550,6 @@ def GetMovie(Host, HostPage, url, LinkType):
 				VideoPage = SolveMediaCaptcha(url=url, HostPage=HostPage, Host=Host)
 			elif Host == "Vidxden_2":
 				VideoPage = SolveMediaCaptcha(url=url, HostPage=HostPage, Host=Host, RecaptchaResponse=2)
-				Log(VideoPage.content)
 
 			try:
 				VideoScript = VideoPage.content.split('<div id="embedcontmvshre"')[1].split("<script type='text/javascript'>")[1].split('</script>')[0]
@@ -2468,7 +2469,6 @@ def GetMovieDebugger(Host, HostPage, url, LinkType):
 			VideoPage = SolveMediaCaptcha(url=url, HostPage=HostPage, Host=Host)
 		elif Host == "Vidbux_2":
 			VideoPage = SolveMediaCaptcha(url=url, HostPage=HostPage, Host=Host, RecaptchaResponse=2)
-			Log(VideoPage.content)
 
 		try:
 			VideoScript = VideoPage.content.split('<div id="embedcontmvshre"')[1].split("<script type='text/javascript'>")[1].split('</script>')[0]
@@ -2563,7 +2563,6 @@ def GetMovieDebugger(Host, HostPage, url, LinkType):
 			VideoPage = SolveMediaCaptcha(url=url, HostPage=HostPage, Host=Host)
 		elif Host == "Vidxden_2":
 			VideoPage = SolveMediaCaptcha(url=url, HostPage=HostPage, Host=Host, RecaptchaResponse=2)
-			Log(VideoPage.content)
 
 		try:
 			VideoScript = VideoPage.content.split('<div id="embedcontmvshre"')[1].split("<script type='text/javascript'>")[1].split('</script>')[0]
