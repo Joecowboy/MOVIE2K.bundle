@@ -27,13 +27,13 @@ import time
 
 
 ####################################################################################################
-def GetImgValue(url, UserAgent, cookies, split=None):
+def GetImgValue(url, HostPage, UserAgent, cookies, split=None):
 
 	headers = {}
-	headers['Accept'] = 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
-	headers['Accept-Encoding'] = 'gzip, deflate'
+	headers['Accept'] = 'image/png,image/*;q=0.8,*/*;q=0.5'
 	headers['Connection'] = 'keep-alive'
 	headers['Host'] = url.split('/')[2]
+	headers['Referer'] = HostPage
 	headers['User-Agent'] = UserAgent
 
 	imgData = requests.get(url, headers=headers, cookies=cookies).content

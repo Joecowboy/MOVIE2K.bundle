@@ -1044,7 +1044,7 @@ def TheMovieListings(title, page, date, dateadd, thumb, type, PageOfHosts, Host=
 
 #####################################################################################################
 # This is the section for Host sites using Captcha
-#@route(PREFIX + '/CaptchaSection2')
+#@route(PREFIX + '/CaptchaSection')
 def CaptchaSection(title, page, date, thumb, type, summary, directors, guest_stars, genres, duration, rating, season, index, show, content_rating, source_title, url, Host):
 
 	oc = ObjectContainer(title2=title)
@@ -1090,11 +1090,12 @@ def CaptchaSection(title, page, date, thumb, type, summary, directors, guest_sta
 			captchathumb = gethost[i]['thumb']
 			GetUserAgent = gethost[i]['UserAgent']
 			cookies = gethost[i]['captchacookies']
+			HostPage = gethost[i]['HostPage']
 			break
 		else:
 			i += 1
 
-	oc.add(InputDirectoryObject(key=Callback(CaptchaInput, title=title, page=page, date=date, thumb=thumb, type=type, summary=summary, directors=directors, guest_stars=guest_stars, genres=genres, duration=duration, rating=rating, season=season, index=index, content_rating=content_rating, source_title=source_title, url=url, Host=Host), title=title, summary="Click here to use input screen for Captcha image.", thumb=Callback(GetThumb, url=captchathumb, GetUserAgent=GetUserAgent, cookies=cookies), prompt="Enter the text from the Captcha image."))
+	oc.add(InputDirectoryObject(key=Callback(CaptchaInput, title=title, page=page, date=date, thumb=thumb, type=type, summary=summary, directors=directors, guest_stars=guest_stars, genres=genres, duration=duration, rating=rating, season=season, index=index, content_rating=content_rating, source_title=source_title, url=url, Host=Host), title=title, summary="Click here to use input screen for Captcha image.", thumb=Callback(GetThumb, url=captchathumb, HostPage=HostPage, GetUserAgent=GetUserAgent, cookies=cookies), prompt="Enter the text from the Captcha image."))
 
 	return oc
 
@@ -1217,17 +1218,17 @@ def GetLang(lang):
 
 
 ####################################################################################################
-def GetThumb(url, GetUserAgent=None, cookies={}):
+def GetThumb(url, HostPage=None, GetUserAgent=None, cookies={}):
 
 	try:
 		if GetUserAgent == None:
 			imgData = HTTP.Request(url, cacheTime=CACHE_1MONTH).content
 		else:
 			headers = {}
-			headers['Accept'] = 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
-			headers['Accept-Encoding'] = 'gzip, deflate'
+			headers['Accept'] = 'image/png,image/*;q=0.8,*/*;q=0.5'
 			headers['Connection'] = 'keep-alive'
 			headers['Host'] = url.split('/')[2]
+			headers['Referer'] = HostPage
 			headers['User-Agent'] = GetUserAgent
 
 			imgData = requests.get(url, headers=headers, cookies=cookies).content

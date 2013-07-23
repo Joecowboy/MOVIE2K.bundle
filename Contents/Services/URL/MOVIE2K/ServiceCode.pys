@@ -363,7 +363,7 @@ def SecondButtonPress(url, HostPage, page=None, elm="", elm2="", wform=0, addkey
 
 	if captchakey != None:
 		Log('Captcha: '+captchaimg)
-		payload[captchakey] = GetImgValue(url=captchaimg, UserAgent=UserAgent[UserAgentNum], cookies=captchacookies, split=split)
+		payload[captchakey] = GetImgValue(url=captchaimg, HostPage=HostPage, UserAgent=UserAgent[UserAgentNum], cookies=captchacookies, split=split)
 
 	if addkey != None:
 		payload.update(addkey)
@@ -407,21 +407,22 @@ def SoftCaptcha(VideoPage):
 ####################################################################################################
 def SolveMediaCaptcha(url, HostPage, Host, wScript=1, RecaptchaResponse=0):
 
-	cookies = {}
-	captchacookies = {}
-	headers = {'User-Agent': UserAgent[UserAgentNum]}
-	session1 = requests.session()
-	OpenUrl = session1.get(HostPage, headers=headers)
-	VideoInfo = OpenUrl.content.split('<noscript>')[wScript].split('src="')[1].split('"')[0]
-	for key, value in session1.cookies.items():
-		cookies[key] = value
-	session = requests.session()
-	req = session.get(VideoInfo, headers=headers)
-	for key, value in session.cookies.items():
-		captchacookies[key] = value
-	VideoID = HTML.ElementFromString(req.content).xpath('//div[@id="adcopy-outer"]/table/tr/td/img')[0].get('src')
-	adcopy_challenge = VideoID.split('=')[1]
-	captchaimg = "http://api.solvemedia.com" + VideoID
+	if RecaptchaResponse == 0 or RecaptchaResponse == 1:
+		cookies = {}
+		captchacookies = {}
+		headers = {'User-Agent': UserAgent[UserAgentNum]}
+		session1 = requests.session()
+		OpenUrl = session1.get(HostPage, headers=headers)
+		VideoInfo = OpenUrl.content.split('<noscript>')[wScript].split('src="')[1].split('"')[0]
+		for key, value in session1.cookies.items():
+			cookies[key] = value
+		session = requests.session()
+		req = session.get(VideoInfo, headers=headers)
+		for key, value in session.cookies.items():
+			captchacookies[key] = value
+		VideoID = HTML.ElementFromString(req.content).xpath('//div[@id="adcopy-outer"]/table/tr/td/img')[0].get('src')
+		adcopy_challenge = VideoID.split('=')[1]
+		captchaimg = "http://api.solvemedia.com" + VideoID
 
 	if RecaptchaResponse == 0:
 		VideoPage = SecondButtonPress(url=url, HostPage=HostPage, page=OpenUrl.content, cookies=cookies, addkey={"adcopy_challenge": adcopy_challenge, "referer": url}, captchakey="adcopy_response", captchaimg=captchaimg, captchacookies=captchacookies, split='TOP')
@@ -463,7 +464,7 @@ def SolveMediaCaptcha(url, HostPage, Host, wScript=1, RecaptchaResponse=0):
 			else:
 				i += 1
 
-		VideoPage = SecondButtonPress(url=url, HostPage=HostPage, page=VideoInfo, cookies=cookies, addkey={"adcopy_challenge": adcopy_challenge, "adcopy_response": RecaptchaResponse, "referer": url}, GetUserAgent=GetUserAgent)
+		VideoPage = SecondButtonPress(url=url, HostPage=HostPage, page=VideoInfo, cookies=cookies, addkey={"adcopy_challenge": adcopy_challenge, "adcopy_response": urllib.quote_plus(RecaptchaResponse), "referer": url}, GetUserAgent=GetUserAgent)
 
 	return VideoPage
 
@@ -471,12 +472,13 @@ def SolveMediaCaptcha(url, HostPage, Host, wScript=1, RecaptchaResponse=0):
 ####################################################################################################
 def GoogleCaptcha(url, HostPage, Host, VideoInfo=None, RecaptchaResponse=0):
 
-	GoogleImgLink = "http://www.google.com/recaptcha/api/image?c="
-	Googleurl = VideoInfo.split('<div id="recaptcha_widget"')[1].split('<script type="text/javascript" src="')[1].split(' ">')[0]
-	headers = {'User-Agent': UserAgent[UserAgentNum]}
-	VideoID = requests.get(Googleurl, headers=headers)
-	GoogleKey = VideoID.content.split("challenge : '")[1].split("'")[0]
-	captchaimg = GoogleImgLink + GoogleKey
+	if RecaptchaResponse == 0 or RecaptchaResponse == 1:
+		GoogleImgLink = "http://www.google.com/recaptcha/api/image?c="
+		Googleurl = VideoInfo.split('<div id="recaptcha_widget"')[1].split('<script type="text/javascript" src="')[1].split(' ">')[0]
+		headers = {'User-Agent': UserAgent[UserAgentNum]}
+		VideoID = requests.get(Googleurl, headers=headers)
+		GoogleKey = VideoID.content.split("challenge : '")[1].split("'")[0]
+		captchaimg = GoogleImgLink + GoogleKey
 
 	if RecaptchaResponse == 0:
 		VideoPage = SecondButtonPress(url=url, HostPage=HostPage, page=VideoInfo, addkey={"recaptcha_challenge_field": GoogleKey, "referer": url, "down_direct": 1, "method_premium": ""}, captchakey="recaptcha_response_field", captchaimg=captchaimg, split='LR')
