@@ -137,7 +137,7 @@ def Movie2kLogin():
 
 	username = Prefs["username"]
 	password = Prefs["password"]
-	cookiejar = {"xxx2": "ok", "domain": ".movie4k.to", "path": "/", "onlylanguage": "deleted", "lang": "en"}
+	cookiejar = {"xxx2": "ok", "domain": ".movie4k.to", "path": "/", "onlylanguage": "", "lang": "en"}
 	Dict['_movie2k_uid'] = cookiejar
 	HTTP.Headers['Cookie'] = cookiejar
 
@@ -1044,7 +1044,6 @@ def TheMovieListings(title, page, date, dateadd, thumb, type, PageOfHosts, Host=
 
 #####################################################################################################
 # This is the section for Host sites using Captcha
-#@route(PREFIX + '/CaptchaSection')
 def CaptchaSection(title, page, date, thumb, type, summary, directors, guest_stars, genres, duration, rating, season, index, show, content_rating, source_title, url, Host):
 
 	oc = ObjectContainer(title2=title)
@@ -1151,6 +1150,7 @@ def CaptchaInput(title, page, date, thumb, type, summary, directors, guest_stars
 				thumb = Callback(GetThumb, url=thumb)))
 
 	return oc
+
 
 #####################################################################################################
 # This is special instructions for Roku users
