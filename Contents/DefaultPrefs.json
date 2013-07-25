@@ -31,6 +31,16 @@
 		],
 		"default": "Disabled" 
 	},
+		{
+		"id": "parentallock",
+		"type": "enum",
+		"label": "Parental Lock",
+		"values": [
+			"Disabled",
+			"Enabled",
+		],
+		"default": "Disabled" 
+	},
 	{
 		"id": "movie2k_language",
 		"type": "enum",

@@ -392,9 +392,67 @@ def TVShows(title, type):
 	TVSHOW_PAGE = "http://" + MOVIE2K_URL + "/tvshows-updates"
 	oc.add(DirectoryObject(key=Callback(MoviePageAdd, title=TVSHOW_TITLE, page=TVSHOW_PAGE, genre=Genre_Type, type=type), title=TVSHOW_TITLE, summary=TVSHOW_SUMMARY, thumb=TVSHOW_THUMB))
 
+	#Add Alphabitical listing to TV Show
+	ICON_ALPHA = "icon-alphabetical.png"
+	TVSHOW_TITLE = "Alphabitical listing of the TV Shows"
+	TVSHOW_SUMMARY = "Listings sorted by Alphabitical order of the TV Shows database!"
+	TVSHOW_THUMB = R(ICON_ALPHA)
+	TVSHOW_PAGE = "http://" + MOVIE2K_URL + "/tvshows-all.html"
+	oc.add(DirectoryObject(key=Callback(AlphabiticalTVShowsPageAdd, title=TVSHOW_TITLE, page=TVSHOW_PAGE, type=type), title=TVSHOW_TITLE, summary=TVSHOW_SUMMARY, thumb=TVSHOW_THUMB))
+
 	#Add Genre Pages to TV Page
-	GENRE_PAGE = "http://" + MOVIE2K_URL + "/genres-tvshows.html"
+	ICON_GENRE = "icon-genre.png"
+	TVSHOW_TITLE = "Genre listing of TV Shows"
+	TVSHOW_SUMMARY = "Listings sorted by Genre of the TV Shows database!"
+	TVSHOW_THUMB = R(ICON_GENRE)
+	TVSHOW_PAGE = "http://" + MOVIE2K_URL + "/genres-tvshows.html"
+	oc.add(DirectoryObject(key=Callback(GenreTVShowsPageAdd, title=TVSHOW_TITLE, page=TVSHOW_PAGE, type=type), title=TVSHOW_TITLE, summary=TVSHOW_SUMMARY, thumb=TVSHOW_THUMB))
+
+	return oc
+
+
+####################################################################################################
+@route(PREFIX + '/AlphabiticalTVShowsPageAdd')
+def AlphabiticalTVShowsPageAdd(title, page, type):
+
+	oc = ObjectContainer(title2=title)
+
+	cookies = Dict['_movie2k_uid']
+	headers = {"Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8", "Accept-Charset": "ISO-8859-1,utf-8;q=0.7,*;q=0.3", "Accept-Encoding": "gzip,deflate,sdch", "Accept-Language": "en-US,en;q=0.8", "Connection": "keep-alive", "Host": MOVIE2K_URL, "Referer": "http://"+MOVIE2K_URL, "User-Agent": UserAgent[UserAgentNum]}
+	req = requests.get(page, headers=headers, cookies=cookies)
+
+	Alpha_Type = "Numerical"
+	ICON_MOVIES = "icon-numerical.png"
+	MOVIES_TITLE = "Numerical"+" "+type
+	MOVIES_SUMMARY = "Your Numerical list of the Movie database!"
+	MOVIES_THUMB = R(ICON_MOVIES)
+	MOVIES_PAGE_PART = "/tvshows-all-1.html"
 	
+	MOVIES_PAGE = "http://" + MOVIE2K_URL + MOVIES_PAGE_PART
+
+	oc.add(DirectoryObject(key=Callback(TVShowsList, title=MOVIES_TITLE, page=MOVIES_PAGE, genre=Alpha_Type, type=type), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=MOVIES_THUMB))
+
+	for AlphNumeric in HTML.ElementFromString(req.content).xpath('//div[@id="content"]/div[@id="boxgrey"]'):
+		Alpha_Type = AlphNumeric.xpath('./a')[0].text
+		ICON_MOVIES = "icon-"+Alpha_Type.lower()+".png"
+		MOVIES_TITLE = Alpha_Type+" "+type
+		MOVIES_SUMMARY = "Your "+Alpha_Type+" list of the "+type+" database!"
+		MOVIES_THUMB = R(ICON_MOVIES)
+		MOVIES_PAGE_PART = AlphNumeric.xpath('./a')[0].get('href').split("/")[4]
+
+		MOVIES_PAGE = "http://" + MOVIE2K_URL + "/" + MOVIES_PAGE_PART
+
+		oc.add(DirectoryObject(key=Callback(TVShowsList, title=MOVIES_TITLE, page=MOVIES_PAGE, genre=Alpha_Type, type=type), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=MOVIES_THUMB))
+
+	return oc
+
+
+####################################################################################################
+@route(PREFIX + '/GenreTVShowsPageAdd')
+def GenreTVShowsPageAdd(title, page, type):
+
+	oc = ObjectContainer(title2=title)
+
 	NotSkip = True
 
 	for Genre in HTML.ElementFromURL(GENRE_PAGE).xpath('//div[@id="content"]/table[@id="tablemovies"]/tr'):
@@ -464,7 +522,7 @@ def FeaturedTVShowsPageAdd(title, page, type):
 		TVSHOW_THUMB = TVSHOWS_DIV[i].xpath("./a/img")[0].get('src')
 		TVSHOW_TITLE = TVSHOWS_DIV[i].xpath("./a/img")[0].get('title')
 		i += 1
-		TVSHOW_YEAR = re.sub('[^0-9]', '', TVSHOWS_DIV[i].xpath('./div[@class="beschreibung"]/span')[0].text_content().split('| : ')[1])
+		TVSHOW_YEAR = re.sub('[^0-9]', '', TVSHOWS_DIV[i].xpath('./div[@class="beschreibung"]/span')[0].text_content().split('| Country/Year: ')[1])
 		LANGUAGE_URL = TVSHOWS_DIV[i].xpath("./h2//img")[0].get('src')
 		try:
 			TVSHOW_LANG = GetLang(lang=LANGUAGE_URL.split('/')[5].split('.')[0])
@@ -562,30 +620,206 @@ def Movies(title, type):
 		MOVIES_PAGE = "http://" + MOVIE2K_URL + "/movies-updates"
 		oc.add(DirectoryObject(key=Callback(MoviePageAdd, title=MOVIES_TITLE, page=MOVIES_PAGE, genre=Genre_Type, type=type), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=MOVIES_THUMB))
 
-		#Add Genre Pages to Movie Page
-		GENRE_PAGE = "http://" + MOVIE2K_URL + "/genres-movies.html"
+		#Add By Alphabitical listing Movie Page
+		ICON_ALPHA = "icon-alphabetical.png"
+		MOVIES_TITLE = "Alphabitical listing of Movies"
+		MOVIES_SUMMARY = "Listings sorted by Alphabitical order of the Movies database!"
+		MOVIES_THUMB = R(ICON_ALPHA)
+		MOVIES_PAGE = "http://" + MOVIE2K_URL + "/movies-all.html"
+		oc.add(DirectoryObject(key=Callback(AlphabiticalPageAdd, title=MOVIES_TITLE, page=MOVIES_PAGE, type=type), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=MOVIES_THUMB))
+
+		#Add By Genre listing Movie Page
+		ICON_GENRE = "icon-genre.png"
+		MOVIES_TITLE = "Genre listing of Movies"
+		MOVIES_SUMMARY = "Listings sorted by Genre of the Movies database!"
+		MOVIES_THUMB = R(ICON_GENRE)
+		MOVIES_PAGE = "http://" + MOVIE2K_URL + "/genres-movies.html"
+		oc.add(DirectoryObject(key=Callback(GenrePageAdd, title=MOVIES_TITLE, page=MOVIES_PAGE, type=type), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=MOVIES_THUMB))
 
 	elif type == 'XXX Movies':
-		#Add Latest Updates XXX Movie Page
-		PORN_TITLE = "Newly Added XXX Movies"
-		PORN_SUMMARY = "Your Latest Updates to the XXX Movies database!"
-		PORN_THUMB = R(ICON_UPDATES)
-		PORN_PAGE = "http://" + MOVIE2K_URL + "/xxx-updates"
-		oc.add(DirectoryObject(key=Callback(MoviePageAdd, title=PORN_TITLE, page=PORN_PAGE, genre=Genre_Type, type=type), title=PORN_TITLE, summary=PORN_SUMMARY, thumb=PORN_THUMB))
+		ParentalLock = Prefs["parentallock"]
+		ICON_PASSWORD = "icon-password.png"
+		PARENTAL_THUMB = R(ICON_PASSWORD)
+		ICON_INSTRUCTIONS = "icon-instructions.png"
+		INSTRUCTIONS_THUMB = R(ICON_INSTRUCTIONS)
+		Password = LoadData(fp=CAPTCHA_DATA)
+		ParentalPassword = Password[0][1]['ParentalPassword']
 
-		#Add Genre Pages to XXX Movies Page
-		GENRE_PAGE = "http://" + MOVIE2K_URL + "/genres-xxx.html"
+		if ParentalLock == "Enabled" or (ParentalLock == "Disabled" and ParentalPassword != ""):
+			if ParentalLock == "Enabled" and ParentalPassword == "":
+				title = "Parental Lockout Enabled"
+				summary = "Click here to input New Parental Lock password."
+				prompt="Click here to input New Parental Lock password."
+			elif ParentalLock == "Enabled" and ParentalPassword != "":
+				title = "Parental Lockout"
+				summary = "Click here to input Parental Lock password."
+				prompt="Click here to input Parental Lock password."
+			elif ParentalLock == "Disabled" and ParentalPassword != "":
+				title = "Parental Lockout Disabled"
+				summary = "Click here to input Parental Lock password to delete password."
+				prompt="Click here to input Parental Lock password to delete password."
+
+			#Add Password Check XXX Movie Page
+			oc.add(DirectoryObject(key=Callback(RokuUsersPasswordInput, title="Special Instructions for Roku Users"), title="Special Instructions for Roku Users", thumb=INSTRUCTIONS_THUMB, summary="Click here to see special instructions necessary for Roku Users for password input."))
+			oc.add(InputDirectoryObject(key=Callback(InputParentalPassword, title=title, type=type), title=title, summary=summary, thumb=PARENTAL_THUMB, prompt=prompt))
+		else:
+
+			#Add Featured XXX Movie Page
+			ICON_FEATURED = "icon-latest-featured.png"
+			PORN_TITLE = "Featured XXX Movies"
+			PORN_SUMMARY = "Your Featured Movies in the XXX Movies database!"
+			PORN_THUMB = R(ICON_FEATURED)
+			PORN_PAGE = "http://" + MOVIE2K_URL + "/xxx-updates.html"
+			oc.add(DirectoryObject(key=Callback(FeaturedMoviePageAdd, title=PORN_TITLE, page=PORN_PAGE, type=type), title=PORN_TITLE, summary=PORN_SUMMARY, thumb=PORN_THUMB))
+
+			#Add Latest Updates XXX Movie Page
+			PORN_TITLE = "Newly Added XXX Movies"
+			PORN_SUMMARY = "Your Latest Updates to the XXX Movies database!"
+			PORN_THUMB = R(ICON_UPDATES)
+			PORN_PAGE = "http://" + MOVIE2K_URL + "/xxx-updates"
+			oc.add(DirectoryObject(key=Callback(MoviePageAdd, title=PORN_TITLE, page=PORN_PAGE, genre=Genre_Type, type=type), title=PORN_TITLE, summary=PORN_SUMMARY, thumb=PORN_THUMB))
+
+			#Add By Alphabitical listing XXX Movie Page
+			ICON_ALPHA = "icon-alphabetical.png"
+			PORN_TITLE = "Alphabitical listing of XXX Movies"
+			PORN_SUMMARY = "Listings sorted by Alphabitical order of the XXX Movies database!"
+			PORN_THUMB = R(ICON_ALPHA)
+			PORN_PAGE = "http://" + MOVIE2K_URL + "/xxx-all.html"
+			oc.add(DirectoryObject(key=Callback(AlphabiticalPageAdd, title=PORN_TITLE, page=PORN_PAGE, type=type), title=PORN_TITLE, summary=PORN_SUMMARY, thumb=PORN_THUMB))
+
+			#Add By Genre listing XXX Movie Page
+			ICON_GENRE = "icon-genre.png"
+			PORN_TITLE = "Genre listing of XXX Movies"
+			PORN_SUMMARY = "Listings sorted by Genre of the XXX Movies database!"
+			PORN_THUMB = R(ICON_GENRE)
+			PORN_PAGE = "http://" + MOVIE2K_URL + "/genres-xxx.html"
+			oc.add(DirectoryObject(key=Callback(GenrePageAdd, title=PORN_TITLE, page=PORN_PAGE, type=type), title=PORN_TITLE, summary=PORN_SUMMARY, thumb=PORN_THUMB))
+
+	return oc
+
+
+####################################################################################################
+@route(PREFIX + '/InputParentalPassword')
+def InputParentalPassword(title, type, query):
+
+	oc = ObjectContainer(title2=title)
+
+	ParentalLock = Prefs["parentallock"]
+	Password = LoadData(fp=CAPTCHA_DATA)
+	ParentalPassword = Password[0][1]['ParentalPassword']
+	PasswordCheck = ParentalPassword.decode('base64', 'strict')
+
+	if ParentalLock == "Enabled" and ParentalPassword == "":
+		Password[0][1]['ParentalPassword'] = query.encode('base64', 'strict')
+		JsonWrite(fp=CAPTCHA_DATA, jsondata=Password)
+		return ObjectContainer(header="Parental Lockout Enabled", message="The Parental Lock password has now been enabled. Please click Ok to exit this screen and then click the back button to refresh the menu line up.")
+	elif ParentalLock == "Disabled" and ParentalPassword != "":
+		if query != PasswordCheck:
+			return ObjectContainer(header="Parental Lockout Error", message="The entered password does not match the one that has been set for Parental Lock!  Please Try Again!") 
+		else:
+			Password[0][1]['ParentalPassword'] = ""
+			JsonWrite(fp=CAPTCHA_DATA, jsondata=Password)
+			return ObjectContainer(header="Parental Lockout Diabled", message="The Parental Lock password has now been removed. Please click Ok to exit this screen and then click the back button to refresh the menu line up.")
+	elif ParentalLock == "Enabled" and ParentalPassword != "":
+		if query != PasswordCheck:
+			return ObjectContainer(header="Parental Lockout Error", message="The entered password does not match the one that has been set for Parental Lock!  Please Try Again!") 
+		else:
+
+			#Add Featured XXX Movie Page
+			ICON_FEATURED = "icon-latest-featured.png"
+			PORN_TITLE = "Featured XXX Movies"
+			PORN_SUMMARY = "Your Featured Movies in the XXX Movies database!"
+			PORN_THUMB = R(ICON_FEATURED)
+			PORN_PAGE = "http://" + MOVIE2K_URL + "/xxx-updates.html"
+			oc.add(DirectoryObject(key=Callback(FeaturedMoviePageAdd, title=PORN_TITLE, page=PORN_PAGE, type=type), title=PORN_TITLE, summary=PORN_SUMMARY, thumb=PORN_THUMB))
+
+			#Add Latest Updates XXX Movie Page
+			Genre_Type = "Latest Updates"
+			ICON_UPDATES = "icon-latest-updates.png"
+			PORN_TITLE = "Newly Added XXX Movies"
+			PORN_SUMMARY = "Your Latest Updates to the XXX Movies database!"
+			PORN_THUMB = R(ICON_UPDATES)
+			PORN_PAGE = "http://" + MOVIE2K_URL + "/xxx-updates"
+			oc.add(DirectoryObject(key=Callback(MoviePageAdd, title=PORN_TITLE, page=PORN_PAGE, genre=Genre_Type, type=type), title=PORN_TITLE, summary=PORN_SUMMARY, thumb=PORN_THUMB))
+
+			#Add By Alphabitical listing XXX Movie Page
+			ICON_ALPHA = "icon-alphabetical.png"
+			PORN_TITLE = "Alphabitical listing of XXX Movies"
+			PORN_SUMMARY = "Listings sorted by Alphabitical order of the XXX Movies database!"
+			PORN_THUMB = R(ICON_ALPHA)
+			PORN_PAGE = "http://" + MOVIE2K_URL + "/xxx-all.html"
+			oc.add(DirectoryObject(key=Callback(AlphabiticalPageAdd, title=PORN_TITLE, page=PORN_PAGE, type=type), title=PORN_TITLE, summary=PORN_SUMMARY, thumb=PORN_THUMB))
+
+			#Add By Genre listing XXX Movie Page
+			ICON_GENRE = "icon-genre.png"
+			PORN_TITLE = "Genre listing of XXX Movies"
+			PORN_SUMMARY = "Listings sorted by Genre of the XXX Movies database!"
+			PORN_THUMB = R(ICON_GENRE)
+			PORN_PAGE = "http://" + MOVIE2K_URL + "/genres-xxx.html"
+			oc.add(DirectoryObject(key=Callback(GenrePageAdd, title=PORN_TITLE, page=PORN_PAGE, type=type), title=PORN_TITLE, summary=PORN_SUMMARY, thumb=PORN_THUMB))
+
+	return oc
+
+
+#####################################################################################################
+# This is special instructions for Roku users
+def RokuUsersPasswordInput(title):
+
+	return ObjectContainer(header="Special Instructions for Roku Users", message="Inputting password, Roku users must be using version 2.6.5 of the Plex Roku Channel (currently the PlexTest channel). If the Parantal Lock has been enabled, please input the password to view the adult content.  If the Parental Lock has been disabled enter the password to delete the password.  WARNING: DO NOT DIRECTLY TYPE OR PASTE THE TEXT IN THE INPUT CAPTCHA SECTION USING ROKU PLEX CHANNELS 2.6.4. THAT VERSION USES A SEARCH INSTEAD OF ENTRY SCREEN AND EVERY LETTER OF THE TEXT YOU ENTER WILL PRODUCE A SUBMIT FORM ON EACH LETTER.")
+
+
+####################################################################################################
+@route(PREFIX + '/AlphabiticalPageAdd')
+def AlphabiticalPageAdd(title, page, type):
+
+	oc = ObjectContainer(title2=title)
+
+	cookies = Dict['_movie2k_uid']
+	headers = {"Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8", "Accept-Charset": "ISO-8859-1,utf-8;q=0.7,*;q=0.3", "Accept-Encoding": "gzip,deflate,sdch", "Accept-Language": "en-US,en;q=0.8", "Connection": "keep-alive", "Host": MOVIE2K_URL, "Referer": "http://"+MOVIE2K_URL, "User-Agent": UserAgent[UserAgentNum]}
+	req = requests.get(page, headers=headers, cookies=cookies)
+
+	Alpha_Type = "Numerical"
+	ICON_MOVIES = "icon-numerical.png"
+	MOVIES_TITLE = "Numerical"+" "+type
+	MOVIES_SUMMARY = "Your Numerical list of the Movie database!"
+	MOVIES_THUMB = R(ICON_MOVIES)
+	MOVIES_PAGE_PART = "/movies-all-1-"
 	
+	MOVIES_PAGE = "http://" + MOVIE2K_URL + MOVIES_PAGE_PART
+
+	oc.add(DirectoryObject(key=Callback(MovieGenres, title=MOVIES_TITLE, page=MOVIES_PAGE, genre=Alpha_Type, thumb=MOVIES_THUMB, type=type), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=MOVIES_THUMB))
+
+	for AlphNumeric in HTML.ElementFromString(req.content).xpath('//div[@id="content"]/div[@id="content"]/div/div[@id="boxgrey"]'):
+		Alpha_Type = AlphNumeric.xpath('./a')[0].text
+		ICON_MOVIES = "icon-"+Alpha_Type.lower()+".png"
+		MOVIES_TITLE = Alpha_Type+" "+type
+		MOVIES_SUMMARY = "Your "+Alpha_Type+" list of the "+type+" database!"
+		MOVIES_THUMB = R(ICON_MOVIES)
+		MOVIES_PAGE_PART = AlphNumeric.xpath('./a')[0].get('href').split(".")[1]
+
+		MOVIES_PAGE = "http://" + MOVIE2K_URL + MOVIES_PAGE_PART + "-"
+
+		oc.add(DirectoryObject(key=Callback(MovieGenres, title=MOVIES_TITLE, page=MOVIES_PAGE, genre=Alpha_Type, thumb=MOVIES_THUMB, type=type), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=MOVIES_THUMB))
+
+	return oc
+
+
+####################################################################################################
+@route(PREFIX + '/GenrePageAdd')
+def GenrePageAdd(title, page, type):
+
+	oc = ObjectContainer(title2=title)
+
 	NotSkip = True
 	cookies = Dict['_movie2k_uid']
 	headers = {"Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8", "Accept-Charset": "ISO-8859-1,utf-8;q=0.7,*;q=0.3", "Accept-Encoding": "gzip,deflate,sdch", "Accept-Language": "en-US,en;q=0.8", "Connection": "keep-alive", "Host": MOVIE2K_URL, "Referer": "http://"+MOVIE2K_URL, "User-Agent": UserAgent[UserAgentNum]}
-	req = requests.get(GENRE_PAGE, headers=headers, cookies=cookies)
+	req = requests.get(page, headers=headers, cookies=cookies)
 
 	for Genre in HTML.ElementFromString(req.content).xpath('//div[@id="content"]/table[@id="tablemovies"]/tr'):
 		Genre_Type = Genre.xpath('./td[@id="tdmovies"]/a')[0].text
 		ICON_MOVIES = "icon-"+Genre_Type.lower()+".png"
 		MOVIES_TITLE = Genre_Type+" "+type
-		MOVIES_SUMMARY = "Your "+Genre_Type+" Movie database!"
+		MOVIES_SUMMARY = "Your "+Genre_Type+" "+type+" database!"
 		MOVIES_THUMB = R(ICON_MOVIES)
 		MOVIES_PAGE_PART = Genre.xpath('./td[@id="tdmovies"]/a')[0].get('href').split(Genre_Type.replace(' ','+'))[0]
 
@@ -598,6 +832,7 @@ def Movies(title, type):
 			oc.add(DirectoryObject(key=Callback(MovieGenres, title=MOVIES_TITLE, page=MOVIES_PAGE, genre=Genre_Type, thumb=MOVIES_THUMB, type=type), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=MOVIES_THUMB))
 		else:
 			NotSkip = True
+
 	return oc
 
 
@@ -606,7 +841,7 @@ def Movies(title, type):
 def MovieGenres(title, page, genre, thumb, type):
 	
 	oc = ObjectContainer(title2=title)
-
+	Log("Page: "+page)
 	i = 1
 	MOVIES = page+"1.html"
 	cookies = Dict['_movie2k_uid']
@@ -655,6 +890,35 @@ def CinemaMoviePageAdd(title, page, type):
 			oc.add(DirectoryObject(key=Callback(SubMoviePageAdd, title=MOVIES_TITLE, page=MOVIES_PAGE, date=MOVIES_YEAR, dateadd=dateadd, thumbck=MOVIES_THUMB, type=type), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=Callback(GetThumb, url=MOVIES_THUMB)))
 		except:
 			pass
+
+	return oc
+
+
+####################################################################################################
+@route(PREFIX + '/FeaturedMoviePageAdd')
+def FeaturedMoviePageAdd(title, page, type):
+
+	oc = ObjectContainer(title2=title)
+	
+	cookies = Dict['_movie2k_uid']
+	headers = {"Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8", "Accept-Charset": "ISO-8859-1,utf-8;q=0.7,*;q=0.3", "Accept-Encoding": "gzip,deflate,sdch", "Accept-Language": "en-US,en;q=0.8", "Connection": "keep-alive", "Host": MOVIE2K_URL, "Referer": "http://"+MOVIE2K_URL, "User-Agent": UserAgent[UserAgentNum]}
+	req = requests.get(page, headers=headers, cookies=cookies)
+	FEATURED_MOVIE_PAGE = HTML.ElementFromString(req.content)
+	dateadd = 'N/A'
+
+	i = 2
+	while i <= 3:
+		for Movie in FEATURED_MOVIE_PAGE.xpath('//div[@id="maincontent'+str(i)+'"]/div[@id="divnotinuse"]'):	
+			MOVIES_TD = Movie.xpath('./div')[0]
+			MOVIES_TITLE = MOVIES_TD.xpath("./a/img")[0].get('title')
+			MOVIES_PAGE = MOVIES_TD.xpath("./a")[0].get('href')
+			MOVIES_THUMB = MOVIES_TD.xpath("./a/img")[0].get('src')
+			MOVIES_YEAR = time.strftime("%Y", time.localtime(time.time()))
+			MOVIES_LANG = "English"
+			MOVIES_SUMMARY = "Year: "+MOVIES_YEAR+" | Lang: "+MOVIES_LANG+" | Part of the Featured XXX Movies line up on Movie2k."
+
+			oc.add(DirectoryObject(key=Callback(SubMoviePageAdd, title=MOVIES_TITLE, page=MOVIES_PAGE, date=MOVIES_YEAR, dateadd=dateadd, thumbck=MOVIES_THUMB, type=type), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=Callback(GetThumb, url=MOVIES_THUMB)))
+		i += 1
 
 	return oc
 
@@ -1048,7 +1312,10 @@ def CaptchaSection(title, page, date, thumb, type, summary, directors, guest_sta
 
 	oc = ObjectContainer(title2=title)
 
-	oc.add(DirectoryObject(key=Callback(RokuUsers, title="Special Instructions for Roku Users"), title="Special Instructions for Roku Users", thumb=R(ICON), summary="Click here to see special instructions necessary for Roku Users to add shows to this channel"))
+	ICON_INSTRUCTIONS = "icon-instructions.png"
+	INSTRUCTIONS_THUMB = R(ICON_INSTRUCTIONS)
+
+	oc.add(DirectoryObject(key=Callback(RokuUsers, title="Special Instructions for Roku Users"), title="Special Instructions for Roku Users", thumb=INSTRUCTIONS_THUMB, summary="Click here to see special instructions necessary for Roku Users to input captcha text."))
 	if type == 'TV Shows':
 		oc.add(EpisodeObject(
 				url = url,

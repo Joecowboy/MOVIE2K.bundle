@@ -792,10 +792,8 @@ def GetMovie(Host, HostPage, url, LinkType):
 	elif Host == "Faststream" or Host == "Fastsream":
 		try:
 			if LinkType == 4:
-				VideoPage = SecondButtonPress(url=url, HostPage=HostPage, wform=1, wait=5, addkey={'referer': url})
-				VideoStream = HTML.ElementFromString(VideoPage.content).xpath('//div[@id="player_code"]/script')[1].text.split('file: "')[1].split('"')[0] + "?start=0"
-			if LinkType == 1:
-				VideoStream = HTML.ElementFromURL(HostPage).xpath('//div[@id="player_code"]/script')[1].text.split('file: "')[1].split('"')[0] + "?start=0"
+				HostPage = "http://faststream.in/embed-" + HostPage.split('/')[3] + "-720x480.html"
+			VideoStream = HTML.ElementFromURL(HostPage).xpath('//div[@id="player_code"]/script')[1].text.split('file: "')[1].split('"')[0] + "?start=0"
 		except:
 			VideoStream = ErrorMessage(Host=Host, LogError=1)
 	elif Host == "Filego":
@@ -1513,10 +1511,8 @@ def GetMovie(Host, HostPage, url, LinkType):
 	elif Host == "Vidstream":
 		try:
 			if LinkType == 4:
-				VideoPage = SecondButtonPress(url=url, HostPage=HostPage, wform=1, addkey={'referer': url})
-				VideoStream = HTML.ElementFromString(VideoPage.content).xpath('//div[@id="player_code"]/script[@type=\'text/javascript\']')[1].text.split('file: "')[1].split('"')[0] + "?start=0"
-			elif LinkType == 1:
-				VideoStream = HTML.ElementFromURL(HostPage).xpath('//div[@id="player_code"]/script[@type=\'text/javascript\']')[1].text.split('file: "')[1].split('"')[0] + "?start=0"
+				HostPage = "http://vidstream.in/embed-" + HostPage.split('/')[3] + "-720x480.html"
+			VideoStream = HTML.ElementFromURL(HostPage).xpath('//div[@id="player_code"]/script[@type=\'text/javascript\']')[1].text.split('file: "')[1].split('"')[0] + "?start=0"
 		except:
 			VideoStream = ErrorMessage(Host=Host, LogError=1)
 	elif Host == "Vidto":
@@ -2001,10 +1997,11 @@ def GetMovieDebugger(Host, HostPage, url, LinkType):
 	elif Host == "Faststream" or Host == "Fastsream":
 		#Example - http://faststream.in/ec8x24kybu6c
 		if LinkType == 4:
-			VideoPage = SecondButtonPress(url=url, HostPage=HostPage, wform=1, wait=5, addkey={'referer': url})
-			VideoStream = HTML.ElementFromString(VideoPage.content).xpath('//div[@id="player_code"]/script')[1].text.split('file: "')[1].split('"')[0] + "?start=0"
-		if LinkType == 1:
-			VideoStream = HTML.ElementFromURL(HostPage).xpath('//div[@id="player_code"]/script')[1].text.split('file: "')[1].split('"')[0] + "?start=0"
+			#VideoPage = SecondButtonPress(url=url, HostPage=HostPage, wform=1, wait=5, addkey={'referer': url})
+			#VideoStream = HTML.ElementFromString(VideoPage.content).xpath('//div[@id="player_code"]/script')[1].text.split('file: "')[1].split('"')[0] + "?start=0"
+			HostPage = "http://faststream.in/embed-" + HostPage.split('/')[3] + "-720x480.html"
+		#if LinkType == 1:
+		VideoStream = HTML.ElementFromURL(HostPage).xpath('//div[@id="player_code"]/script')[1].text.split('file: "')[1].split('"')[0] + "?start=0"
 	elif Host == "Filego":
 		#Example - http://filego.org/?d=5102D5E112
 		VideoPage = 'http://www.filego.org/fgflash.php?id=' + HostPage.split('=')[1]
@@ -2532,10 +2529,11 @@ def GetMovieDebugger(Host, HostPage, url, LinkType):
 		VideoStream = VideoURL.headers['location'] + "?cookies="+String.Quote(str(cookies), usePlus=True)+"&headers="+String.Quote(str(headers), usePlus=True)
 	elif Host == "Vidstream":
 		if LinkType == 4:
-			VideoPage = SecondButtonPress(url=url, HostPage=HostPage, wform=1, addkey={'referer': url})
-			VideoStream = HTML.ElementFromString(VideoPage.content).xpath('//div[@id="player_code"]/script[@type=\'text/javascript\']')[1].text.split('file: "')[1].split('"')[0] + "?start=0"
-		elif LinkType == 1:
-			VideoStream = HTML.ElementFromURL(HostPage).xpath('//div[@id="player_code"]/script[@type=\'text/javascript\']')[1].text.split('file: "')[1].split('"')[0] + "?start=0"
+			#VideoPage = SecondButtonPress(url=url, HostPage=HostPage, wform=1, addkey={'referer': url})
+			#VideoStream = HTML.ElementFromString(VideoPage.content).xpath('//div[@id="player_code"]/script[@type=\'text/javascript\']')[1].text.split('file: "')[1].split('"')[0] + "?start=0"
+			HostPage = "http://vidstream.in/embed-" + HostPage.split('/')[3] + "-720x480.html"
+		#elif LinkType == 1:
+		VideoStream = HTML.ElementFromURL(HostPage).xpath('//div[@id="player_code"]/script[@type=\'text/javascript\']')[1].text.split('file: "')[1].split('"')[0] + "?start=0"
 	elif Host == "Vidto":
 		#Does not process form properly -- <Response [200]> -- Only text returned
 		#Example: http://vidto.me/4uoqsdnijj7j.html

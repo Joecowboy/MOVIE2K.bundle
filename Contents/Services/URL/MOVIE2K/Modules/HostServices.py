@@ -14,10 +14,11 @@ import os
 def JsonOpen(fp):
 	if os.path.exists(fp) == False:
 		jsondata = '[\n'
-		jsondata = jsondata + '{1 : {host: "180upload", url: "",  HostPage: "", page: "", adcopy_challenge: "", response: "", UserAgent: "", cookies: "", captchacookies: "", thumb: ""}},\n'
-		jsondata = jsondata + '{2 : {host: "Clicktoview", url: "", HostPage: "", page: "", recaptcha_challenge_field: "", response: "", UserAgent: "", captchacookies: "", thumb: ""}},\n'
-		jsondata = jsondata + '{3 : {host: "Vidbux", url: "",  HostPage: "", page: "", adcopy_challenge: "", response: "", UserAgent: "", cookies: "", captchacookies: "", thumb: ""}},\n'
-		jsondata = jsondata + '{4 : {host: "Vidxden", url: "",  HostPage: "", page: "", adcopy_challenge: "", response: "", UserAgent: "", cookies: "", captchacookies: "", thumb: ""}}\n'
+		jsondata = jsondata + '{1 : {host: "Password", ParentalPassword: ""}},\n'
+		jsondata = jsondata + '{2 : {host: "180upload", url: "",  HostPage: "", page: "", adcopy_challenge: "", response: "", UserAgent: "", cookies: "", captchacookies: "", thumb: ""}},\n'
+		jsondata = jsondata + '{3 : {host: "Clicktoview", url: "", HostPage: "", page: "", recaptcha_challenge_field: "", response: "", UserAgent: "", captchacookies: "", thumb: ""}},\n'
+		jsondata = jsondata + '{4 : {host: "Vidbux", url: "",  HostPage: "", page: "", adcopy_challenge: "", response: "", UserAgent: "", cookies: "", captchacookies: "", thumb: ""}},\n'
+		jsondata = jsondata + '{5 : {host: "Vidxden", url: "",  HostPage: "", page: "", adcopy_challenge: "", response: "", UserAgent: "", cookies: "", captchacookies: "", thumb: ""}}\n'
 		jsondata = jsondata + ']'
 		f = open(fp, "w+")
 		f.write(jsondata)
