@@ -783,8 +783,11 @@ def AlphabiticalPageAdd(title, page, type):
 	MOVIES_TITLE = "Numerical"+" "+type
 	MOVIES_SUMMARY = "Your Numerical list of the Movie database!"
 	MOVIES_THUMB = R(ICON_MOVIES)
-	MOVIES_PAGE_PART = "/movies-all-1-"
-	
+	if type == "Movies":
+		MOVIES_PAGE_PART = "/movies-all-1-"
+	else:
+		MOVIES_PAGE_PART = "/xxx-all-1-"
+
 	MOVIES_PAGE = "http://" + MOVIE2K_URL + MOVIES_PAGE_PART
 
 	oc.add(DirectoryObject(key=Callback(MovieGenres, title=MOVIES_TITLE, page=MOVIES_PAGE, genre=Alpha_Type, thumb=MOVIES_THUMB, type=type), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=MOVIES_THUMB))
