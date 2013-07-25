@@ -651,7 +651,6 @@ def Movies(title, type):
 
 		if ParentalLock == "Enabled" or (ParentalLock == "Disabled" and ParentalPassword != ""):
 			if ParentalLock == "Enabled" and ParentalPassword == "":
-				Log("ParentalPassword: "+ParentalPassword)
 				title = "Parental Lockout Enabled"
 				summary = "Click here to input New Parental Lock password."
 				prompt="Click here to input New Parental Lock password."
