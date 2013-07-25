@@ -455,7 +455,7 @@ def GenreTVShowsPageAdd(title, page, type):
 
 	NotSkip = True
 
-	for Genre in HTML.ElementFromURL(GENRE_PAGE).xpath('//div[@id="content"]/table[@id="tablemovies"]/tr'):
+	for Genre in HTML.ElementFromURL(page).xpath('//div[@id="content"]/table[@id="tablemovies"]/tr'):
 		Genre_Type = Genre.xpath('./td[@id="tdmovies"]/a')[0].text
 		ICON_MOVIES = "icon-"+Genre_Type.lower()+".png"
 		MOVIES_TITLE = Genre_Type+" "+type
