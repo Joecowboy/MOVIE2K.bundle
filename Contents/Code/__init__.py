@@ -27,7 +27,7 @@ UserAgent = ['Mozilla/4.0 (compatible; MSIE 5.5; Windows NT)', 'Opera/9.25 (Wind
 UserAgentNum = random.randrange(0, len(UserAgent)-1, 1)
 
 # Movie2k Plugin Version
-Version = "1.3.1"
+Version = "1.3.2"
 
 # Set up Host Services
 HostServices.Version = Version
@@ -849,7 +849,7 @@ def GenrePageAdd(title, page, type):
 def MovieGenres(title, page, genre, thumb, type):
 	
 	oc = ObjectContainer(title2=title)
-	Log("Page: "+page)
+
 	i = 1
 	MOVIES = page+"1.html"
 	cookies = Dict['_movie2k_uid']
@@ -1015,12 +1015,19 @@ def SubMoviePageAdd(title, page, date, dateadd, thumbck, type):
 		if thumbck != "" and thumbck != None:
 			thumb = thumbck
 
-	NumHostListing1 = len(MOVIE_PAGE_HTML.xpath('//div[@id="menu"]//tr[@id="tablemoviesindex2"]'))
+	Listing = MOVIE_PAGE_HTML.xpath('//div[@id="menu"]//tr[@id="tablemoviesindex2"]')
+	NumHostListing1 = len(Listing)
 	StringListing = MOVIE_PAGE_HTML.xpath('//div[@id="menu"]//script[@type="text/javascript"]')
 	NumStringListing = len(StringListing)
 	NumHostListing2 = 0
+	HostCount = 1
 	nsl = 0
+	sll = 1
+	Num1 = 0
+	Num2 = 0
 	i = 1
+	k = 0
+	Hosts = ""
 
 	while nsl < NumStringListing:
 		NumHosts = len(StringListing[nsl].text.split('links[')) - 2
@@ -1034,8 +1041,36 @@ def SubMoviePageAdd(title, page, date, dateadd, thumbck, type):
 		jj += 1
 
 	while i <= jj:
-		MOVIES_SUMMARY = "Page - " + str(i) + " of hosting sites."
+		while HostCount <= 4:
+			if Num1 < NumHostListing1:
+				try:
+					Host = Listing[Num1].xpath("./td/a/img")[0].get('title').split(' ')[0].split('.')[0].capitalize()
+				except:
+					Host = Listing[Num1].xpath("./td/a/img")[0].get('title').split(' ')[0].capitalize()
+				Num1 += 1
+				Hosts = Hosts + Host + ", "
+			elif Num2 < NumHostListing2:
+				ScriptListing = StringListing[k].text.split('links[')
+				NumHosts = len(ScriptListing) - 2	
+				try:
+					Host = ScriptListing[sll].split('title=\\"')[1].split('\\"')[0].split(' ')[0].split('.')[0].capitalize()
+				except:
+					Host = ScriptListing[sll].split('title=\\"')[1].split('\\"')[0].split(' ')[0].capitalize()
+				if sll == NumHosts:
+					k += 1
+					sll = 1
+				else:
+					sll += 1
+				Num2 += 1
+				Hosts = Hosts + Host + ", "
+			else:
+				HostCount = 4
+			HostCount += 1
+
+		MOVIES_SUMMARY = "Page - " + str(i) + " | Hosts: " + Hosts[:-2]
 		oc.add(DirectoryObject(key=Callback(TheMovieListings, title=title, page=page, date=date, dateadd=dateadd, thumb=thumb, type=type, PageOfHosts=i), title=title, summary=MOVIES_SUMMARY, thumb=Callback(GetThumb, url=thumb)))
+		HostCount = 1
+		Hosts = ""
 		i += 1
 
 	return oc
