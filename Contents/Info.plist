@@ -2,46 +2,24 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>CFBundleDevelopmentRegion</key>
-	<string>English</string>
-
-	<key>CFBundleExecutable</key>
-	<string></string>
-
 	<key>CFBundleIdentifier</key>
 	<string>com.plexapp.plugins.movie2k</string>
 
 	<key>PlexFrameworkVersion</key>
 	<string>2</string>
 
-	<key>PlexAudioCodec</key>
-	<array>
-		<string>AAC</string>
-	</array>
-
-	<key>PlexMediaContainer</key>
-	<array>
-		<string>MP4</string>
-		<string>Flash</string>
-	</array>
-
-	<key>PlexVideoCodec</key>
-	<array>
-		<string>H.264</string>
-	</array>
+    <key>PlexClientPlatforms</key>
+    <string>*</string>
 
 	<key>PlexFrameworkFlags</key>
 	<array>
 		<string>UseRealRTMP</string>
 	</array>
 
-	<key>PlexPluginMode</key>
-	<string>AlwaysOn</string>
-	
 	<key>PlexPluginConsoleLogging</key>
-	<string></string>
+	<string>0</string>
 
 	<key>PlexPluginDevMode</key>
-	<string></string>
+	<string>0</string>
 </dict>
 </plist>
