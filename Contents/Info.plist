@@ -8,8 +8,8 @@
 	<key>PlexFrameworkVersion</key>
 	<string>2</string>
 
-    <key>PlexClientPlatforms</key>
-    <string>*</string>
+	<key>PlexClientPlatforms</key>
+	<string>*</string>
 
 	<key>PlexFrameworkFlags</key>
 	<array>
