@@ -43,7 +43,10 @@ http://wiki.github.com/hoffstaetter/python-tesseract
 
 # CHANGE THIS IF TESSERACT IS NOT IN YOUR PATH, OR IS NAMED DIFFERENTLY
 import os
-tesseract_cmd = os.getcwd().split("?\\")[1].split('Plug-in Support')[0].replace('\\', '\\\\')+"Plug-ins\\MOVIE2K.bundle\\Contents\\Services\\URL\\MOVIE2K\\Modules\\Tesseract-OCR\\tesseract.exe"
+try:
+	tesseract_cmd = os.getcwd().split("?\\")[1].split('Plug-in Support')[0].replace('\\', '\\\\')+"Plug-ins\\MOVIE2K.bundle\\Contents\\Services\\URL\\MOVIE2K\\Modules\\Tesseract-OCR\\tesseract.exe"
+except:
+	tesseract_cmd = os.getcwd().split("Plug-in Support")[0]+"Plug-ins/MOVIE2K.bundle/Contents/Services/URL/MOVIE2K/Modules/Tesseract-OCR-OSX/tesseractOCR"
 
 from PIL import Image
 import StringIO
