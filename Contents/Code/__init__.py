@@ -34,7 +34,7 @@ UserAgent = ['Mozilla/4.0 (compatible; MSIE 5.5; Windows NT)', 'Opera/9.25 (Wind
 UserAgentNum = random.randrange(0, len(UserAgent)-1, 1)
 
 # Movie2k Plugin Version
-Version = "1.4.1"
+Version = "1.4.2"
 
 # Set up Host Services
 HostServices.Version = Version
@@ -342,6 +342,9 @@ def MyFavoriteURL(title):
 		if MOVIES_PAGE != "":
 			oc.add(DirectoryObject(key=Callback(SubMoviePageAdd, title=MOVIES_TITLE, page=MOVIES_PAGE, date=MOVIES_YEAR, dateadd=dateadd, thumbck=MOVIES_THUMB, type=type), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=Callback(GetThumb, url=MOVIES_THUMB)))
 
+	if len(oc) < 1:
+		oc = ObjectContainer(header="Sorry", message="This section does not contain any My Favorite videos.  Please add a video to view.")
+
 	return oc
 
 ####################################################################################################
@@ -425,6 +428,9 @@ def DeleteFavoriteURL(title):
 
 		if MOVIES_PAGE != "":
 			oc.add(DirectoryObject(key=Callback(DeleteURL, title=MOVIES_TITLE, page=MOVIES_PAGE), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=Callback(GetThumb, url=MOVIES_THUMB)))
+
+	if len(oc) < 1:
+		oc = ObjectContainer(header="Sorry", message="This section does not contain any My Favorite videos to delete.")
 
 	return oc
 
