@@ -18,13 +18,14 @@ from .structures import CaseInsensitiveDict
 from .auth import HTTPBasicAuth
 from .cookies import cookiejar_from_dict, get_cookie_header
 from .packages.urllib3.filepost import encode_multipart_formdata
+from .packages.urllib3.util import parse_url
 from .exceptions import HTTPError, RequestException, MissingSchema, InvalidURL
 from .utils import (
     guess_filename, get_auth_from_url, requote_uri,
     stream_decode_response_unicode, to_key_val_list, parse_header_links,
     iter_slices, guess_json_utf, super_len)
 from .compat import (
-    cookielib, urlparse, urlunparse, urlsplit, urlencode, str, bytes, StringIO,
+    cookielib, urlunparse, urlsplit, urlencode, str, bytes, StringIO,
     is_py2, chardet, json, builtin_str, basestring)
 
 CONTENT_CHUNK_SIZE = 10 * 1024
@@ -104,7 +105,7 @@ class RequestEncodingMixin(object):
             for v in val:
                 if v is not None:
                     new_fields.append(
-                        (field.encode('utf-8') if isinstance(field, str) else field,
+                        (field.decode('utf-8') if isinstance(field, bytes) else field,
                          v.encode('utf-8') if isinstance(v, str) else v))
 
         for (k, v) in files:
@@ -266,6 +267,15 @@ class PreparedRequest(RequestEncodingMixin, RequestHooksMixin):
     def __repr__(self):
         return '<PreparedRequest [%s]>' % (self.method)
 
+    def copy(self):
+        p = PreparedRequest()
+        p.method = self.method
+        p.url = self.url
+        p.headers = self.headers
+        p.body = self.body
+        p.hooks = self.hooks
+        return p
+
     def prepare_method(self, method):
         """Prepares the given HTTP method."""
         self.method = method
@@ -284,18 +294,27 @@ class PreparedRequest(RequestEncodingMixin, RequestHooksMixin):
             pass
 
         # Support for unicode domain names and paths.
-        scheme, netloc, path, _params, query, fragment = urlparse(url)
+        scheme, auth, host, port, path, query, fragment = parse_url(url)
 
         if not scheme:
             raise MissingSchema("Invalid URL %r: No schema supplied" % url)
 
-        if not netloc:
-            raise InvalidURL("Invalid URL %t: No netloc supplied" % url)
+        if not host:
+            raise InvalidURL("Invalid URL %r: No host supplied" % url)
 
+        # Only want to apply IDNA to the hostname
         try:
-            netloc = netloc.encode('idna').decode('utf-8')
+            host = host.encode('idna').decode('utf-8')
         except UnicodeError:
             raise InvalidURL('URL has an invalid label.')
+
+        # Carefully reconstruct the network location
+        netloc = auth or ''
+        if netloc:
+            netloc += '@'
+        netloc += host
+        if port:
+            netloc += ':' + str(port)
 
         # Bare domains aren't valid URLs.
         if not path:
@@ -308,8 +327,6 @@ class PreparedRequest(RequestEncodingMixin, RequestHooksMixin):
                 netloc = netloc.encode('utf-8')
             if isinstance(path, str):
                 path = path.encode('utf-8')
-            if isinstance(_params, str):
-                _params = _params.encode('utf-8')
             if isinstance(query, str):
                 query = query.encode('utf-8')
             if isinstance(fragment, str):
@@ -322,7 +339,7 @@ class PreparedRequest(RequestEncodingMixin, RequestHooksMixin):
             else:
                 query = enc_params
 
-        url = requote_uri(urlunparse([scheme, netloc, path, _params, query, fragment]))
+        url = requote_uri(urlunparse([scheme, netloc, path, None, query, fragment]))
         self.url = url
 
     def prepare_headers(self, headers):
@@ -344,7 +361,6 @@ class PreparedRequest(RequestEncodingMixin, RequestHooksMixin):
         body = None
         content_type = None
         length = None
-        is_stream = False
 
         is_stream = all([
             hasattr(data, '__iter__'),
@@ -356,7 +372,7 @@ class PreparedRequest(RequestEncodingMixin, RequestHooksMixin):
         try:
             length = super_len(data)
         except (TypeError, AttributeError):
-            length = False
+            length = None
 
         if is_stream:
             body = data
@@ -364,7 +380,7 @@ class PreparedRequest(RequestEncodingMixin, RequestHooksMixin):
             if files:
                 raise NotImplementedError('Streamed bodies and files are mutually exclusive.')
 
-            if length:
+            if length is not None:
                 self.headers['Content-Length'] = str(length)
             else:
                 self.headers['Transfer-Encoding'] = 'chunked'
@@ -529,11 +545,18 @@ class Response(object):
             return iter_slices(self._content, chunk_size)
 
         def generate():
-            while 1:
-                chunk = self.raw.read(chunk_size, decode_content=True)
-                if not chunk:
-                    break
-                yield chunk
+            try:
+                # Special case for urllib3.
+                for chunk in self.raw.stream(chunk_size, decode_content=True):
+                    yield chunk
+            except AttributeError:
+                # Standard file-like object.
+                while 1:
+                    chunk = self.raw.read(chunk_size)
+                    if not chunk:
+                        break
+                    yield chunk
+
             self._content_consumed = True
 
         gen = generate()
@@ -646,7 +669,7 @@ class Response(object):
     def links(self):
         """Returns the parsed header links of the response, if any."""
 
-        header = self.headers['link']
+        header = self.headers.get('link')
 
         # l = MultiDict()
         l = {}
@@ -675,4 +698,9 @@ class Response(object):
             raise HTTPError(http_error_msg, response=self)
 
     def close(self):
+        """Closes the underlying file descriptor and releases the connection
+        back to the pool.
+
+        *Note: Should not normally need to be called explicitly.*
+        """
         return self.raw.release_conn()

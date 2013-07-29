@@ -8,7 +8,11 @@ except:
 	path = os.getcwd().split("Plug-in Support")[0]+"Plug-ins/MOVIE2K.bundle/Contents/Services/URL/MOVIE2K/Modules"
 sys.path.append(path)
 
-import requests
+try:
+	import requests
+except:
+	import requests25 as requests
+
 import urllib
 import re
 import time
@@ -43,6 +47,7 @@ ART            = "art-default.jpg"
 ICON           = "icon-default.png"
 MOVIE2K_URL    = Prefs['movie2k_url']
 CAPTCHA_DATA   = "captcha.data.json"
+FAVORITES_DATA = "favorites.data.json"
 
 
 ####################################################################################################
@@ -258,105 +263,286 @@ def Search(query):
 @route(PREFIX + '/MyMovie2k')
 def MyMovie2k(title):
 
+	oc = ObjectContainer(title2=title)
+
 	# Attempt to login
 	loginResult = Movie2kLogin()
 	Log("My Movie2k Login success: " + str(loginResult))
 
+	# User input instructions
+	ICON_INSTRUCTIONS = "icon-instructions.png"
+	INSTRUCTIONS_THUMB = R(ICON_INSTRUCTIONS)
+	title = "Special Instructions for Roku Users"
+	summary = "Click here to see special instructions necessary for Roku Users for password input."
+	oc.add(DirectoryObject(key=Callback(RokuUsersMyFavorites, title=title), title=title, summary=summary, thumb=INSTRUCTIONS_THUMB))
+
+	# My Uploads on Movie4k.to
 	ICON_MYUPLOADS = "icon-myuploads.png"
 	MYUPLOADS_THUMB = R(ICON_MYUPLOADS)
+	title = "My Uploads"
+	summary = "Show all online, offline, waiting and queued links!"
+	oc.add(DirectoryObject(key = Callback(Queue, title=title, loginResult=loginResult), title=title, summary=summary, thumb=MYUPLOADS_THUMB))
+
+	# My Messages on Movie4k.to
 	ICON_MYMESSAGES = "icon-mymessages.png"
 	MYMESSAGES_THUMB = R(ICON_MYMESSAGES)
+	title = "My Messages"
+	summary = "Show messages from your Inbox!"
+	oc.add(DirectoryObject(key = Callback(Messages, title=title, loginResult=loginResult), title=title, summary=summary, thumb=MYMESSAGES_THUMB))
 
-	if loginResult:
-		oc = ObjectContainer(title2=title)
-		oc.add(DirectoryObject(key = Callback(Queue, title="My Uploads"), title="My Uploads", summary="Show all online, offline, waiting and queued links!", thumb=MYUPLOADS_THUMB))
-		oc.add(DirectoryObject(key = Callback(Messages, title="My Messages"), title = "My Messages", summary="Show messages from your Inbox!", thumb=MYMESSAGES_THUMB))
-	else:
-		oc = MessageContainer("User info required", "Please enter your Movie2k username and password in Preferences.")
+	# My Favorite Movie4k.to links
+	ICON_MYFAVORITES = "icon-my-favorites.png"
+	MYFAVORITES_THUMB = R(ICON_MYFAVORITES)
+	title = "My Favorite Links"
+	summary = "Show my favorite links from Movie2k!"
+	oc.add(DirectoryObject(key = Callback(MyFavoriteURL, title=title), title=title, summary=summary, thumb=MYFAVORITES_THUMB))
+
+	# Add Favorite Movie4k.to link
+	ICON_ADDFAVORITE = "icon-add-favorite.png"
+	ADDFAVORITE_THUMB = R(ICON_ADDFAVORITE)
+	title = "Add Favorite Link"
+	summary = "Add a favorite link from Movie2k!"
+	prompt = "Add a favorite link from Movie2k!"
+	oc.add(InputDirectoryObject(key=Callback(InputFavoriteURL, title=title), title=title, summary=summary, thumb=ADDFAVORITE_THUMB, prompt=prompt))
+
+	# Delete Favorite Movie4k.to link
+	ICON_DELETEFAVORITE = "icon-delete-favorite.png"
+	DELETEFAVORITE_THUMB = R(ICON_DELETEFAVORITE)
+	title = "Delete Favorite Links"
+	summary = "Delete my favorite links from Movie2k!"
+	oc.add(DirectoryObject(key = Callback(DeleteFavoriteURL, title=title), title=title, summary=summary, thumb=DELETEFAVORITE_THUMB))
 
 	return oc
 
 
 ####################################################################################################
-@route(PREFIX + '/Queue')
-def Queue(title):
-	
+def RokuUsersMyFavorites(title):
+
+	return ObjectContainer(header="Special Instructions for Roku Users", message="Inputting Movie4k URL, Roku users must be using version 2.6.6 of the Plex Roku Channel (currently the PlexTest channel). If you do not want to input the Movie4k URL via the Roku input screen you can use the online Rokue remote control.  It can be found at:  http://www.remoku.tv   WARNING: DO NOT DIRECTLY TYPE OR PASTE THE TEXT IN THE INPUT CAPTCHA SECTION USING ROKU PLEX CHANNELS 2.6.4. THAT VERSION USES A SEARCH INSTEAD OF ENTRY SCREEN AND EVERY LETTER OF THE TEXT YOU ENTER WILL PRODUCE A SUBMIT FORM ON EACH LETTER.")
+
+
+####################################################################################################
+@route(PREFIX + '/MyFavoriteURL')
+def MyFavoriteURL(title):
+
 	oc = ObjectContainer(title2=title)
-	ICON_MYUPLOADS = "icon-myuploads.png"
-	MYUPLOADS_THUMB = R(ICON_MYUPLOADS)
-	MYUPLOADS_PAGE = "http://" + MOVIE2K_URL + "/ui.php?ua=myuploads&filter=no"
-	TempMovie = None
 
-	session_cookies = Dict['_movie2k_uid']
-	session_headers = {"Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8", "Accept-Charset": "ISO-8859-1,utf-8;q=0.7,*;q=0.3", "Accept-Encoding": "gzip,deflate,sdch", "Accept-Language": "en-US,en;q=0.8", "Connection": "keep-alive", "Host": MOVIE2K_URL, "Referer": "http://"+MOVIE2K_URL, "User-Agent": UserAgent[UserAgentNum]}
-	values = dict(session_token = Dict['_movie2k_uid'])
-	
-	req = requests.get(MYUPLOADS_PAGE, headers=session_headers, cookies=session_cookies)
-	mylist = HTML.ElementFromString(req.content).xpath('//div[@id="maincontent4"]/table')[0]
-	Movies = mylist.xpath('./tr')
-
+	hosts = LoadData(fp=FAVORITES_DATA, GetJson=False)
 	i = 1
-	while i < len(Movies):
-		Movie = Movies[i].xpath('./td/a')[0].text
-		Host = strip_one_space(Movies[i].xpath('./td')[1].text_content())
-		Status = Movies[i].xpath('./td')[2].text
-		page = Movies[i].xpath('./td/a')[0].get('href')
-		summary = "Hoster: "+Host+" | Status: "+Status
-		title = "My Upload " + str(i) + ": " + Movie
-		
-		try:
-			TitleParts = Movie.split(' ')
-			TitleLen = len(TitleParts) - 1
-			Season = int(TitleParts[TitleLen].split('S')[1].split('E')[0])
-			Episode = int(TitleParts[TitleLen].split('E')[1])
-			if Season >= 0 and Episode >= 0:
-				type = 'TV Shows'
-		except:
-			type = 'Movies'
-
-		if Movie != TempMovie:
-			MOVIE_PAGE_HTML = HTML.ElementFromURL("http://"+MOVIE2K_URL+"/"+page)
-
-			GET_THUMB = MOVIE_PAGE_HTML.xpath('//div[@id="maincontent5"]/div/div')[0]
-			thumb = GET_THUMB.xpath('./a/img')[0].get('src')
-
-		TempMovie = Movie
-
-		oc.add(DirectoryObject(key = Callback(TheMovieListings, title=title, page=page, date='N/A', dateadd='N/A', thumb=thumb, type=type, PageOfHosts=0, Host=Host), title = title, summary=summary, thumb=thumb))
+	for gethost in hosts:
+		MOVIES_PAGE = gethost[i]['SiteURL']
+		MOVIES_THUMB = gethost[i]['ThumbURL']
+		MOVIES_TITLE = gethost[i]['Title']
+		MOVIES_SUMMARY = gethost[i]['Summary']
+		MOVIES_YEAR = gethost[i]['Date']
+		dateadd = 'N/A'
+		type = 'N/A'
 		i += 1
+
+		if MOVIES_PAGE != "":
+			oc.add(DirectoryObject(key=Callback(SubMoviePageAdd, title=MOVIES_TITLE, page=MOVIES_PAGE, date=MOVIES_YEAR, dateadd=dateadd, thumbck=MOVIES_THUMB, type=type), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=Callback(GetThumb, url=MOVIES_THUMB)))
+
+	return oc
+
+####################################################################################################
+@route(PREFIX + '/InputFavoriteURL')
+def InputFavoriteURL(title, query):
+
+	oc = ObjectContainer(title2=title)
+	try:
+		checkURL = query.split('/')[2]
+		if checkURL != 'www.movie4k.to' and checkURL != 'www.movie2kproxy.org' and checkURL != 'www.movie2kproxy.com' and checkURL != '91.202.63.145':
+			return ObjectContainer(header="Not a Movie4k URL", message="The entered URL is not a valid Movie4k video URL. Example of a valid Movie4k video URL: http://www.movie4k.to/Oblivion-watch-movie-3777965.html  Please try again and click Ok to exit this screen.")
+	except:
+		return ObjectContainer(header="Not a Movie4k URL", message="The entered URL is not a valid Movie4k video URL. Example of a valid Movie4k video URL: http://www.movie4k.to/Oblivion-watch-movie-3777965.html  Please try again and click Ok to exit this screen.")
+
+	try:
+		Num = query.split('-')
+		checkNum = Num[len(Num)-1].split('.')[0]
+		if len(checkNum) != 7:
+			return ObjectContainer(header="Not a Valid Video Link", message="The entered URL is not a valid Movie4k video URL. Example of a valid Movie4k video URL: http://www.movie4k.to/Oblivion-watch-movie-3777965.html  Please try again and click Ok to exit this screen.")
+	except:
+		return ObjectContainer(header="Not a Valid Video Link", message="The entered URL is not a valid Movie4k video URL. Example of a valid Movie4k video URL: http://www.movie4k.to/Oblivion-watch-movie-3777965.html  Please try again and click Ok to exit this screen.")
+
+	MOVIE_PAGE_HTML = HTML.ElementFromURL(query)
+	MOVIE_INFO = MOVIE_PAGE_HTML.xpath('//div[@id="details"]')[0].text_content()
+	try:
+		date = re.sub('[^0-9]', '', MOVIE_INFO.split('Land/Year: ')[1])
+		if date == "":
+			date =  "0001"
+	except:
+		re.sub('[^0-9]', '', MOVIE_INFO.split('Land/Jahr: ')[1])
+		if date == "":
+			date =  "0001"
+
+	MOVIE_INFO = MOVIE_PAGE_HTML.xpath('//div[@id="maincontent5"]/div/div')
+	MOVIES_LANG = GetLang(lang=MOVIE_INFO[1].xpath("./span/img")[0].get('src').split('.')[0])
+	MOVIES_TITLE = MOVIE_INFO[1].xpath("./span/h1/a")[0].text.strip()
+	MOVIES_QUALITY = MOVIE_INFO[1].xpath("./span/span/img")[0].get('title').split(' ')[2]
+	MOVIES_THUMB = MOVIE_INFO[0].xpath("./a/img")[0].get('src')
+
+	MOVIES_SUMMARY = "Year: "+date+" | Lang: "+MOVIES_LANG+" | Quality: "+MOVIES_QUALITY
+
+	hosts = LoadData(fp=FAVORITES_DATA, GetJson=False)
+	numHosts = len(hosts)
+	i = 1
+	jj = 0
+	while jj <= numHosts:
+		try:
+			if hosts[jj][i]['SiteURL'] == "":
+				hosts[jj][i]['SiteURL'] = query
+				hosts[jj][i]['ThumbURL'] = MOVIES_THUMB
+				hosts[jj][i]['Title'] = MOVIES_TITLE
+				hosts[jj][i]['Summary'] = MOVIES_SUMMARY
+				hosts[jj][i]['Date'] = date
+				break
+			else:
+				i += 1
+				jj += 1
+		except:
+			hosts.append({i : {'SiteURL': query, 'ThumbURL': MOVIES_THUMB, 'Title': MOVIES_TITLE, 'Summary': MOVIES_SUMMARY, 'Date': date}})
+			break
+
+	JsonWrite(fp=FAVORITES_DATA, jsondata=hosts)
+	return ObjectContainer(header="Favorite URL Added", message="Your video URL from Movie4k has been added to MY FAVORITES line up now. Please click Ok to exit this screen.")
+
+
+####################################################################################################
+@route(PREFIX + '/DeleteFavoriteURL')
+def DeleteFavoriteURL(title):
+
+	oc = ObjectContainer(title2=title)
+
+	hosts = LoadData(fp=FAVORITES_DATA, GetJson=False)
+	i = 1
+	for gethost in hosts:
+		MOVIES_PAGE = gethost[i]['SiteURL']
+		MOVIES_THUMB = gethost[i]['ThumbURL']
+		MOVIES_TITLE = gethost[i]['Title']
+		MOVIES_SUMMARY = gethost[i]['Summary']
+		MOVIES_YEAR = gethost[i]['Date']
+		i += 1
+
+		if MOVIES_PAGE != "":
+			oc.add(DirectoryObject(key=Callback(DeleteURL, title=MOVIES_TITLE, page=MOVIES_PAGE), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=Callback(GetThumb, url=MOVIES_THUMB)))
+
+	return oc
+
+
+####################################################################################################
+@route(PREFIX + '/DeleteURL')
+def DeleteURL(title, page):
+
+	oc = ObjectContainer(title2=title)
+
+	hosts = LoadData(fp=FAVORITES_DATA, GetJson=False)
+	i = 1
+	for gethost in hosts:
+		if gethost[i]['SiteURL'] == page:
+			gethost[i]['SiteURL'] = ""
+			gethost[i]['ThumbURL'] = ""
+			gethost[i]['Title'] = ""
+			gethost[i]['Summary'] = ""
+			gethost[i]['Date'] = ""
+			break
+		else:
+			i += 1
+
+	JsonWrite(fp=FAVORITES_DATA, jsondata=hosts)
+	return ObjectContainer(header="Deleted Movie4k URL", message="The Movie4k URL has been removed from My Favorites.  Please click Ok to exit this screen.")
+
+####################################################################################################
+@route(PREFIX + '/Queue')
+def Queue(title, loginResult):
+
+	if loginResult == "True":
+		try:
+			oc = ObjectContainer(title2=title)
+			ICON_MYUPLOADS = "icon-myuploads.png"
+			MYUPLOADS_THUMB = R(ICON_MYUPLOADS)
+			MYUPLOADS_PAGE = "http://" + MOVIE2K_URL + "/ui.php?ua=myuploads&filter=no"
+			TempMovie = None
+
+			session_cookies = Dict['_movie2k_uid']
+			session_headers = {"Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8", "Accept-Charset": "ISO-8859-1,utf-8;q=0.7,*;q=0.3", "Accept-Encoding": "gzip,deflate,sdch", "Accept-Language": "en-US,en;q=0.8", "Connection": "keep-alive", "Host": MOVIE2K_URL, "Referer": "http://"+MOVIE2K_URL, "User-Agent": UserAgent[UserAgentNum]}
+			values = dict(session_token = Dict['_movie2k_uid'])
+	
+			req = requests.get(MYUPLOADS_PAGE, headers=session_headers, cookies=session_cookies)
+			mylist = HTML.ElementFromString(req.content).xpath('//div[@id="maincontent4"]/table')[0]
+			Movies = mylist.xpath('./tr')
+
+			i = 1
+			while i < len(Movies):
+				Movie = Movies[i].xpath('./td/a')[0].text
+				Host = strip_one_space(Movies[i].xpath('./td')[1].text_content())
+				Status = Movies[i].xpath('./td')[2].text
+				page = Movies[i].xpath('./td/a')[0].get('href')
+				summary = "Hoster: "+Host+" | Status: "+Status
+				title = "My Upload " + str(i) + ": " + Movie
+		
+				try:
+					TitleParts = Movie.split(' ')
+					TitleLen = len(TitleParts) - 1
+					Season = int(TitleParts[TitleLen].split('S')[1].split('E')[0])
+					Episode = int(TitleParts[TitleLen].split('E')[1])
+					if Season >= 0 and Episode >= 0:
+						type = 'TV Shows'
+				except:
+					type = 'Movies'
+
+				if Movie != TempMovie:
+					MOVIE_PAGE_HTML = HTML.ElementFromURL("http://"+MOVIE2K_URL+"/"+page)
+
+					GET_THUMB = MOVIE_PAGE_HTML.xpath('//div[@id="maincontent5"]/div/div')[0]
+					thumb = GET_THUMB.xpath('./a/img')[0].get('src')
+
+				TempMovie = Movie
+
+				oc.add(DirectoryObject(key = Callback(TheMovieListings, title=title, page=page, date='N/A', dateadd='N/A', thumb=thumb, type=type, PageOfHosts=0, Host=Host), title = title, summary=summary, thumb=thumb))
+				i += 1
+		except:
+			oc = ObjectContainer(header="User Login Error", message="Your user login and password are correct but there has been an error connecting to the website user account.  Please click ok to exit this screen and the back button to refresh login data. (MAY TAKE SEVERAL TRIES)")
+	else:
+		oc = ObjectContainer(header="User Login Required", message="Please enter your Movie4k login username and password in Preferences.  If you do not have an account please go to www.movie4k.to and click the Register link at the very top of the page to create you a new account.")
 
 	return oc
 
 
 ####################################################################################################
 @route(PREFIX + '/Messages')
-def Messages(title):
+def Messages(title, loginResult):
+
+	if loginResult == "True":
+		try:
+			oc = ObjectContainer(title2=title)
+			ICON_MYMESSAGES = "icon-mymessages.png"
+			MYMESSAGES_THUMB = R(ICON_MYMESSAGES)
+			MYMESSAGES_PAGE = "http://" + MOVIE2K_URL + "/ui.php?ua=messages_inbox"
+
+			session_cookies = Dict['_movie2k_uid']
+			session_headers = {"Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8", "Accept-Charset": "ISO-8859-1,utf-8;q=0.7,*;q=0.3", "Accept-Encoding": "gzip,deflate,sdch", "Accept-Language": "en-US,en;q=0.8", "Connection": "keep-alive", "Host": MOVIE2K_URL, "Referer": "http://"+MOVIE2K_URL, "User-Agent": UserAgent[UserAgentNum]}
+			values = dict(session_token = Dict['_movie2k_uid'])
 	
-	oc = ObjectContainer(title2=title)
-	ICON_MYMESSAGES = "icon-mymessages.png"
-	MYMESSAGES_THUMB = R(ICON_MYMESSAGES)
-	MYMESSAGES_PAGE = "http://" + MOVIE2K_URL + "/ui.php?ua=messages_inbox"
+			req = requests.get(MYMESSAGES_PAGE, headers=session_headers, cookies=session_cookies)
+			inbox = HTML.ElementFromString(req.content).xpath('//div[@id="maincontent4"]/form')[3]
+			Message = inbox.xpath('./table/tr')
 
-	session_cookies = Dict['_movie2k_uid']
-	session_headers = {"Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8", "Accept-Charset": "ISO-8859-1,utf-8;q=0.7,*;q=0.3", "Accept-Encoding": "gzip,deflate,sdch", "Accept-Language": "en-US,en;q=0.8", "Connection": "keep-alive", "Host": MOVIE2K_URL, "Referer": "http://"+MOVIE2K_URL, "User-Agent": UserAgent[UserAgentNum]}
-	values = dict(session_token = Dict['_movie2k_uid'])
-	
-	req = requests.get(MYMESSAGES_PAGE, headers=session_headers, cookies=session_cookies)
-	inbox = HTML.ElementFromString(req.content).xpath('//div[@id="maincontent4"]/form')[3]
-	Message = inbox.xpath('./table/tr')
+			i = 1
+			while i < len(Message):
+				From = Message[i].xpath('./td')[1].text
+				Date = Message[i].xpath('./td')[2].text
+				Subject = Message[i].xpath('./td/a')[0].text
+				url = "http://" + MOVIE2K_URL + "/" + Message[i].xpath('./td/a')[0].get('href')
+				summary = "From: "+From+" | Date: "+Date+" | Subject: "+Subject
+				summary2 = "Date: "+Date+" | Subject: "+Subject
+				title = "Inbox - Message " + str(i)
 
-	i = 1
-	while i < len(Message):
-		From = Message[i].xpath('./td')[1].text
-		Date = Message[i].xpath('./td')[2].text
-		Subject = Message[i].xpath('./td/a')[0].text
-		url = "http://" + MOVIE2K_URL + "/" + Message[i].xpath('./td/a')[0].get('href')
-		summary = "From: "+From+" | Date: "+Date+" | Subject: "+Subject
-		summary2 = "Date: "+Date+" | Subject: "+Subject
-		title = "Inbox - Message " + str(i)
-
-		oc.add(DirectoryObject(key = Callback(ShowMessage, title=title, url=url, summary=summary2), title = title, summary=summary, thumb=MYMESSAGES_THUMB))
-		i += 1
+				oc.add(DirectoryObject(key = Callback(ShowMessage, title=title, url=url, summary=summary2), title = title, summary=summary, thumb=MYMESSAGES_THUMB))
+				i += 1
+		except:
+			oc = ObjectContainer(header="User Login Error", message="Your user login and password are correct but there has been an error connecting to the website user account.  Please click ok to exit this screen and the back button to refresh login data. (MAY TAKE SEVERAL TRIES)")
+	else:
+		oc = ObjectContainer(header="User Login Required", message="Please enter your Movie4k login username and password in Preferences.  If you do not have an account please go to www.movie4k.to and click the Register link at the very top of the page to create you a new account.")
 
 	return oc
 
@@ -617,7 +803,10 @@ def Movies(title, type):
 		MOVIES_TITLE = "Newly Added Cinema Movies"
 		MOVIES_SUMMARY = "Your Latest Updates to the Cinema Movies database!"
 		MOVIES_THUMB = R(ICON_CINEMA)
-		MOVIES_PAGE = "http://" + MOVIE2K_URL + "/index.php?lang=us"
+		if GetLanguage() == 'German':
+			MOVIES_PAGE = "http://" + MOVIE2K_URL + "/index.php?lang=de"
+		else:
+			MOVIES_PAGE = "http://" + MOVIE2K_URL + "/index.php?lang=us"
 		oc.add(DirectoryObject(key=Callback(CinemaMoviePageAdd, title=MOVIES_TITLE, page=MOVIES_PAGE, type=type), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=MOVIES_THUMB))
 
 		#Add Latest Updates Movie Page
@@ -772,7 +961,7 @@ def InputParentalPassword(title, type, query):
 # This is special instructions for Roku users
 def RokuUsersPasswordInput(title):
 
-	return ObjectContainer(header="Special Instructions for Roku Users", message="Inputting password, Roku users must be using version 2.6.5 of the Plex Roku Channel (currently the PlexTest channel). If the Parantal Lock has been enabled, please input the password to view the adult content.  If the Parental Lock has been disabled enter the password to delete the password.  WARNING: DO NOT DIRECTLY TYPE OR PASTE THE TEXT IN THE INPUT CAPTCHA SECTION USING ROKU PLEX CHANNELS 2.6.4. THAT VERSION USES A SEARCH INSTEAD OF ENTRY SCREEN AND EVERY LETTER OF THE TEXT YOU ENTER WILL PRODUCE A SUBMIT FORM ON EACH LETTER.")
+	return ObjectContainer(header="Special Instructions for Roku Users", message="Inputting password, Roku users must be using version 2.6.6 of the Plex Roku Channel (currently the PlexTest channel). If the Parantal Lock has been enabled, please input the password to view the adult content.  If the Parental Lock has been disabled enter the password to delete the password.  WARNING: DO NOT DIRECTLY TYPE OR PASTE THE TEXT IN THE INPUT CAPTCHA SECTION USING ROKU PLEX CHANNELS 2.6.4. THAT VERSION USES A SEARCH INSTEAD OF ENTRY SCREEN AND EVERY LETTER OF THE TEXT YOU ENTER WILL PRODUCE A SUBMIT FORM ON EACH LETTER.")
 
 
 ####################################################################################################
@@ -895,7 +1084,10 @@ def CinemaMoviePageAdd(title, page, type):
 			MOVIES_PAGE = MOVIES_TD.xpath("./a")[0].get('href')
 			MOVIES_THUMB = MOVIES_TD.xpath("./a/img")[0].get('src')
 			MOVIES_YEAR = time.strftime("%Y", time.localtime(time.time()))
-			MOVIES_LANG = "English"
+			if GetLanguage() == 'German':
+				MOVIES_LANG = "German"
+			else:
+				MOVIES_LANG = "English"
 			MOVIES_SUMMARY = "Year: "+MOVIES_YEAR+" | Lang: "+MOVIES_LANG+" | Part of the Cinema Movies line up on Movie2k."
 
 			oc.add(DirectoryObject(key=Callback(SubMoviePageAdd, title=MOVIES_TITLE, page=MOVIES_PAGE, date=MOVIES_YEAR, dateadd=dateadd, thumbck=MOVIES_THUMB, type=type), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=Callback(GetThumb, url=MOVIES_THUMB)))
@@ -1100,36 +1292,13 @@ def TheMovieListings(title, page, date, dateadd, thumb, type, PageOfHosts, Host=
 
 	if date == "N/A":
 		try:
-			try:
-				date = re.sub("\s", "", MOVIE_INFO.split('Land/Year: ')[1].split('/')[1].split(' ')[0])
-				if date == "N/A":
-					date =  "0001"
-				else:
-					try:
-						tempdate = int(date)
-					except:
-						date = re.sub("\s", "", MOVIE_INFO.split('Land/Year: ')[1].split(' ')[0])
-						if date == "N/A":
-							date =  "0001"
-						else:
-							try:
-								tempdate = int(date)
-							except:
-								date = re.sub("\s", "", MOVIE_INFO.split('Land/Year: ')[1].split(' ')[1])
-			except:
-				date = re.sub("\s", "", MOVIE_INFO.split('Land/Jahr: ')[1].split(' ')[0])
-				if date == "N/A":
-					date = "0001"
-				else:
-					try:
-						tempdate = int(date)
-					except:
-						try:
-							date = re.sub("\s", "", MOVIE_INFO.split('Land/Jahr: ')[1].split('/')[1].split(' ')[0])
-						except:
-							date = MOVIE_INFO.split('Land/Jahr: ')[1].split(' ')[1]
+			date = re.sub('[^0-9]', '', MOVIE_INFO.split('Land/Year: ')[1])
+			if date == "":
+				date =  "0001"
 		except:
-			date = "0001"
+			re.sub('[^0-9]', '', MOVIE_INFO.split('Land/Jahr: ')[1])
+			if date == "":
+				date =  "0001"
 
 	date = Datetime.ParseDate(date, "%Y")
 	
@@ -1469,7 +1638,7 @@ def CaptchaInput(title, page, date, thumb, type, summary, directors, guest_stars
 # This is special instructions for Roku users
 def RokuUsers(title):
 
-	return ObjectContainer(header="Special Instructions for Roku Users", message="To enter Captcha text, Roku users must be using version 2.6.5 of the Plex Roku Channel (currently the PlexTest channel). You can choose to type in the Captcha image text or allow the OCR to try and deocode it. However, the OCR decode rate is very low.  WARNING: DO NOT DIRECTLY TYPE OR PASTE THE TEXT IN THE INPUT CAPTCHA SECTION USING ROKU PLEX CHANNELS 2.6.4. THAT VERSION USES A SEARCH INSTEAD OF ENTRY SCREEN AND EVERY LETTER OF THE TEXT YOU ENTER WILL PRODUCE A SUBMIT FORM ON EACH CAPTCHA LETTER.")
+	return ObjectContainer(header="Special Instructions for Roku Users", message="To enter Captcha text, Roku users must be using version 2.6.6 of the Plex Roku Channel (currently the PlexTest channel). You can choose to type in the Captcha image text or allow the OCR to try and deocode it. However, the OCR decode rate is very low.  WARNING: DO NOT DIRECTLY TYPE OR PASTE THE TEXT IN THE INPUT CAPTCHA SECTION USING ROKU PLEX CHANNELS 2.6.4. THAT VERSION USES A SEARCH INSTEAD OF ENTRY SCREEN AND EVERY LETTER OF THE TEXT YOU ENTER WILL PRODUCE A SUBMIT FORM ON EACH CAPTCHA LETTER.")
 
 
 ####################################################################################################

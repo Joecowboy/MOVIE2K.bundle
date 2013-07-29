@@ -1,3 +1,5 @@
+[B]Version 1.4.0[/B]
+- Added My Favorites to the MY MOVIE2k line up.  Also, added German update includes Newly Added Cinema Movies.  Added host site Vidx. Also, worked on OSX compatibility (OSX Not fully working).
 [B]Version 1.3.3[/B]
 - Fix for OSX directory path
 [B]Version 1.3.2[/B]

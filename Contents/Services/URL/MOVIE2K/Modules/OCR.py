@@ -16,12 +16,15 @@
 
 
 # Perform OCR using tesseract-ocr library
+try:
+	import requests
+except:
+	import requests25 as requests
 from tesseract import image_to_string
 from PIL import Image
 from PIL import TiffImagePlugin
 from PIL import ImageEnhance
 import cStringIO
-import requests
 import hashlib
 import time
 

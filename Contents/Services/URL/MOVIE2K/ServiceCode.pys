@@ -1,14 +1,11 @@
 ####################################################################################################
 # Setting up imports
 
-import os, sys
 try:
-	path = os.getcwd().split("?\\")[1].split('Plug-in Support')[0]+"Plug-ins\MOVIE2K.bundle\Contents\Services\URL\MOVIE2K\Modules"
+	import requests
 except:
-	path = os.getcwd().split("Plug-in Support")[0]+"Plug-ins/MOVIE2K.bundle/Contents/Services/URL/MOVIE2K/Modules"
-sys.path.append(path)
+	import requests25 as requests
 
-import requests
 import urllib
 import urllib2
 import time
@@ -1537,6 +1534,16 @@ def GetMovie(Host, HostPage, url, LinkType):
 			VideoStream = ScriptConvert(script=VideoInfo)
 		except:
 			VideoStream = ErrorMessage(Host=Host, LogError=1)
+	elif Host == "Vidx":
+		try:
+			VideoPage = SecondButtonPress(url=url, HostPage=HostPage, wait=10)
+			VideoInfo = HTML.ElementFromString(VideoPage.content).xpath('//div[@id="player_code"]/script')[1].text
+			VideoURL = VideoInfo.split('file: "')[1].split('"')[0]
+			cookies = {'ref_url': url}
+			headers = {'User-Agent': UserAgent[UserAgentNum], 'Host': VideoURL.split('/')[2], 'Referer': url}
+			VideoStream = VideoURL + "?cookies="+String.Quote(str(cookies), usePlus=True)+"&headers="+String.Quote(str(headers), usePlus=True)
+		except:
+			VideoStream = ErrorMessage(Host=Host, LogError=1)
 	elif Host == "Vidxden" or Host == "Vidxden_2":
 		try:
 			if Host == "Vidxden":
@@ -1723,8 +1730,6 @@ def GetMovieDebugger(Host, HostPage, url, LinkType):
 
 		#http://mafiaon.hi2.ro/g-i-joe-retaliation-2013/  uses Proxy.swf -- needs proxy to work
 		#http://movies-online-free.net/upload/fullnews.php?fn_id=279#.Uaqenngo7mE
-
-
 
 
 	######################################  These use Proxy.swf ###################################
@@ -2552,6 +2557,11 @@ def GetMovieDebugger(Host, HostPage, url, LinkType):
 		VideoPage = SecondButtonPress(url=url, HostPage=HostPage)
 		VideoInfo = VideoPage.content.split("<script type='text/javascript'>")[2].split("</script>")[0]
 		VideoStream = ScriptConvert(script=VideoInfo)
+	elif Host == "Vidx":
+		#Example: http://vidx.to/68ht6but3gxz.html
+		VideoPage = SecondButtonPress(url=url, HostPage=HostPage, wait=10)
+		VideoInfo = HTML.ElementFromString(VideoPage.content).xpath('//div[@id="player_code"]/script')[1].text
+		VideoStream = VideoInfo.split('file: "')[1].split('"')[0]
 	elif Host == "Vidxden":
 		#Image process problem do to recaptcha text enter -- Example:
 		if Host == "Vidxden":

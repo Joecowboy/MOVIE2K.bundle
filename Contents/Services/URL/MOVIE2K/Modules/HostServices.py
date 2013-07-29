@@ -22,7 +22,7 @@ def JsonOpen(fp):
 		f.close()
 
 	try:
-		SystemData = LoadData(fp=fp, CaptchaData=CaptchaData, LoadFile=False)
+		SystemData = LoadData(fp=fp, Data=CaptchaData, LoadFile=False)
 		if Version != SystemData[0][1]['Version']:
 			ParentalPassword = SystemData[0][1]['ParentalPassword']
 			CaptchaData = JsonStruct(fp=fp, ParentalPassword=ParentalPassword, GetVersion=Version)
@@ -50,25 +50,53 @@ def JsonStruct(fp, ParentalPassword, GetVersion):
 
 
 ####################################################################################################
+#The JSON file is read/saved in the data cache for this plugin setup by Plex
+def JsonFavoriteOpen(fp):
+	if os.path.exists(fp) == False:
+		FavoritesData = JsonFavoriteStruct(fp=fp)
+	else:
+		f = open(fp, "rb")
+		FavoritesData = f.read()
+		f.close()
+
+	return FavoritesData
+
+
+####################################################################################################
+#The JSON file is saved in the data cache for this plugin setup by Plex
+def JsonFavoriteStruct(fp):
+	jsondata = '[\n'
+	jsondata = jsondata + '{1 : {SiteURL: "", ThumbURL: "", Title: "", Summary:"", Date: ""}},\n'
+	jsondata = jsondata + ']'
+	
+	JsonWrite(fp=fp, jsondata=jsondata)
+
+	return jsondata
+
+
+####################################################################################################
 #The JSON file is saved in the data cache for this plugin setup by Plex
 def JsonWrite(fp, jsondata):
 	f = open(fp, "w+")
-	f.write(str(jsondata).replace("u'", "'"))
+	f.write(str(jsondata).replace(", u'", ", '").replace(": u'", ": '").replace("{u'", "{'"))
 	f.close()
 
 	return True
 
 
-#############################################################################################################################
+####################################################################################################
 # This function loads the json data file
-def LoadData(fp, CaptchaData=None, LoadFile=True):
+def LoadData(fp, Data=None, LoadFile=True, GetJson=True):
 	if LoadFile:
-		CaptchaData = JsonOpen(fp=fp)
+		if GetJson:
+			Data = JsonOpen(fp=fp)
+		else:
+			Data = JsonFavoriteOpen(fp=fp)
 
 	try:
-		obj = simplejson.loads(CaptchaData)
+		obj = simplejson.loads(Data)
 	except:
-		obj = demjson.decode(CaptchaData)
+		obj = demjson.decode(Data)
 
 	return obj
 
