@@ -13,9 +13,19 @@
 # 1.0> Altered to use Python-tesseract, tuned image \
 #      manipulation for scr.im specific captchas
 #
-
-
+#
+#
 # Perform OCR using tesseract-ocr library
+
+
+# Setting up imports
+import os, sys
+try:
+	path = os.getcwd().split("?\\")[1].split('Plug-in Support')[0]+"Plug-ins\MOVIE2K.bundle\Contents\Services\URL\MOVIE2K\Modules"
+except:
+	path = os.getcwd().split("Plug-in Support")[0]+"Plug-ins/MOVIE2K.bundle/Contents/Services/URL/MOVIE2K/Modules"
+sys.path.append(path)
+
 try:
 	import requests
 except:

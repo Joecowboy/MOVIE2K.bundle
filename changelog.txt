@@ -1,3 +1,5 @@
+[B]Version 1.4.4[/B]
+- Fix to play on the iOS
 [B]Version 1.4.3[/B]
 - Added new hosts Megafiles and Vidplay.  Updated Flashx and Zalaa
 [B]Version 1.4.2[/B]
