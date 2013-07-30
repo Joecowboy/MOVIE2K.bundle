@@ -34,7 +34,7 @@ UserAgent = ['Mozilla/4.0 (compatible; MSIE 5.5; Windows NT)', 'Opera/9.25 (Wind
 UserAgentNum = random.randrange(0, len(UserAgent)-1, 1)
 
 # Movie2k Plugin Version
-Version = "1.4.2"
+Version = "1.4.3"
 
 # Set up Host Services
 HostServices.Version = Version
@@ -66,7 +66,8 @@ def Start():
 	DirectoryObject.thumb = R(ICON)
 	VideoClipObject.thumb = R(ICON)
 
-	HTTP.CacheTime = 0
+	# Set the default cache time
+	HTTP.CacheTime = CACHE_1HOUR
 	HTTP.Headers['User-Agent'] = UserAgent[UserAgentNum]
 
         
@@ -186,7 +187,7 @@ def Search(query):
 	#Search movie4k.to for movies using user input, and populate a list with the results
 
 	# Create a container to hold the results
-	oc = ObjectContainer(title2="Search Results", view_group="InfoList")
+	oc = ObjectContainer(title2="Search Results")
 	
 	#AutoComplete = "http://" + MOVIE2K_URL + "/searchAutoCompleteNew.php?search=" + urllib.quote_plus(query)
 	#AutoSearch = HTML.ElementFromURL(AutoComplete).xpath('//table/tr')
@@ -341,7 +342,7 @@ def MyFavoriteURL(title):
 
 		if MOVIES_PAGE != "":
 			oc.add(DirectoryObject(key=Callback(SubMoviePageAdd, title=MOVIES_TITLE, page=MOVIES_PAGE, date=MOVIES_YEAR, dateadd=dateadd, thumbck=MOVIES_THUMB, type=type), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=Callback(GetThumb, url=MOVIES_THUMB)))
-
+	
 	if len(oc) < 1:
 		oc = ObjectContainer(header="Sorry", message="This section does not contain any My Favorite videos.  Please add a video to view.")
 
@@ -1205,7 +1206,7 @@ def MoviePageAdd(title, page, genre, type):
 @route(PREFIX + '/TVandMovieHostPage')
 def SubMoviePageAdd(title, page, date, dateadd, thumbck, type):
 
-	oc = ObjectContainer(title2=title, view_group="InfoList")
+	oc = ObjectContainer(title2=title)
 
 	MOVIE_PAGE_HTML = HTML.ElementFromURL("http://"+MOVIE2K_URL+"/"+page)
 
@@ -1281,7 +1282,7 @@ def SubMoviePageAdd(title, page, date, dateadd, thumbck, type):
 @route(PREFIX + '/TVandTheMovieListings')
 def TheMovieListings(title, page, date, dateadd, thumb, type, PageOfHosts, Host=None):
 
-	oc = ObjectContainer(title2=title, view_group="InfoList")
+	oc = ObjectContainer(title2=title)
 
 	MOVIE_PAGE_HTML = HTML.ElementFromURL("http://"+MOVIE2K_URL+"/"+page)
 	MOVIE_INFO = MOVIE_PAGE_HTML.xpath('//div[@id="details"]')[0].text_content()
@@ -1473,7 +1474,7 @@ def TheMovieListings(title, page, date, dateadd, thumb, type, PageOfHosts, Host=
 
 			url = MOVIE_PAGE+"?title="+String.Quote(title, usePlus=True)+"&summary="+String.Quote(summary, usePlus=True)+"&show="+String.Quote(show, usePlus=True)+"&date="+String.Quote(str(date), usePlus=True)+"&thumb="+String.Quote(thumb, usePlus=True)+"&host="+Host+"&season="+str(season)+"&index="+str(index)+"&type="+String.Quote(type, usePlus=True)+"&genres="+String.Quote(genre, usePlus=True)+"&director="+String.Quote(director, usePlus=True)+"&actors="+String.Quote(actors, usePlus=True)+"&duration="+str(duration)+"&rating="+str(rating)+"&content_rating="+content_rating
 
-			if Host == '180upload' or Host == 'Clicktoview' or Host == 'Vidbux' or Host == 'Vidxden':
+			if Host == '180upload' or Host == 'Clicktoview' or Host == 'Vidbux' or Host == 'Vidplay' or Host == 'Vidxden':
 				show_update = "Click here if you want OCR to try and decode Captcha text."
 				oc.add(DirectoryObject(key=Callback(CaptchaSection, title=title, page=page, date=date, thumb=thumb, type=type, summary=summary, directors=directors, guest_stars=guest_stars, genres=genres, duration=duration, rating=rating, season=season, index=index, show=show_update, content_rating=content_rating, source_title=source_title, url=url, Host=Host), title=title, thumb=Callback(GetThumb, url=thumb), summary=show))
 			else:
@@ -1710,7 +1711,7 @@ def GetThumb(url, HostPage=None, GetUserAgent=None, cookies={}):
 
 	try:
 		if GetUserAgent == None:
-			imgData = HTTP.Request(url, cacheTime=CACHE_1MONTH).content
+			imgData = HTTP.Request(url, cacheTime=CACHE_1HOUR).content
 		else:
 			headers = {}
 			headers['Accept'] = 'image/png,image/*;q=0.8,*/*;q=0.5'

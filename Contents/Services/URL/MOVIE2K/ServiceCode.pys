@@ -27,7 +27,7 @@ UserAgent = ['Mozilla/4.0 (compatible; MSIE 5.5; Windows NT)', 'Opera/9.25 (Wind
 UserAgentNum = random.randrange(0, len(UserAgent)-1, 1)
 
 # Movie2k Plugin Version
-Version = "1.4.2"
+Version = "1.4.3"
 
 # Set up Host Services
 HostServices.Version = Version
@@ -218,7 +218,7 @@ def MediaObjectsForURL(url):
 def GetThumb(url, GetUserAgent=None, cookies={}):
 
 	try:
-		imgData = HTTP.Request(url, cacheTime=CACHE_1MONTH).content
+		imgData = HTTP.Request(url, cacheTime=CACHE_1HOUR).content
 		return DataObject(imgData, 'image/jpeg')
 	except:
 		return Redirect(R(ICON))
@@ -862,11 +862,11 @@ def GetMovie(Host, HostPage, url, LinkType):
 
 			VideoID = HTML.ElementFromString(s.content).xpath('//span[@class="auto-style6"]/a')[0].get('href')
 			v = session.get(VideoID, headers=headers)
-			VideoLink = HTML.ElementFromString(v.content).xpath('//head/script')[2].text.split('<object id="nuevoplayer"')[1].split('config=')[1].split('"')[0]
+			VideoLink = HTML.ElementFromString(v.content).xpath('//head/script')[0].text.split('<object id="nuevoplayer"')[1].split('config=')[1].split('"')[0]
 
 			headers['Referer'] = VideoID
 			xmlreq = session.get(VideoLink, headers=headers)
-			VideoStream = XML.ElementFromString(xmlreq.content).xpath('//file')[0].text
+			VideoStream = XML.ElementFromString(xmlreq.content).xpath('//file')[0].text + "?start=0"
 		except:
 			VideoStream = ErrorMessage(Host=Host, LogError=1)
 	elif Host == "Fleon":
@@ -976,6 +976,15 @@ def GetMovie(Host, HostPage, url, LinkType):
 			cookies = {'ref_url': urllib.quote_plus(HostPage)}
 			headers = {'User-Agent': UserAgent[UserAgentNum], 'Host': VideoURL.split('/')[2], 'Referer': 'http://videozed.net/player/player.swf'}
 			VideoStream = VideoURL + "?cookies="+String.Quote(str(cookies), usePlus=True)+"&headers="+String.Quote(str(headers), usePlus=True)
+		except:
+			VideoStream = ErrorMessage(Host=Host, LogError=1)
+	elif Host == "Megafiles":
+		try:
+			if LinkType == 4:
+				HostPage = "http://www.megafiles.se/embed-"+HostPage.split('/')[3]+"-640x360.html"
+
+			VideoInfo = HTML.ElementFromURL(HostPage).xpath('//div[@id="player_code"]/script')[1].text
+			VideoStream = ScriptConvert(script=VideoInfo)
 		except:
 			VideoStream = ErrorMessage(Host=Host, LogError=1)
 	elif Host == "Megavideoz":
@@ -1512,6 +1521,26 @@ def GetMovie(Host, HostPage, url, LinkType):
 			VideoStream = VideoURL.headers['location'] + "?cookies="+String.Quote(str(cookies), usePlus=True)+"&headers="+String.Quote(str(headers), usePlus=True)
 		except:
 			VideoStream = ErrorMessage(Host=Host, LogError=1)
+	elif Host == "Vidplay" or Host == "Vidplay_2":
+		try:
+			if LinkType == 4:
+				HostPage = "http://vidplay.net/embed-"+HostPage.split('/')[3]+"-640x360.html"
+		
+			if Host == "Vidplay":
+				VideoPage = SolveMediaCaptcha(url=url, HostPage=HostPage, Host=Host)
+			elif Host == "Vidplay_2":
+				VideoPage = SolveMediaCaptcha(url=url, HostPage=HostPage, Host=Host, RecaptchaResponse=2)
+
+			try:
+				VideoInfo = VideoPage.content.split('<div id="player_code">')[1].split("<script type='text/javascript'>")[1].split("</script>")[0]
+				VideoStream = ScriptConvert(script=VideoInfo)
+			except:
+				VideoStream = ErrorMessage(Host=Host, LogError=4)
+
+			if Host == "Vidplay":
+				VideoPage = SolveMediaCaptcha(url=url, HostPage=HostPage, Host=Host, RecaptchaResponse=1)
+		except:
+			VideoStream = ErrorMessage(Host=Host, LogError=4)
 	elif Host == "Vidstream":
 		try:
 			if LinkType == 4:
@@ -1625,7 +1654,10 @@ def GetMovie(Host, HostPage, url, LinkType):
 		try:
 			VideoPage = SecondButtonPress(url=url, HostPage=HostPage, addkey={"method_free": "Slow access", "referer": url})
 			VideoInfo = HTML.ElementFromString(VideoPage.content).xpath('//div[@id="player_code"]/script')[0].text
-			VideoStream = ScriptConvert(script=VideoInfo)
+			try:
+				VideoStream = VideoInfo.split("file','")[1].split("'")[0]
+			except:
+				VideoStream = ScriptConvert(script=VideoInfo)
 		except:
 			VideoStream = ErrorMessage(Host=Host, LogError=1)
 	elif Host == "Zinwa":
@@ -1732,6 +1764,7 @@ def GetMovieDebugger(Host, HostPage, url, LinkType):
 		#http://movies-online-free.net/upload/fullnews.php?fn_id=279#.Uaqenngo7mE
 
 
+		
 	######################################  These use Proxy.swf ###################################
 
 	elif Host == "Stream2k.eu":
@@ -2064,7 +2097,7 @@ def GetMovieDebugger(Host, HostPage, url, LinkType):
 
 		VideoID = HTML.ElementFromString(s.content).xpath('//span[@class="auto-style6"]/a')[0].get('href')
 		v = session.get(VideoID, headers=headers)
-		VideoLink = HTML.ElementFromString(v.content).xpath('//head/script')[2].text.split('<object id="nuevoplayer"')[1].split('config=')[1].split('"')[0]
+		VideoLink = HTML.ElementFromString(v.content).xpath('//head/script')[0].text.split('<object id="nuevoplayer"')[1].split('config=')[1].split('"')[0]
 
 		headers['Referer'] = VideoID
 		xmlreq = session.get(VideoLink, headers=headers)
@@ -2146,6 +2179,13 @@ def GetMovieDebugger(Host, HostPage, url, LinkType):
 		cookies = {'ref_url': urllib.quote_plus(HostPage)}
 		headers = {'User-Agent': UserAgent[UserAgentNum], 'Host': VideoURL.split('/')[2], 'Referer': 'http://videozed.net/player/player.swf'}
 		VideoStream = VideoURL + "?cookies="+String.Quote(str(cookies), usePlus=True)+"&headers="+String.Quote(str(headers), usePlus=True)
+	elif Host == "Megafiles":
+		# Example: http://megafiles.se/9jh1sql60qmg
+		if LinkType == 4:
+			HostPage = "http://www.megafiles.se/embed-"+HostPage.split('/')[3]+"-640x360.html"
+
+		VideoInfo = HTML.ElementFromURL(HostPage).xpath('//div[@id="player_code"]/script')[1].text
+		VideoStream = ScriptConvert(script=VideoInfo)
 	elif Host == "Megavideoz":
 		url = 'http://megavideoz.eu/get_video.php'
 		params = {"v": HostPage.split('/')[4], "start": "0"}
@@ -2539,6 +2579,24 @@ def GetMovieDebugger(Host, HostPage, url, LinkType):
 		VideoID = 'http://vidhog.com/vidembed-' + HostPage.split('/')[3] + '.' + VideoInfo[len(VideoInfo)-1]
 		VideoURL = session.head(VideoID, headers=headers)
 		VideoStream = VideoURL.headers['location'] + "?cookies="+String.Quote(str(cookies), usePlus=True)+"&headers="+String.Quote(str(headers), usePlus=True)
+	elif Host == "Vidplay":
+		#Example: http://vidplay.net/embed-i3tp1rzcxyxh-640x360.html
+		if LinkType == 4:
+			HostPage = "http://vidplay.net/embed-"+HostPage.split('/')[3]+"-640x360.html"
+		
+		if Host == "Vidplay":
+			VideoPage = SolveMediaCaptcha(url=url, HostPage=HostPage, Host=Host)
+		elif Host == "Vidplay_2":
+			VideoPage = SolveMediaCaptcha(url=url, HostPage=HostPage, Host=Host, RecaptchaResponse=2)
+
+		try:
+			VideoInfo = VideoPage.content.split('<div id="player_code">')[1].split("<script type='text/javascript'>")[1].split("</script>")[0]
+			VideoStream = ScriptConvert(script=VideoInfo)
+		except:
+			VideoStream = ErrorMessage(Host=Host, LogError=4)
+
+		if Host == "Vidplay":
+			VideoPage = SolveMediaCaptcha(url=url, HostPage=HostPage, Host=Host, RecaptchaResponse=1)
 	elif Host == "Vidstream":
 		if LinkType == 4:
 			#VideoPage = SecondButtonPress(url=url, HostPage=HostPage, wform=1, addkey={'referer': url})
@@ -2615,7 +2673,10 @@ def GetMovieDebugger(Host, HostPage, url, LinkType):
 	elif Host == "Zalaa":
 		VideoPage = SecondButtonPress(url=url, HostPage=HostPage, addkey={"method_free": "Slow access", "referer": url})
 		VideoInfo = HTML.ElementFromString(VideoPage.content).xpath('//div[@id="player_code"]/script')[0].text
-		VideoStream = ScriptConvert(script=VideoInfo)
+		try:
+			VideoStream = VideoInfo.split("file','")[1].split("'")[0]
+		except:
+			VideoStream = ScriptConvert(script=VideoInfo)
 	elif Host == "Zinwa":
 		VideoInfo = HTML.ElementFromURL(HostPage).xpath('//div[@id="player_code"]/script')[1].text
 		VideoStream = VideoInfo.split("jwplayer().load('")[1].split("'")[0]

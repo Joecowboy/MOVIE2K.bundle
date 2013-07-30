@@ -1,3 +1,5 @@
+[B]Version 1.4.3[/B]
+- Added new hosts Megafiles and Vidplay.  Updated Flashx and Zalaa
 [B]Version 1.4.2[/B]
 - Added My Favorite error check for empty Object Container
 [B]Version 1.4.1[/B]

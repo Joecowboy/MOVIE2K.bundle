@@ -41,7 +41,8 @@ def JsonStruct(fp, ParentalPassword, GetVersion):
 	jsondata = jsondata + '{2 : {host: "180upload", url: "",  HostPage: "", page: "", adcopy_challenge: "", response: "", UserAgent: "", cookies: "", captchacookies: "", thumb: ""}},\n'
 	jsondata = jsondata + '{3 : {host: "Clicktoview", url: "", HostPage: "", page: "", recaptcha_challenge_field: "", response: "", UserAgent: "", captchacookies: "", thumb: ""}},\n'
 	jsondata = jsondata + '{4 : {host: "Vidbux", url: "",  HostPage: "", page: "", adcopy_challenge: "", response: "", UserAgent: "", cookies: "", captchacookies: "", thumb: ""}},\n'
-	jsondata = jsondata + '{5 : {host: "Vidxden", url: "",  HostPage: "", page: "", adcopy_challenge: "", response: "", UserAgent: "", cookies: "", captchacookies: "", thumb: ""}}\n'
+	jsondata = jsondata + '{5 : {host: "Vidplay", url: "",  HostPage: "", page: "", adcopy_challenge: "", response: "", UserAgent: "", cookies: "", captchacookies: "", thumb: ""}},\n'
+	jsondata = jsondata + '{6 : {host: "Vidxden", url: "",  HostPage: "", page: "", adcopy_challenge: "", response: "", UserAgent: "", cookies: "", captchacookies: "", thumb: ""}}\n'
 	jsondata = jsondata + ']'
 	
 	JsonWrite(fp=fp, jsondata=jsondata)
@@ -78,7 +79,7 @@ def JsonFavoriteStruct(fp):
 #The JSON file is saved in the data cache for this plugin setup by Plex
 def JsonWrite(fp, jsondata):
 	f = open(fp, "w+")
-	f.write(str(jsondata).replace(", u'", ", '").replace(": u'", ": '").replace("{u'", "{'"))
+	f.write(str(jsondata).replace(", u'", ", '").replace(": u'", ": '").replace("{u'", "{'").replace("}},", "}},\n").replace("[", "[\n").replace("]", "\n]"))
 	f.close()
 
 	return True
