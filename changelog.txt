@@ -1,3 +1,5 @@
+[B]Version 1.4.5[/B]
+- Updated Newly Added Cinema Movies order
 [B]Version 1.4.4[/B]
 - Fix to play on the iOS
 [B]Version 1.4.3[/B]

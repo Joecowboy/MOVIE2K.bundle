@@ -34,7 +34,7 @@ UserAgent = ['Mozilla/4.0 (compatible; MSIE 5.5; Windows NT)', 'Opera/9.25 (Wind
 UserAgentNum = random.randrange(0, len(UserAgent)-1, 1)
 
 # Movie2k Plugin Version
-Version = "1.4.4"
+Version = "1.4.5"
 
 # Set up Host Services
 HostServices.Version = Version
@@ -1083,19 +1083,35 @@ def CinemaMoviePageAdd(title, page, type):
 
 	for Movie in CINEMA_MOVIE_PAGE.xpath('//div[@id="maincontentnew"]/div'):
 		try:	
-			try:
-				MOVIES_TD = Movie.xpath('./div')[0]
-			except:
-				MOVIES_TD = Movie
+			MOVIES_TD = Movie
+			MOVIES_YEAR = time.strftime("%Y", time.localtime(time.time()))
 			MOVIES_TITLE = MOVIES_TD.xpath("./a/img")[0].get('title').replace(' kostenlos','')
 			MOVIES_PAGE = MOVIES_TD.xpath("./a")[0].get('href')
 			MOVIES_THUMB = MOVIES_TD.xpath("./a/img")[0].get('src')
-			MOVIES_YEAR = time.strftime("%Y", time.localtime(time.time()))
+	
 			if GetLanguage() == 'German':
 				MOVIES_LANG = "German"
 			else:
 				MOVIES_LANG = "English"
 			MOVIES_SUMMARY = "Year: "+MOVIES_YEAR+" | Lang: "+MOVIES_LANG+" | Part of the Cinema Movies line up on Movie2k."
+
+			oc.add(DirectoryObject(key=Callback(SubMoviePageAdd, title=MOVIES_TITLE, page=MOVIES_PAGE, date=MOVIES_YEAR, dateadd=dateadd, thumbck=MOVIES_THUMB, type=type), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=Callback(GetThumb, url=MOVIES_THUMB)))			
+		except:
+			pass
+
+	for Movie in CINEMA_MOVIE_PAGE.xpath('//div[@id="maincontentnew"]/div'):
+		try:	
+			MOVIES_TD = Movie.xpath('./div')[0]
+			MOVIES_YEAR = 'N/A'
+			MOVIES_TITLE = MOVIES_TD.xpath("./a/img")[0].get('title').replace(' kostenlos','')
+			MOVIES_PAGE = MOVIES_TD.xpath("./a")[0].get('href')
+			MOVIES_THUMB = MOVIES_TD.xpath("./a/img")[0].get('src')
+	
+			if GetLanguage() == 'German':
+				MOVIES_LANG = "German"
+			else:
+				MOVIES_LANG = "English"
+			MOVIES_SUMMARY = "Year: "+MOVIES_YEAR+" | Lang: "+MOVIES_LANG+" | Part of the Older Cinema Movies line up on Movie2k."
 
 			oc.add(DirectoryObject(key=Callback(SubMoviePageAdd, title=MOVIES_TITLE, page=MOVIES_PAGE, date=MOVIES_YEAR, dateadd=dateadd, thumbck=MOVIES_THUMB, type=type), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=Callback(GetThumb, url=MOVIES_THUMB)))
 		except:
