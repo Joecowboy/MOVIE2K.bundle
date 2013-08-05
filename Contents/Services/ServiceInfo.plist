@@ -40,6 +40,22 @@
 				<string>http://www\.movie2kproxy\.com/tvshows-genre+</string>
 				<string>http://www\.movie2kproxy\.com/tvshows-season+</string>
 				<string>http://www\.movie2kproxy\.com/+</string>
+				<string>http://www\.movie2k\.tv/genre-movies+</string>
+				<string>http://www\.movie2k\.tv/movies-genre+</string>
+				<string>http://www\.movie2k\.tv/genre-xxx+</string>
+				<string>http://www\.movie2k\.tv/xxx-genre-+</string>
+				<string>http://www\.movie2k\.tv/genre-tvshows+</string>
+				<string>http://www\.movie2k\.tv/tvshows-genre+</string>
+				<string>http://www\.movie2k\.tv/tvshows-season+</string>
+				<string>http://www\.movie2k\.tv/+</string>
+				<string>http://91\.202\.63\.123/genre-movies+</string>
+				<string>http://91\.202\.63\.123/movies-genre+</string>
+				<string>http://91\.202\.63\.123/genre-xxx+</string>
+				<string>http://91\.202\.63\.123/xxx-genre-+</string>
+				<string>http://91\.202\.63\.123/genre-tvshows+</string>
+				<string>http://91\.202\.63\.123/tvshows-genre+</string>
+				<string>http://91\.202\.63\.123/tvshows-season+</string>
+				<string>http://91\.202\.63\.123/+</string>
 				<string>http://media31\.traileraddict\.com/+</string>
 				<string>http://www\.traileraddict\.com/clip+</string>
 			</array>
