@@ -1,3 +1,5 @@
+[B]Version 1.4.6[/B]
+- Added url www.movie2k.tv and it's IP to Site URL
 [B]Version 1.4.5[/B]
 - Updated Newly Added Cinema Movies order
 [B]Version 1.4.4[/B]
