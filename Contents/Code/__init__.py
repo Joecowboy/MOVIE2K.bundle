@@ -34,7 +34,7 @@ UserAgent = ['Mozilla/4.0 (compatible; MSIE 5.5; Windows NT)', 'Opera/9.25 (Wind
 UserAgentNum = random.randrange(0, len(UserAgent)-1, 1)
 
 # Movie2k Plugin Version
-Version = "1.4.6"
+Version = "1.4.7"
 
 # Set up Host Services
 HostServices.Version = Version
@@ -355,7 +355,7 @@ def InputFavoriteURL(title, query):
 	oc = ObjectContainer(title2=title)
 	try:
 		checkURL = query.split('/')[2]
-		if checkURL != 'www.movie4k.to' and checkURL != 'www.movie2kproxy.org' and checkURL != 'www.movie2kproxy.com' and checkURL != '91.202.63.145':
+		if checkURL != 'www.movie4k.to' and checkURL != 'www.movie2kproxy.org' and checkURL != 'www.movie2kproxy.com' and checkURL != '91.202.63.145' and checkURL != 'www.movie2k.tv' and checkURL != '91.202.62.123':
 			return ObjectContainer(header="Not a Movie4k URL", message="The entered URL is not a valid Movie4k video URL. Example of a valid Movie4k video URL: http://www.movie4k.to/Oblivion-watch-movie-3777965.html  Please try again and click Ok to exit this screen.")
 	except:
 		return ObjectContainer(header="Not a Movie4k URL", message="The entered URL is not a valid Movie4k video URL. Example of a valid Movie4k video URL: http://www.movie4k.to/Oblivion-watch-movie-3777965.html  Please try again and click Ok to exit this screen.")
@@ -363,10 +363,10 @@ def InputFavoriteURL(title, query):
 	try:
 		Num = query.split('-')
 		checkNum = Num[len(Num)-1].split('.')[0]
-		if len(checkNum) != 7:
-			return ObjectContainer(header="Not a Valid Video Link", message="The entered URL is not a valid Movie4k video URL. Example of a valid Movie4k video URL: http://www.movie4k.to/Oblivion-watch-movie-3777965.html  Please try again and click Ok to exit this screen.")
+		if len(checkNum) != 7 and len(checkNum) != 8:
+			return ObjectContainer(header="Not a Valid Video Link", message="The entered URL is not a valid Movie4k video URL. Example of a valid Movie4k video URL: http://www.movie4k.to/Oblivion-watch-movie-3777966.html  Please try again and click Ok to exit this screen.")
 	except:
-		return ObjectContainer(header="Not a Valid Video Link", message="The entered URL is not a valid Movie4k video URL. Example of a valid Movie4k video URL: http://www.movie4k.to/Oblivion-watch-movie-3777965.html  Please try again and click Ok to exit this screen.")
+		return ObjectContainer(header="Not a Valid Video Link", message="The entered URL is not a valid Movie4k video URL. Example of a valid Movie4k video URL: http://www.movie4k.to/Oblivion-watch-movie-3777967.html  Please try again and click Ok to exit this screen.")
 
 	MOVIE_PAGE_HTML = HTML.ElementFromURL(query)
 	MOVIE_INFO = MOVIE_PAGE_HTML.xpath('//div[@id="details"]')[0].text_content()
@@ -1224,7 +1224,14 @@ def SubMoviePageAdd(title, page, date, dateadd, thumbck, type):
 
 	oc = ObjectContainer(title2=title)
 
-	MOVIE_PAGE_HTML = HTML.ElementFromURL("http://"+MOVIE2K_URL+"/"+page)
+	if page.split('/')[0] == "http:":
+		GET_MOVIE2K_URL = page.split('/')[2]
+		GET_PAGE = page.split('/')[3]
+	else:
+		GET_MOVIE2K_URL = MOVIE2K_URL
+		GET_PAGE = page
+
+	MOVIE_PAGE_HTML = HTML.ElementFromURL("http://"+GET_MOVIE2K_URL+"/"+GET_PAGE)
 
 	GET_THUMB = MOVIE_PAGE_HTML.xpath('//div[@id="maincontent5"]/div/div')[0]
 	thumb = GET_THUMB.xpath('./a/img')[0].get('src')
@@ -1300,7 +1307,14 @@ def TheMovieListings(title, page, date, dateadd, thumb, type, PageOfHosts, Host=
 
 	oc = ObjectContainer(title2=title)
 
-	MOVIE_PAGE_HTML = HTML.ElementFromURL("http://"+MOVIE2K_URL+"/"+page)
+	if page.split('/')[0] == "http:":
+		GET_MOVIE2K_URL = page.split('/')[2]
+		page = page.split('/')[3]
+	else:
+		GET_MOVIE2K_URL = MOVIE2K_URL
+
+	MOVIE_PAGE_HTML = HTML.ElementFromURL("http://"+GET_MOVIE2K_URL+"/"+page)
+	Log(MOVIE_PAGE_HTML.xpath('//body')[0].text_content())
 	MOVIE_INFO = MOVIE_PAGE_HTML.xpath('//div[@id="details"]')[0].text_content()
 	source_title = "Movie2k"
 
@@ -1440,7 +1454,7 @@ def TheMovieListings(title, page, date, dateadd, thumb, type, PageOfHosts, Host=
 					Host = Listing[i].xpath("./td/a/img")[0].get('title').split(' ')[0].split('.')[0].capitalize()
 				except:
 					Host = Listing[i].xpath("./td/a/img")[0].get('title').split(' ')[0].capitalize()
-				MOVIE_PAGE = "http://" + MOVIE2K_URL + "/" + Listing[i].xpath("./td/a")[0].get('href')
+				MOVIE_PAGE = "http://" + GET_MOVIE2K_URL + "/" + Listing[i].xpath("./td/a")[0].get('href')
 				if type == 'TV Shows':
 					DateAdded = dateadd
 					Quality = "DVDRip/BDRip"
@@ -1457,7 +1471,7 @@ def TheMovieListings(title, page, date, dateadd, thumb, type, PageOfHosts, Host=
 					Host = ScriptListing[sll].split('title=\\"')[1].split('\\"')[0].split(' ')[0].split('.')[0].capitalize()
 				except:
 					Host = ScriptListing[sll].split('title=\\"')[1].split('\\"')[0].split(' ')[0].capitalize()
-				MOVIE_PAGE = "http://" + MOVIE2K_URL + "/" + ScriptListing[sll].split('href=\\"')[1].split('\\"')[0]
+				MOVIE_PAGE = "http://" + GET_MOVIE2K_URL + "/" + ScriptListing[sll].split('href=\\"')[1].split('\\"')[0]
 				if type == 'TV Shows':
 					DateAdded = dateadd
 					Quality = "DVDRip/BDRip"
@@ -1475,7 +1489,7 @@ def TheMovieListings(title, page, date, dateadd, thumb, type, PageOfHosts, Host=
 			CurrentPage = 0
 			HostCount = 4
 			DateAdded = dateadd
-			MOVIE_PAGE = "http://" + MOVIE2K_URL + "/" + page
+			MOVIE_PAGE = "http://" + GET_MOVIE2K_URL + "/" + page
 			if type == 'TV Shows':
 				Quality = "DVDRip/BDRip"
 			else:

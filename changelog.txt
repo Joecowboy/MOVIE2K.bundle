@@ -1,3 +1,5 @@
+[B]Version 1.4.7[/B]
+- Fixed error when Site URL setting (plugin Preference) did not match My Favorite URL
 [B]Version 1.4.6[/B]
 - Added url www.movie2k.tv and it's IP to Site URL
 [B]Version 1.4.5[/B]
