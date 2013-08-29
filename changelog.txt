@@ -1,3 +1,5 @@
+[B]Version 1.4.8[/B]
+- Added new host Vidspot and updated Stream2k.eu and Veevr changed to f4m stream from RTMP stream
 [B]Version 1.4.7[/B]
 - Fixed error when Site URL setting (plugin Preference) did not match My Favorite URL
 [B]Version 1.4.6[/B]

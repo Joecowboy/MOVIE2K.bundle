@@ -34,7 +34,7 @@ UserAgent = ['Mozilla/4.0 (compatible; MSIE 5.5; Windows NT)', 'Opera/9.25 (Wind
 UserAgentNum = random.randrange(0, len(UserAgent)-1, 1)
 
 # Movie2k Plugin Version
-Version = "1.4.7"
+Version = "1.4.8"
 
 # Set up Host Services
 HostServices.Version = Version
@@ -319,7 +319,7 @@ def MyMovie2k(title):
 ####################################################################################################
 def RokuUsersMyFavorites(title):
 
-	return ObjectContainer(header="Special Instructions for Roku Users", message="Inputting Movie4k URL, Roku users must be using version 2.6.6 of the Plex Roku Channel (currently the PlexTest channel). If you do not want to input the Movie4k URL via the Roku input screen you can use the online Rokue remote control.  It can be found at:  http://www.remoku.tv   WARNING: DO NOT DIRECTLY TYPE OR PASTE THE TEXT IN THE INPUT CAPTCHA SECTION USING ROKU PLEX CHANNELS 2.6.4. THAT VERSION USES A SEARCH INSTEAD OF ENTRY SCREEN AND EVERY LETTER OF THE TEXT YOU ENTER WILL PRODUCE A SUBMIT FORM ON EACH LETTER.")
+	return ObjectContainer(header="Special Instructions for Roku Users", message="Inputting Movie4k URL, Roku users must be using version 2.6.7 or later of the Plex Roku Channel. If you do not want to input the Movie4k URL via the Roku input screen you can use the online Rokue remote control.  It can be found at:  http://www.remoku.tv   WARNING: DO NOT DIRECTLY TYPE OR PASTE THE TEXT IN THE INPUT CAPTCHA SECTION USING ROKU PLEX CHANNELS 2.6.4. THAT VERSION USES A SEARCH INSTEAD OF ENTRY SCREEN AND EVERY LETTER OF THE TEXT YOU ENTER WILL PRODUCE A SUBMIT FORM ON EACH LETTER.")
 
 
 ####################################################################################################
@@ -968,7 +968,7 @@ def InputParentalPassword(title, type, query):
 # This is special instructions for Roku users
 def RokuUsersPasswordInput(title):
 
-	return ObjectContainer(header="Special Instructions for Roku Users", message="Inputting password, Roku users must be using version 2.6.6 of the Plex Roku Channel (currently the PlexTest channel). If the Parantal Lock has been enabled, please input the password to view the adult content.  If the Parental Lock has been disabled enter the password to delete the password.  WARNING: DO NOT DIRECTLY TYPE OR PASTE THE TEXT IN THE INPUT CAPTCHA SECTION USING ROKU PLEX CHANNELS 2.6.4. THAT VERSION USES A SEARCH INSTEAD OF ENTRY SCREEN AND EVERY LETTER OF THE TEXT YOU ENTER WILL PRODUCE A SUBMIT FORM ON EACH LETTER.")
+	return ObjectContainer(header="Special Instructions for Roku Users", message="Inputting password, Roku users must be using version 2.6.7 or later of the Plex Roku Channel. If the Parantal Lock has been enabled, please input the password to view the adult content.  If the Parental Lock has been disabled enter the password to delete the password.  WARNING: DO NOT DIRECTLY TYPE OR PASTE THE TEXT IN THE INPUT CAPTCHA SECTION USING ROKU PLEX CHANNELS 2.6.4. THAT VERSION USES A SEARCH INSTEAD OF ENTRY SCREEN AND EVERY LETTER OF THE TEXT YOU ENTER WILL PRODUCE A SUBMIT FORM ON EACH LETTER.")
 
 
 ####################################################################################################
@@ -1199,7 +1199,6 @@ def MoviePageAdd(title, page, genre, type):
 			MOVIES_THUMB = GET_THUMB.split(Movie.get('id'))[1].split("img src='")[1].split("'")[0]
 		except:
 			try:
-				Log(MOVIES_PAGE)
 				MOVIE_INFO = MOVIES_PAGE.split('.')[0].split('-')
 				i = len(MOVIE_INFO)
 				i = i - 1
@@ -1314,7 +1313,6 @@ def TheMovieListings(title, page, date, dateadd, thumb, type, PageOfHosts, Host=
 		GET_MOVIE2K_URL = MOVIE2K_URL
 
 	MOVIE_PAGE_HTML = HTML.ElementFromURL("http://"+GET_MOVIE2K_URL+"/"+page)
-	Log(MOVIE_PAGE_HTML.xpath('//body')[0].text_content())
 	MOVIE_INFO = MOVIE_PAGE_HTML.xpath('//div[@id="details"]')[0].text_content()
 	source_title = "Movie2k"
 
@@ -1675,7 +1673,7 @@ def CaptchaInput(title, page, date, thumb, type, summary, directors, guest_stars
 # This is special instructions for Roku users
 def RokuUsers(title):
 
-	return ObjectContainer(header="Special Instructions for Roku Users", message="To enter Captcha text, Roku users must be using version 2.6.6 of the Plex Roku Channel (currently the PlexTest channel). You can choose to type in the Captcha image text or allow the OCR to try and deocode it. However, the OCR decode rate is very low.  WARNING: DO NOT DIRECTLY TYPE OR PASTE THE TEXT IN THE INPUT CAPTCHA SECTION USING ROKU PLEX CHANNELS 2.6.4. THAT VERSION USES A SEARCH INSTEAD OF ENTRY SCREEN AND EVERY LETTER OF THE TEXT YOU ENTER WILL PRODUCE A SUBMIT FORM ON EACH CAPTCHA LETTER.")
+	return ObjectContainer(header="Special Instructions for Roku Users", message="To enter Captcha text, Roku users must be using version 2.6.7 or later of the Plex Roku Channel. You can choose to type in the Captcha image text or allow the OCR to try and deocode it. However, the OCR decode rate is very low.  WARNING: DO NOT DIRECTLY TYPE OR PASTE THE TEXT IN THE INPUT CAPTCHA SECTION USING ROKU PLEX CHANNELS 2.6.4. THAT VERSION USES A SEARCH INSTEAD OF ENTRY SCREEN AND EVERY LETTER OF THE TEXT YOU ENTER WILL PRODUCE A SUBMIT FORM ON EACH CAPTCHA LETTER.")
 
 
 ####################################################################################################

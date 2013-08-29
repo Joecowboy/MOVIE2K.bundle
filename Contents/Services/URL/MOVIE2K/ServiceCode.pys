@@ -34,7 +34,7 @@ UserAgent = ['Mozilla/4.0 (compatible; MSIE 5.5; Windows NT)', 'Opera/9.25 (Wind
 UserAgentNum = random.randrange(0, len(UserAgent)-1, 1)
 
 # Movie2k Plugin Version
-Version = "1.4.7"
+Version = "1.4.8"
 
 # Set up Host Services
 HostServices.Version = Version
@@ -475,7 +475,7 @@ def SolveMediaCaptcha(url, HostPage, Host, wScript=1, RecaptchaResponse=0):
 			else:
 				i += 1
 
-		VideoPage = SecondButtonPress(url=url, HostPage=HostPage, page=VideoInfo, cookies=cookies, addkey={"adcopy_challenge": adcopy_challenge, "adcopy_response": urllib.quote_plus(RecaptchaResponse), "referer": url}, GetUserAgent=GetUserAgent)
+		VideoPage = SecondButtonPress(url=url, HostPage=HostPage, page=VideoInfo, cookies=cookies, addkey={"adcopy_challenge": adcopy_challenge, "adcopy_response": RecaptchaResponse, "referer": url}, GetUserAgent=GetUserAgent)
 
 	return VideoPage
 
@@ -1277,8 +1277,20 @@ def GetMovie(Host, HostPage, url, LinkType):
 		except:
 			VideoStream = ErrorMessage(Host=Host, LogError=1)
 	elif Host == "Stream2k.eu":
-		#Changed to Streamvids.eu
-		VideoStream = ErrorMessage(Host=Host, LogError=3)
+		try:
+			session = requests.session()
+			cookies = {}
+			headers = {'User-Agent': UserAgent[UserAgentNum], 'Referer': url}
+			s = session.get(HostPage, headers=headers)
+			for key, value in session.cookies.items():
+				cookies[key] = value
+			VideoID = "http://stream2k.eu/ajax.php?p=video&do=getplayer&vid="+HostPage.split('_')[1].split('.')[0]+"&aid=1&player=detail"
+			headers['Referer'] = HostPage
+			VideoInfo = session.get(VideoID, headers=headers)
+			VideoURL = urllib.unquote(VideoInfo.content.split('file=')[1].split('&')[0])
+			VideoStream = VideoURL + "?cookies="+String.Quote(str(cookies), usePlus=True)+"&headers="+String.Quote(str(headers), usePlus=True)
+		except:
+			VideoStream = ErrorMessage(Host=Host, LogError=1)
 	elif Host == "Streamme":
 		try:
 			VideoPage = "http://streamme.cc/playerframe.php?Id="+HostPage.split('/')[4]
@@ -1306,7 +1318,6 @@ def GetMovie(Host, HostPage, url, LinkType):
 			s = session.get(HostPage, headers=headers)
 			for key, value in session.cookies.items():
 				cookies[key] = value
-			Log(cookies)
 			VideoID = "http://streamvids.eu/ajax.php?p=video&do=getplayer&vid="+HostPage.split('_')[1].split('.')[0]+"&aid=1&player=detail"
 			headers['Referer'] = HostPage
 			VideoInfo = session.get(VideoID, headers=headers)
@@ -1398,16 +1409,17 @@ def GetMovie(Host, HostPage, url, LinkType):
 			VideoStream = ErrorMessage(Host=Host, LogError=1)
 	elif Host == "Veevr":
 		try:
+			cookies = {}
 			headers = {'User-Agent': UserAgent[UserAgentNum], 'Host': 'veevr.com'}
 			session = requests.session()
 			s = session.get(HostPage, headers=headers)
+			for key, value in session.cookies.items():
+				cookies[key] = value
 			vidID = HTML.ElementFromString(s.content).xpath('//div[@id="player_cont"]/script')[1].text
-			vidstr = urllib2.unquote(vidID.split('clip: {')[1].split("url: '")[1].split("'")[0])
-			swfurl = "http://hwcdn.veevr.com/q4z7c2x6/cds/swf/flowplayer.rtmp-3.2.10.swf"
-			rtmpurl = 7
-			VideoStream = [vidstr, swfurl, rtmpurl, 'rtmp', HostPage, '']
+			VideoURL = vidID.split('clip: {')[1].split("url: '")[1].split("'")[0]
+			VideoStream = VideoURL + "?cookies="+String.Quote(str(cookies), usePlus=True)+"&headers="+String.Quote(str(headers), usePlus=True)
 		except:
-			VideoStream = ErrorMessage(Host=Host, LogError=5)
+			VideoStream = ErrorMessage(Host=Host, LogError=8)
 	elif Host == "Veervid":
 		try:
 			VideoPage = HostPage.split('file')[0]+"file1"+HostPage.split('file')[1]
@@ -1548,6 +1560,12 @@ def GetMovie(Host, HostPage, url, LinkType):
 				VideoPage = SolveMediaCaptcha(url=url, HostPage=HostPage, Host=Host, RecaptchaResponse=1)
 		except:
 			VideoStream = ErrorMessage(Host=Host, LogError=4)
+	elif Host == "Vidspot":
+		try:
+			VideoPage = SecondButtonPress(url=url, HostPage=HostPage)
+			VideoStream = VideoPage.content.split('"file" : "')[1].split('"')[0]
+		except:
+			VideoStream = ErrorMessage(Host=Host, LogError=1)
 	elif Host == "Vidstream":
 		try:
 			if LinkType == 4:
@@ -1712,6 +1730,8 @@ def ErrorMessage(Host, LogError):
 		Log(Host+" -- May Not work do to country restrictions")
 	elif LogError == 7:
 		Log(Host+" -- Not in list!!!")
+	elif LogError == 8:
+		Log(Host+" -- HTTP Steaming f4m not supported")
 
 	return ErrorVideo()
 
@@ -1768,21 +1788,10 @@ def GetMovieDebugger(Host, HostPage, url, LinkType):
 
 
 		#http://mafiaon.hi2.ro/g-i-joe-retaliation-2013/  uses Proxy.swf -- needs proxy to work
-		#http://movies-online-free.net/upload/fullnews.php?fn_id=279#.Uaqenngo7mE
+		#http://movies-online-free.net/movie/79/-terminator-salvation-2009.html#.Uh6j1T9VOo8
 
 
-		
 	######################################  These use Proxy.swf ###################################
-
-	elif Host == "Stream2k.eu":
-		headers = {'User-Agent': UserAgent[UserAgentNum]}
-		VideoInfo =  requests.get(HostPage, headers=headers)
-		VideoPage = VideoInfo.content.split('<object')[1].split('proxy.link=')[1].split('&')[0]
-		Host = VideoPage.split('/')[2].split('.')[0].capitalize()
-		if Host == 'Www' or Host == 'Embed':
-			Host = VideoPage.split('/')[2].split('.')[1].capitalize()
-		VideoStream = GetMovieDebugger(Host=Host, HostPage=VideoPage, url=url, LinkType=1)
-		#Plugin file -- http://stream2k.eu/license/pluginslist.xml
 
 	elif Host == "Mshare":
 		#HostPage = "http://mshare.eu/playvideo/upload/fullnews.php?fn_id=1683"
@@ -2379,6 +2388,18 @@ def GetMovieDebugger(Host, HostPage, url, LinkType):
 		headers = {'User-Agent': UserAgent[UserAgentNum], 'Referer': url}
 		req = requests.get(HostPage, headers=headers)
 		VideoStream = urllib.unquote(HTML.ElementFromString(req.content).xpath('//div[@id="player"]/object/param[@name="flashvars"]')[0].get('value').split('file=')[1].split('&')[0])
+	elif Host == "Stream2k.eu":
+		session = requests.session()
+		cookies = {}
+		headers = {'User-Agent': UserAgent[UserAgentNum], 'Referer': url}
+		s = session.get(HostPage, headers=headers)
+		for key, value in session.cookies.items():
+			cookies[key] = value
+		VideoID = "http://stream2k.eu/ajax.php?p=video&do=getplayer&vid="+HostPage.split('_')[1].split('.')[0]+"&aid=1&player=detail"
+		headers['Referer'] = HostPage
+		VideoInfo = session.get(VideoID, headers=headers)
+		VideoURL = urllib.unquote(VideoInfo.content.split('file=')[1].split('&')[0])
+		VideoStream = VideoURL + "?cookies="+String.Quote(str(cookies), usePlus=True)+"&headers="+String.Quote(str(headers), usePlus=True)
 	elif Host == "Streamme":
 		VideoPage = "http://streamme.cc/playerframe.php?Id="+HostPage.split('/')[4]
 		VideoInfo = HTML.ElementFromURL(VideoPage).xpath('//div[@class="containerDiv"]/script')[1].text
@@ -2491,14 +2512,19 @@ def GetMovieDebugger(Host, HostPage, url, LinkType):
 		VideoStream = VideoURL + "?cookies="+String.Quote(str(cookies), usePlus=True)+"&headers="+String.Quote(str(headers), usePlus=True)
 	elif Host == "Veevr":
 		#Example: http://veevr.com/videos/RwsL0GfL
+		cookies = {}
 		headers = {'User-Agent': UserAgent[UserAgentNum], 'Host': 'veevr.com'}
 		session = requests.session()
 		s = session.get(HostPage, headers=headers)
+		for key, value in session.cookies.items():
+			cookies[key] = value
 		vidID = HTML.ElementFromString(s.content).xpath('//div[@id="player_cont"]/script')[1].text
-		vidstr = urllib2.unquote(vidID.split('clip: {')[1].split("url: '")[1].split("'")[0])
-		swfurl = "http://hwcdn.veevr.com/q4z7c2x6/cds/swf/flowplayer.rtmp-3.2.10.swf"
-		rtmpurl = 7
-		VideoStream = [vidstr, swfurl, rtmpurl, 'rtmp', HostPage, '']
+		VideoURL = vidID.split('clip: {')[1].split("url: '")[1].split("'")[0]
+		VideoStream = VideoURL + "?cookies="+String.Quote(str(cookies), usePlus=True)+"&headers="+String.Quote(str(headers), usePlus=True)
+		#vidstr = urllib2.unquote(vidID.split('clip: {')[1].split("url: '")[1].split("'")[0])
+		#swfurl = "http://hwcdn.veevr.com/q4z7c2x6/cds/swf/flowplayer.rtmp-3.2.10.swf"
+		#rtmpurl = 7
+		#VideoStream = [vidstr, swfurl, rtmpurl, 'rtmp', HostPage, '']
 	elif Host == "Veervid":
 		VideoPage = HostPage.split('file')[0]+"file1"+HostPage.split('file')[1]
 		VideoStream = HTML.ElementFromURL(VideoPage).xpath('//form')[0].get('action')
@@ -2604,6 +2630,10 @@ def GetMovieDebugger(Host, HostPage, url, LinkType):
 
 		if Host == "Vidplay":
 			VideoPage = SolveMediaCaptcha(url=url, HostPage=HostPage, Host=Host, RecaptchaResponse=1)
+	elif Host == "Vidspot":
+		#Example - http://vidspot.net/veyjdx3mq10n
+		VideoPage = SecondButtonPress(url=url, HostPage=HostPage)
+		VideoStream = VideoPage.content.split('"file" : "')[1].split('"')[0]
 	elif Host == "Vidstream":
 		if LinkType == 4:
 			#VideoPage = SecondButtonPress(url=url, HostPage=HostPage, wform=1, addkey={'referer': url})
