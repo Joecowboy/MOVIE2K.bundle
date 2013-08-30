@@ -34,7 +34,7 @@ UserAgent = ['Mozilla/4.0 (compatible; MSIE 5.5; Windows NT)', 'Opera/9.25 (Wind
 UserAgentNum = random.randrange(0, len(UserAgent)-1, 1)
 
 # Movie2k Plugin Version
-Version = "1.4.8"
+Version = "1.4.9"
 
 # Set up Host Services
 HostServices.Version = Version
@@ -623,8 +623,25 @@ def GetMovie(Host, HostPage, url, LinkType):
 			VideoStream = ErrorMessage(Host=Host, LogError=1)
 	elif Host == "Billionuploads":
 		try:
-			VideoPage = SecondButtonPress(url=url, HostPage=HostPage, elm='div[@class="templates"]/', wait=3, addkey={"method_premium": "", "down_direct": "1", "referer": url})
-			VideoStream = HTML.ElementFromString(VideoPage.content).xpath("//div[@id='inf']/input[@id=\"dl\"]")[0].get('value')
+			if LinkType == 4:
+				HostPage = "http://billionuploads.com/embed-"+HostPage.split('/')[3]+"-640x320.html"
+			headers = {'User-Agent': UserAgent[UserAgentNum], 'Referer': HostPage}
+			cookies = {}
+			session = requests.session()
+			VideoInfo = session.get(HostPage, headers=headers)
+			FormInput = HTML.ElementFromString(VideoInfo.content).xpath("//form[@id='challenge-form']/input")[0].get('value')
+			Math = HTML.ElementFromString(VideoInfo.content).xpath("//head/script")[0].text.split('a.value = ')[1].split(';')[0]
+			Num1 = int(Math.split('+')[0])
+			Num2 = int(Math.split('+')[1].split('*')[0])
+			Num3 = int(Math.split('*')[1])
+			Answer = Num1+(Num2*Num3)+18
+			VideoURL = "http://billionuploads.com/cdn-cgi/l/chk_jschl?jschl_vc="+FormInput+"&jschl_answer="+str(Answer)
+			VideoCookie = session.get(VideoURL, headers=headers)
+			VideoPage = session.get(HostPage, headers=headers)
+			for key, value in session.cookies.items():
+				cookies[key] = value
+			VideoID = SecondButtonPress(url=url, HostPage=HostPage, page=VideoPage.content, addkey={"verc": "freet", "submit_btn.x": "47", "submit_btn.y": "27"}, cookies=cookies)
+			VideoStream = HTML.ElementFromString(VideoID.content).xpath("//div[@id='inf']/input[@id=\"dl\"]")[0].get('value')
 		except:
 			VideoStream = ErrorMessage(Host=Host, LogError=1)
 	elif Host == "Bitloader":
@@ -1790,6 +1807,11 @@ def GetMovieDebugger(Host, HostPage, url, LinkType):
 		#http://mafiaon.hi2.ro/g-i-joe-retaliation-2013/  uses Proxy.swf -- needs proxy to work
 		#http://movies-online-free.net/movie/79/-terminator-salvation-2009.html#.Uh6j1T9VOo8
 
+	elif Host == "Fileloby":
+		#Example - http://www.fileloby.com/a79d1926f548b216
+		HostPage = HostPage + "?d=1"
+		VideoStream = None
+
 
 	######################################  These use Proxy.swf ###################################
 
@@ -1920,11 +1942,25 @@ def GetMovieDebugger(Host, HostPage, url, LinkType):
 		VideoInfo = HTML.ElementFromString(VideoPage.content).xpath('//div[@id="player_code"]/script')[1].text
 		VideoStream = VideoInfo.split('file: "')[1].split('"')[0]
 	elif Host == "Billionuploads":
-		#HostPage = "http://billionuploads.com/tj661u1xv50u"
-		VideoPage = SecondButtonPress(url=url, HostPage=HostPage, elm='div[@class="templates"]/', wait=3, addkey={"method_premium": "", "down_direct": "1", "referer": url})
-		VideoStream = HTML.ElementFromString(VideoPage.content).xpath("//div[@id='inf']/input[@id=\"dl\"]")[0].get('value')
-		#VideoInfo = VideoPage.content.split('<div id=player_code')[1].split("<script type='text/javascript'>")[1].split("</script>")[0]
-		#VideoStream = ScriptConvert(script=VideoInfo)
+		if LinkType == 4:
+			HostPage = "http://billionuploads.com/embed-"+HostPage.split('/')[3]+"-640x320.html"
+		headers = {'User-Agent': UserAgent[UserAgentNum], 'Referer': HostPage}
+		cookies = {}
+		session = requests.session()
+		VideoInfo = session.get(HostPage, headers=headers)
+		FormInput = HTML.ElementFromString(VideoInfo.content).xpath("//form[@id='challenge-form']/input")[0].get('value')
+		Math = HTML.ElementFromString(VideoInfo.content).xpath("//head/script")[0].text.split('a.value = ')[1].split(';')[0]
+		Num1 = int(Math.split('+')[0])
+		Num2 = int(Math.split('+')[1].split('*')[0])
+		Num3 = int(Math.split('*')[1])
+		Answer = Num1+(Num2*Num3)+18
+		VideoURL = "http://billionuploads.com/cdn-cgi/l/chk_jschl?jschl_vc="+FormInput+"&jschl_answer="+str(Answer)
+		VideoCookie = session.get(VideoURL, headers=headers)
+		VideoPage = session.get(HostPage, headers=headers)
+		for key, value in session.cookies.items():
+			cookies[key] = value
+		VideoID = SecondButtonPress(url=url, HostPage=HostPage, page=VideoPage.content, addkey={"verc": "freet", "submit_btn.x": "47", "submit_btn.y": "27"}, cookies=cookies)
+		VideoStream = HTML.ElementFromString(VideoID.content).xpath("//div[@id='inf']/input[@id=\"dl\"]")[0].get('value')
 	elif Host == "Bitloader":
 		VideoID = HostPage.split('/')[4]
 		VideoPageXML = "http://bitloader.org/Xajax/saveaction/?xjxfun=load_player_eng&xjxr="+str(time.time())+"&xjxargs[]="+VideoID+"&xjxargs[]=N5"

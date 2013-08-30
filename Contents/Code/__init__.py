@@ -34,7 +34,7 @@ UserAgent = ['Mozilla/4.0 (compatible; MSIE 5.5; Windows NT)', 'Opera/9.25 (Wind
 UserAgentNum = random.randrange(0, len(UserAgent)-1, 1)
 
 # Movie2k Plugin Version
-Version = "1.4.8"
+Version = "1.4.9"
 
 # Set up Host Services
 HostServices.Version = Version
@@ -54,12 +54,12 @@ FAVORITES_DATA = "favorites.data.json"
 def Start():
 
 	# Initialize the plug-in
-	Plugin.AddViewGroup("InfoList", viewMode="InfoList", mediaType="items")
+	#Plugin.AddViewGroup("InfoList", viewMode="InfoList", mediaType="items")
 
 	# Setup the default attributes for the ObjectContainer
 	ObjectContainer.art = R(ART)
 	ObjectContainer.title1 = NAME
-	ObjectContainer.view_group = "InfoList"
+	#ObjectContainer.view_group = "InfoList"
 
 
 	# Setup the default attributes for the other objects
@@ -913,7 +913,7 @@ def InputParentalPassword(title, type, query):
 	PasswordCheck = ParentalPassword.decode('base64', 'strict')
 
 	if ParentalLock == "Enabled" and ParentalPassword == "":
-		Password[0][1]['ParentalPassword'] = query.encode('base64', 'strict')
+		Password[0][1]['ParentalPassword'] = query.encode('base64', 'strict').replace('\n', '')
 		JsonWrite(fp=CAPTCHA_DATA, jsondata=Password)
 		return ObjectContainer(header="Parental Lockout Enabled", message="The Parental Lock password has now been enabled. Please click Ok to exit this screen and then click the back button to refresh the menu line up.")
 	elif ParentalLock == "Disabled" and ParentalPassword != "":
