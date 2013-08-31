@@ -1,3 +1,5 @@
+[B]Version 1.4.11[/B]
+- Added check for no rating on German for content rating error variable setting
 [B]Version 1.4.10[/B]
 - Fixed warning callback path for GetThumb, fixed date variable reference for german movie year and updated captcha trying to get it to display image
 [B]Version 1.4.9[/B]

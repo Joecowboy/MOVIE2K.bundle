@@ -34,7 +34,7 @@ UserAgent = ['Mozilla/4.0 (compatible; MSIE 5.5; Windows NT)', 'Opera/9.25 (Wind
 UserAgentNum = random.randrange(0, len(UserAgent)-1, 1)
 
 # Movie2k Plugin Version
-Version = "1.4.10"
+Version = "1.4.11"
 
 # Set up Host Services
 HostServices.Version = Version
@@ -1393,6 +1393,8 @@ def TheMovieListings(title, page, date, dateadd, thumb, type, PageOfHosts, Host=
 				content_rating = 'R'
 			elif movie_rating == 'ab 18':
 				content_rating = 'NC-17'
+			else:
+				content_rating = 'NR'
 		except:
 			content_rating = 'NR'
 
