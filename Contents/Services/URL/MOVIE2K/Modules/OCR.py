@@ -14,7 +14,6 @@
 #      manipulation for scr.im specific captchas
 #
 #
-#
 # Perform OCR using tesseract-ocr library
 
 
@@ -30,6 +29,7 @@ try:
 	import requests
 except:
 	import requests25 as requests
+
 from tesseract import image_to_string
 from PIL import Image
 from PIL import TiffImagePlugin
@@ -43,7 +43,7 @@ import time
 def GetImgValue(url, HostPage, UserAgent, cookies, split=None):
 
 	headers = {}
-	headers['Accept'] = 'image/png,image/*;q=0.8,*/*;q=0.5'
+	headers['Accept'] = 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
 	headers['Connection'] = 'keep-alive'
 	headers['Host'] = url.split('/')[2]
 	headers['Referer'] = HostPage

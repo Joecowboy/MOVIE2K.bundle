@@ -1,3 +1,5 @@
+[B]Version 1.4.10[/B]
+- Fixed warning callback path for GetThumb, fixed date variable reference for german movie year and updated captcha trying to get it to display image
 [B]Version 1.4.9[/B]
 - Fixed not saving Parental Password on version updates and updated Billionuploads
 [B]Version 1.4.8[/B]

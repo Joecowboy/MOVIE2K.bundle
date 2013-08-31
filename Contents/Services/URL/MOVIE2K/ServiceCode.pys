@@ -34,7 +34,7 @@ UserAgent = ['Mozilla/4.0 (compatible; MSIE 5.5; Windows NT)', 'Opera/9.25 (Wind
 UserAgentNum = random.randrange(0, len(UserAgent)-1, 1)
 
 # Movie2k Plugin Version
-Version = "1.4.9"
+Version = "1.4.10"
 
 # Set up Host Services
 HostServices.Version = Version
@@ -431,12 +431,19 @@ def SolveMediaCaptcha(url, HostPage, Host, wScript=1, RecaptchaResponse=0):
 		req = session.get(VideoInfo, headers=headers)
 		for key, value in session.cookies.items():
 			captchacookies[key] = value
-		VideoID = HTML.ElementFromString(req.content).xpath('//div[@id="adcopy-outer"]/table/tr/td/img')[0].get('src')
+		VideoSRC = HTML.ElementFromString(req.content).xpath('//div[@id="adcopy-outer"]/table/tr')
+		try:
+			VideoID = VideoSRC[0].xpath('./td/img')[0].get('src')
+		except:
+			VideoID = VideoSRC[0].xpath('./td/div/iframe')[0].get('src')
 		adcopy_challenge = VideoID.split('=')[1]
 		captchaimg = "http://api.solvemedia.com" + VideoID
 
 	if RecaptchaResponse == 0:
-		VideoPage = SecondButtonPress(url=url, HostPage=HostPage, page=OpenUrl.content, cookies=cookies, addkey={"adcopy_challenge": adcopy_challenge, "referer": url}, captchakey="adcopy_response", captchaimg=captchaimg, captchacookies=captchacookies, split='TOP')
+		try:
+			VideoPage = SecondButtonPress(url=url, HostPage=HostPage, page=OpenUrl.content, cookies=cookies, addkey={"adcopy_challenge": adcopy_challenge, "referer": url}, captchakey="adcopy_response", captchaimg=captchaimg, captchacookies=captchacookies, split='TOP')
+		except:
+			VideoPage = None
 	elif RecaptchaResponse == 1:
 		hosts = LoadData(fp=CAPTCHA_DATA)
 
@@ -492,7 +499,10 @@ def GoogleCaptcha(url, HostPage, Host, VideoInfo=None, RecaptchaResponse=0):
 		captchaimg = GoogleImgLink + GoogleKey
 
 	if RecaptchaResponse == 0:
-		VideoPage = SecondButtonPress(url=url, HostPage=HostPage, page=VideoInfo, addkey={"recaptcha_challenge_field": GoogleKey, "referer": url, "down_direct": 1, "method_premium": ""}, captchakey="recaptcha_response_field", captchaimg=captchaimg, split='LR')
+		try:
+			VideoPage = SecondButtonPress(url=url, HostPage=HostPage, page=VideoInfo, addkey={"recaptcha_challenge_field": GoogleKey, "referer": url, "down_direct": 1, "method_premium": ""}, captchakey="recaptcha_response_field", captchaimg=captchaimg, split='LR')
+		except:
+			VideoPage = None
 	elif RecaptchaResponse == 1:
 		hosts = LoadData(fp=CAPTCHA_DATA)
 

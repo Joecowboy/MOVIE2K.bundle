@@ -34,7 +34,7 @@ UserAgent = ['Mozilla/4.0 (compatible; MSIE 5.5; Windows NT)', 'Opera/9.25 (Wind
 UserAgentNum = random.randrange(0, len(UserAgent)-1, 1)
 
 # Movie2k Plugin Version
-Version = "1.4.9"
+Version = "1.4.10"
 
 # Set up Host Services
 HostServices.Version = Version
@@ -1153,7 +1153,7 @@ def FeaturedMoviePageAdd(title, page, type):
 @route(PREFIX + '/MovieGenrePage')
 def MoviePageAdd(title, page, genre, type):
 	
-	oc = ObjectContainer(title2=title, view_group='InfoList')
+	oc = ObjectContainer(title2=title)
 
 	cookies = Dict['_movie2k_uid']
 	headers = {"Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8", "Accept-Charset": "ISO-8859-1,utf-8;q=0.7,*;q=0.3", "Accept-Encoding": "gzip,deflate,sdch", "Accept-Language": "en-US,en;q=0.8", "Connection": "keep-alive", "Host": MOVIE2K_URL, "Referer": "http://"+MOVIE2K_URL, "User-Agent": UserAgent[UserAgentNum]}
@@ -1331,7 +1331,7 @@ def TheMovieListings(title, page, date, dateadd, thumb, type, PageOfHosts, Host=
 			if date == "":
 				date =  "0001"
 		except:
-			re.sub('[^0-9]', '', MOVIE_INFO.split('Land/Jahr: ')[1])
+			date = re.sub('[^0-9]', '', MOVIE_INFO.split('Land/Jahr: ')[1])
 			if date == "":
 				date =  "0001"
 
@@ -1735,6 +1735,7 @@ def GetLang(lang):
 
 
 ####################################################################################################
+@route(PREFIX + '/GetThumb')
 def GetThumb(url, HostPage=None, GetUserAgent=None, cookies={}):
 
 	try:
@@ -1742,7 +1743,7 @@ def GetThumb(url, HostPage=None, GetUserAgent=None, cookies={}):
 			imgData = HTTP.Request(url, cacheTime=CACHE_1HOUR).content
 		else:
 			headers = {}
-			headers['Accept'] = 'image/png,image/*;q=0.8,*/*;q=0.5'
+			headers['Accept'] = 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
 			headers['Connection'] = 'keep-alive'
 			headers['Host'] = url.split('/')[2]
 			headers['Referer'] = HostPage
