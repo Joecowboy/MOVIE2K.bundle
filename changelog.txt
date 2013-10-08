@@ -1,3 +1,5 @@
+[B]Version 1.4.13[/B]
+- Added Video Resolution change in preferences, updated Flashx, Novamov, Nowvideo, Primeshare, Videopremium, Zinwa
 [B]Version 1.4.12[/B]
 - Udated ScriptConvert function
 [B]Version 1.4.11[/B]

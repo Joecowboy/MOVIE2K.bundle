@@ -1,5 +1,16 @@
 [
 	{
+		"id": "video_resolution",
+		"type": "enum",
+		"label": "Video Resolution",
+		"values": [
+			"480",
+			"720",
+			"1080"
+		],
+		"default": "480"
+	},
+	{
 		"id": "movie2k_url",
 		"type": "enum",
 		"label": "Site URL",
