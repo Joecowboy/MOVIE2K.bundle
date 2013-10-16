@@ -128,21 +128,11 @@ def ScriptConvert(script):
 	c = int(parameters[1].split(',')[1])
 	p = parameters[0].split('return p}')[1].replace("\\", "")
 
-	#if CKtable == 23:
-	#	table = ['0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f','g','h','i','j','k','l','m']
-	#elif CKtable == 26:
-	#	table = ['0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p']
-	#elif CKtable == 34:
-	#	table = ['0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x']
 	if CKtable <= 36:
 		table = ['0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z','10','11','12','13','14','15','16','17','18','19','1a','1b','1c','1d','1e','1f','1g','1h','1i','1j','1k','1l','1m','1n','1o','1p','1q','1r','1s','1t','1u','1v','1w','1x','1y','1z','20','21','22','23','24','25','26','27','28','29','2a','2b','2c','2d','2e','2f','2g','2h','2i','2j','2k','2l','2m','2n','2o','2p','2q','2r','2s','2t','2u','2v','2w','2x','2y','2z','30','31','32','33','34','35','36','37','38','39','3a','3b','3c','3d','3e','3f','3g']
-	#elif CKtable == 41:
-	#	table = ['0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z','A','B','C','D','E']
-	#elif CKtable == 46:
-	#	table = ['0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z','A','B','C','D','E','F','G','H','I','J']
-	elif CKtable <= 54:
-		table = ['0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z','A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z']
-		
+	elif CKtable <= 62:
+		table = ['0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z','A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z','10','11','12','13','14','15','16','17','18','19','1a','1b','1c','1d','1e','1f','1g','1h','1i','1j','1k','1l','1m','1n','1o','1p','1q','1r','1s','1t','1u','1v','1w','1x','1y','1z','1A','1B','1C','1D','1E','1F','1G','1H','1I','1J','1K','1L','1M','1N','1O','1P','1Q','1R','1S','1T','1U','1V','1W','1X','1Y','1Z','20','21','22','23','24','25','26','27','28','29','2a','2b','2c','2d','2e','2f','2g','2h','2i','2j','2k','2l','2m','2n','2o','2p','2q','2r','2s','2t','2u','2v','2w','2x','2y','2z','2A','2B','2C','2D','2E','2F','2G','2H','2I','2J','2K','2L','2M','2N','2O','2P','2Q','2R','2S','2T','2U','2V','2W','2X','2Y','2Z','30','31','32','34','35','36','37','38','39','3a','3b','3c','3d','3e','3f','3g','3h','3i','3j','3k','3l','3m','3n','3o','3p','3q','3r','3s','3t','3u','3v','3w','3x','3y','3z','3A','3B','3C','3D','3E','3F','3G','3H','3I','3J','3K','3L','3M','3N','3M','3O','3P','3Q','3R','3S','3T','3U','3V','3W','3X','3Y','3Z','40','41','42','43','44','45','46','47','48','49','4a','4b','4c','4d','4e','4f','4g','4h']
+	
 	while c >= 0:
 		c = c - 1
 		if k[c] != "":
@@ -156,7 +146,12 @@ def ScriptConvert(script):
 				except:
 					p = p.split('name="src" value="')[1].split('"')[0]
 			except:
-				p = p.split("file','")[1].split("'")[0]
+				try:
+					p = p.split("file','")[1].split("'")[0]
+				except:
+					VarArray = p.split('var ')
+					VideoKeyVar = VarArray[len(VarArray)-16].split('=')[1].split(';')[0]
+					p = p.split(VideoKeyVar)[1].split('="')[1].split('"')[0]
 		except:			
 			try:
 				p = p.split("file':'")[1].split("'")[0]
@@ -365,4 +360,51 @@ def decodeurl(encodedurl):
         temp9=chr(temp9i)
         temp6=temp6+temp9
         temp8=temp8+4
+
     return temp6
+
+
+####################################################################################################
+def CharConvert(w,i,s,e):
+
+	lIll = 0
+	ll1I = 0
+	Il1l = 0
+	ll1l = []
+	l1lI = []
+	looper = True
+
+	while looper == True:
+		if lIll < 5:
+			l1lI.append(w[lIll])
+  		elif lIll < len(w):
+			ll1l.append(w[lIll])
+	  	lIll += 1
+		if ll1I < 5:
+			l1lI.append(i[ll1I])
+		elif ll1I < len(i):
+			ll1l.append(i[ll1I])
+		ll1I += 1
+		if Il1l < 5:
+			l1lI.append(s[Il1l])
+		elif Il1l < len(s):
+			ll1l.append(s[Il1l])
+		Il1l += 1
+  		if len(w)+len(i)+len(s)+len(e) == len(ll1l)+len(l1lI)+len(e):
+			looper = False
+
+	lI1l = ''.join(ll1l)
+	I1lI = ''.join(l1lI)
+	ll1I = 0
+	l1ll = []
+
+	for lIll in range(0, len(ll1l), 2):
+		ll11 = -1
+		if ord(I1lI[ll1I])%2 == 1:
+			ll11 = 1
+		l1ll.append(chr(int(lI1l[lIll:lIll+2],36)-ll11))
+		ll1I += 1
+		if ll1I >= len(l1lI):
+			ll1I = 0
+
+	return ''.join(l1ll)

@@ -1,7 +1,9 @@
+[B]Version 1.4.14[/B]
+- Added host V-vids and updated Divxhosting, Gigabyteupload, Movshare, Nowvideo, Potlocker, Vidup
 [B]Version 1.4.13[/B]
 - Added Video Resolution change in preferences, updated Flashx, Novamov, Nowvideo, Primeshare, Videopremium, Zinwa
 [B]Version 1.4.12[/B]
-- Udated ScriptConvert function
+- Updated ScriptConvert function
 [B]Version 1.4.11[/B]
 - Added check for no rating on German for content rating error variable setting
 [B]Version 1.4.10[/B]
