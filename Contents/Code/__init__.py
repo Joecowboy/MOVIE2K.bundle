@@ -34,7 +34,7 @@ UserAgent = ['Mozilla/4.0 (compatible; MSIE 5.5; Windows NT)', 'Opera/9.25 (Wind
 UserAgentNum = random.randrange(0, len(UserAgent)-1, 1)
 
 # Movie2k Plugin Version
-Version = "1.4.13"
+Version = "1.4.14"
 
 # Set up Host Services
 HostServices.Version = Version
