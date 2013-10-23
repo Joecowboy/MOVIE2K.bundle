@@ -8,56 +8,190 @@
 		<dict>
 			<key>URLPatterns</key>
 			<array>
+				<string>http://media31\.traileraddict\.com/+</string>
+				<string>http://www\.traileraddict\.com/clip+</string>
+				<string>http://www\.movie4k\.to/movies-all+</string>
+				<string>http://www\.movie4k\.to/movies-updates+</string>
+				<string>http://www\.movie4k\.to/movies-top+</string>
 				<string>http://www\.movie4k\.to/genre-movies+</string>
 				<string>http://www\.movie4k\.to/movies-genre+</string>
+				<string>http://www\.movie4k\.to/xxx-all+</string>
+				<string>http://www\.movie4k\.to/xxx-updates+</string>
+				<string>http://www\.movie4k\.to/xxx-top+</string>
 				<string>http://www\.movie4k\.to/genre-xxx+</string>
 				<string>http://www\.movie4k\.to/xxx-genre-+</string>
+				<string>http://www\.movie4k\.to/tvshows-all+</string>
+				<string>http://www\.movie4k\.to/tvshows_featured+</string>
+				<string>http://www\.movie4k\.to/tvshows-updates+</string>
+				<string>http://www\.movie4k\.to/tvshows-top+</string>
 				<string>http://www\.movie4k\.to/genre-tvshows+</string>
 				<string>http://www\.movie4k\.to/tvshows-genre+</string>
 				<string>http://www\.movie4k\.to/tvshows-season+</string>
 				<string>http://www\.movie4k\.to/+</string>
+				<string>http://91\.202\.63\.145/movies-all+</string>
+				<string>http://91\.202\.63\.145/movies-updates+</string>
+				<string>http://91\.202\.63\.145/movies-top+</string>
+				<string>http://91\.202\.63\.145/movies-all+</string>
 				<string>http://91\.202\.63\.145/genre-movies+</string>
 				<string>http://91\.202\.63\.145/movies-genre+</string>
+				<string>http://91\.202\.63\.145/xxx-all+</string>
+				<string>http://91\.202\.63\.145/xxx-updates+</string>
+				<string>http://91\.202\.63\.145/xxx-top+</string>
 				<string>http://91\.202\.63\.145/genre-xxx+</string>
 				<string>http://91\.202\.63\.145/xxx-genre-+</string>
+				<string>http://91\.202\.63\.145/tvshows-all+</string>
+				<string>http://91\.202\.63\.145/tvshows_featured+</string>
+				<string>http://91\.202\.63\.145/tvshows-updates+</string>
+				<string>http://91\.202\.63\.145/tvshows-top+</string>
 				<string>http://91\.202\.63\.145/genre-tvshows+</string>
 				<string>http://91\.202\.63\.145/tvshows-genre+</string>
 				<string>http://91\.202\.63\.145/tvshows-season+</string>
 				<string>http://91\.202\.63\.145/+</string>
+				<string>http://www\.movie\.to/movies-all+</string>
+				<string>http://www\.movie\.to/movies-updates+</string>
+				<string>http://www\.movie\.to/movies-top+</string>
+				<string>http://www\.movie\.to/genre-movies+</string>
+				<string>http://www\.movie\.to/movies-genre+</string>
+				<string>http://www\.movie\.to/xxx-all+</string>
+				<string>http://www\.movie\.to/xxx-updates+</string>
+				<string>http://www\.movie\.to/xxx-top+</string>
+				<string>http://www\.movie\.to/genre-xxx+</string>
+				<string>http://www\.movie\.to/xxx-genre-+</string>
+				<string>http://www\.movie\.to/tvshows-all+</string>
+				<string>http://www\.movie\.to/tvshows_featured+</string>
+				<string>http://www\.movie\.to/tvshows-updates+</string>
+				<string>http://www\.movie\.to/tvshows-top+</string>
+				<string>http://www\.movie\.to/genre-tvshows+</string>
+				<string>http://www\.movie\.to/tvshows-genre+</string>
+				<string>http://www\.movie\.to/tvshows-season+</string>
+				<string>http://www\.movie\.to/+</string>
+				<string>http://movie\.to.\come\.in/movies-all+</string>
+				<string>http://movie4k\.to.\come\.in/movies-all+</string>
+				<string>http://movie4k\.to.\come\.in/movies-updates+</string>
+				<string>http://movie4k\.to.\come\.in/movies-top+</string>
+				<string>http://movie4k\.to.\come\.in/genre-movies+</string>
+				<string>http://movie4k\.to.\come\.in/movies-genre+</string>
+				<string>http://movie4k\.to.\come\.in/xxx-all+</string>
+				<string>http://movie4k\.to.\come\.in/xxx-updates+</string>
+				<string>http://movie4k\.to.\come\.in/xxx-top+</string>
+				<string>http://movie4k\.to.\come\.in/genre-xxx+</string>
+				<string>http://movie4k\.to.\come\.in/xxx-genre-+</string>
+				<string>http://movie4k\.to.\come\.in/tvshows-all+</string>
+				<string>http://movie4k\.to.\come\.in/tvshows_featured+</string>
+				<string>http://movie4k\.to.\come\.in/tvshows-updates+</string>
+				<string>http://movie4k\.to.\come\.in/tvshows-top+</string>
+				<string>http://movie4k\.to.\come\.in/genre-tvshows+</string>
+				<string>http://movie4k\.to.\come\.in/tvshows-genre+</string>
+				<string>http://movie4k\.to.\come\.in/tvshows-season+</string>
+				<string>http://movie4k\.to.\come\.in/+</string>
+				<string>http://www\.movie4kunblocked\.co/movies-all+</string>
+				<string>http://www\.movie4kunblocked\.co/movies-updates+</string>
+				<string>http://www\.movie4kunblocked\.co/movies-top+</string>
+				<string>http://www\.movie4kunblocked\.co/genre-movies+</string>
+				<string>http://www\.movie4kunblocked\.co/movies-genre+</string>
+				<string>http://www\.movie4kunblocked\.co/xxx-all+</string>
+				<string>http://www\.movie4kunblocked\.co/xxx-updates+</string>
+				<string>http://www\.movie4kunblocked\.co/xxx-top+</string>
+				<string>http://www\.movie4kunblocked\.co/genre-xxx+</string>
+				<string>http://www\.movie4kunblocked\.co/xxx-genre-+</string>
+				<string>http://www\.movie4kunblocked\.co/tvshows-all+</string>
+				<string>http://www\.movie4kunblocked\.co/tvshows_featured+</string>
+				<string>http://www\.movie4kunblocked\.co/tvshows-updates+</string>
+				<string>http://www\.movie4kunblocked\.co/tvshows-top+</string>
+				<string>http://www\.movie4kunblocked\.co/genre-tvshows+</string>
+				<string>http://www\.movie4kunblocked\.co/tvshows-genre+</string>
+				<string>http://www\.movie4kunblocked\.co/tvshows-season+</string>
+				<string>http://www\.movie4kunblocked\.co/+</string>
+				<string>http://www\.movie2kproxy\.org/movies-all+</string>
+				<string>http://www\.movie2kproxy\.org/movies-updates+</string>
+				<string>http://www\.movie2kproxy\.org/movies-top+</string>
 				<string>http://www\.movie2kproxy\.org/genre-movies+</string>
 				<string>http://www\.movie2kproxy\.org/movies-genre+</string>
+				<string>http://www\.movie2kproxy\.org/xxx-all+</string>
+				<string>http://www\.movie2kproxy\.org/xxx-updates+</string>
+				<string>http://www\.movie2kproxy\.org/xxx-top+</string>
 				<string>http://www\.movie2kproxy\.org/genre-xxx+</string>
 				<string>http://www\.movie2kproxy\.org/xxx-genre-+</string>
+				<string>http://www\.movie2kproxy\.org/tvshows-all+</string>
+				<string>http://www\.movie2kproxy\.org/tvshows_featured+</string>
+				<string>http://www\.movie2kproxy\.org/tvshows-updates+</string>
+				<string>http://www\.movie2kproxy\.org/tvshows-top+</string>
 				<string>http://www\.movie2kproxy\.org/genre-tvshows+</string>
 				<string>http://www\.movie2kproxy\.org/tvshows-genre+</string>
 				<string>http://www\.movie2kproxy\.org/tvshows-season+</string>
 				<string>http://www\.movie2kproxy\.org/+</string>
+				<string>http://www\.movie2kproxy\.com/movies-all+</string>
+				<string>http://www\.movie2kproxy\.com/movies-updates+</string>
+				<string>http://www\.movie2kproxy\.com/movies-top+</string>
 				<string>http://www\.movie2kproxy\.com/genre-movies+</string>
 				<string>http://www\.movie2kproxy\.com/movies-genre+</string>
+				<string>http://www\.movie2kproxy\.com/xxx-all+</string>
+				<string>http://www\.movie2kproxy\.com/xxx-updates+</string>
+				<string>http://www\.movie2kproxy\.com/xxx-top+</string>
 				<string>http://www\.movie2kproxy\.com/genre-xxx+</string>
 				<string>http://www\.movie2kproxy\.com/xxx-genre-+</string>
+				<string>http://www\.movie2kproxy\.com/tvshows-all+</string>
+				<string>http://www\.movie2kproxy\.com/tvshows_featured+</string>
+				<string>http://www\.movie2kproxy\.com/tvshows-updates+</string>
+				<string>http://www\.movie2kproxy\.com/tvshows-top+</string>
 				<string>http://www\.movie2kproxy\.com/genre-tvshows+</string>
 				<string>http://www\.movie2kproxy\.com/tvshows-genre+</string>
 				<string>http://www\.movie2kproxy\.com/tvshows-season+</string>
 				<string>http://www\.movie2kproxy\.com/+</string>
+				<string>http://www\.movie2k\.tv/movies-all+</string>
+				<string>http://www\.movie2k\.tv/movies-updates+</string>
+				<string>http://www\.movie2k\.tv/movies-top+</string>
 				<string>http://www\.movie2k\.tv/genre-movies+</string>
 				<string>http://www\.movie2k\.tv/movies-genre+</string>
+				<string>http://www\.movie2k\.tv/xxx-all+</string>
+				<string>http://www\.movie2k\.tv/xxx-updates+</string>
+				<string>http://www\.movie2k\.tv/xxx-top+</string>
 				<string>http://www\.movie2k\.tv/genre-xxx+</string>
 				<string>http://www\.movie2k\.tv/xxx-genre-+</string>
+				<string>http://www\.movie2k\.tv/tvshows-all+</string>
+				<string>http://www\.movie2k\.tv/tvshows_featured+</string>
+				<string>http://www\.movie2k\.tv/tvshows-updates+</string>
+				<string>http://www\.movie2k\.tv/tvshows-top+</string>
 				<string>http://www\.movie2k\.tv/genre-tvshows+</string>
 				<string>http://www\.movie2k\.tv/tvshows-genre+</string>
 				<string>http://www\.movie2k\.tv/tvshows-season+</string>
 				<string>http://www\.movie2k\.tv/+</string>
+				<string>http://91\.202\.63\.123/movies-all+</string>
+				<string>http://91\.202\.63\.123/movies-updates+</string>
+				<string>http://91\.202\.63\.123/movies-top+</string>
 				<string>http://91\.202\.63\.123/genre-movies+</string>
 				<string>http://91\.202\.63\.123/movies-genre+</string>
+				<string>http://91\.202\.63\.123/xxx-all+</string>
+				<string>http://91\.202\.63\.123/xxx-updates+</string>
+				<string>http://91\.202\.63\.123/xxx-top+</string>
 				<string>http://91\.202\.63\.123/genre-xxx+</string>
 				<string>http://91\.202\.63\.123/xxx-genre-+</string>
+				<string>http://91\.202\.63\.123/tvshows-all+</string>
+				<string>http://91\.202\.63\.123/tvshows_featured+</string>
+				<string>http://91\.202\.63\.123/tvshows-updates+</string>
+				<string>http://91\.202\.63\.123/tvshows-top+</string>
 				<string>http://91\.202\.63\.123/genre-tvshows+</string>
 				<string>http://91\.202\.63\.123/tvshows-genre+</string>
 				<string>http://91\.202\.63\.123/tvshows-season+</string>
 				<string>http://91\.202\.63\.123/+</string>
-				<string>http://media31\.traileraddict\.com/+</string>
-				<string>http://www\.traileraddict\.com/clip+</string>
+				<string>http://www\.movie2k\.tl/movies-all+</string>
+				<string>http://www\.movie2k\.tl/movies-updates+</string>
+				<string>http://www\.movie2k\.tl/movies-top+</string>
+				<string>http://www\.movie2k\.tl/genre-movies+</string>
+				<string>http://www\.movie2k\.tl/movies-genre+</string>
+				<string>http://www\.movie2k\.tl/xxx-all+</string>
+				<string>http://www\.movie2k\.tl/xxx-updates+</string>
+				<string>http://www\.movie2k\.tl/xxx-top+</string>
+				<string>http://www\.movie2k\.tl/genre-xxx+</string>
+				<string>http://www\.movie2k\.tl/xxx-genre-+</string>
+				<string>http://www\.movie2k\.tl/tvshows-all+</string>
+				<string>http://www\.movie2k\.tl/tvshows_featured+</string>
+				<string>http://www\.movie2k\.tl/tvshows-updates+</string>
+				<string>http://www\.movie2k\.tl/tvshows-top+</string>
+				<string>http://www\.movie2k\.tl/genre-tvshows+</string>
+				<string>http://www\.movie2k\.tl/tvshows-genre+</string>
+				<string>http://www\.movie2k\.tl/tvshows-season+</string>
+				<string>http://www\.movie2k\.tl/+</string>
 			</array>
 		</dict>
 	</dict>

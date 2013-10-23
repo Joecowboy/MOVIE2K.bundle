@@ -1,3 +1,5 @@
+[B]Version 1.5.0[/B]
+- Added new website www.movie2k.tl for German content, updated multiple hosts and added three hosts
 [B]Version 1.4.14[/B]
 - Added host V-vids and updated Divxhosting, Gigabyteupload, Movshare, Nowvideo, Potlocker, Vidup
 [B]Version 1.4.13[/B]

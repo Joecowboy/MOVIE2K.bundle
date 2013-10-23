@@ -17,10 +17,14 @@
 		"values": [
 			"www.movie4k.to",
 			"91.202.63.145",
+			"www.movie.to",
+			"movie4k.to.come.in",
+			"www.movie4kunblocked.co",
 			"www.movie2kproxy.org",
 			"www.movie2kproxy.com",
 			"www.movie2k.tv",
-			"91.202.62.123"
+			"91.202.62.123",
+			"www.movie2k.tl"
 		],
 		"default": "www.movie4k.to"
 	},
@@ -33,6 +37,16 @@
 			"Enabled",
 		],
 		"default": "Enabled" 
+	},
+	{
+		"id": "toppages",
+		"type": "enum",
+		"label": "Top Pages Displayed",
+		"values": [
+			"Disabled",
+			"Enabled",
+		],
+		"default": "Disabled" 
 	},
 	{
 		"id": "disabledadult",
