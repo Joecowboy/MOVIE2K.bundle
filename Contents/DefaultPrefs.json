@@ -1,5 +1,12 @@
 [
 	{
+		"id": "version",
+		"type": "enum",
+		"label": "Version",
+		"values": ["1.5.1"],
+		"default": "1.5.1"
+	},
+	{
 		"id": "video_resolution",
 		"type": "enum",
 		"label": "Video Resolution",

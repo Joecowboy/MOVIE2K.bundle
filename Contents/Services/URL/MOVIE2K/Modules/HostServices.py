@@ -29,7 +29,6 @@ def JsonOpen(fp):
 	except:
 		CaptchaData = JsonStruct(fp=fp, ParentalPassword=ParentalPassword, GetVersion=Version)
 
-
 	return CaptchaData
 
 
@@ -39,10 +38,11 @@ def JsonStruct(fp, ParentalPassword, GetVersion):
 	jsondata = '[\n'
 	jsondata = jsondata + '{1 : {host: "System", ParentalPassword: "'+ParentalPassword+'", Version:"'+GetVersion+'"}},\n'
 	jsondata = jsondata + '{2 : {host: "180upload", url: "",  HostPage: "", page: "", adcopy_challenge: "", response: "", UserAgent: "", cookies: "", captchacookies: "", thumb: ""}},\n'
-	jsondata = jsondata + '{3 : {host: "Clicktoview", url: "", HostPage: "", page: "", recaptcha_challenge_field: "", response: "", UserAgent: "", captchacookies: "", thumb: ""}},\n'
-	jsondata = jsondata + '{4 : {host: "Vidbux", url: "",  HostPage: "", page: "", adcopy_challenge: "", response: "", UserAgent: "", cookies: "", captchacookies: "", thumb: ""}},\n'
-	jsondata = jsondata + '{5 : {host: "Vidplay", url: "",  HostPage: "", page: "", adcopy_challenge: "", response: "", UserAgent: "", cookies: "", captchacookies: "", thumb: ""}},\n'
-	jsondata = jsondata + '{6 : {host: "Vidxden", url: "",  HostPage: "", page: "", adcopy_challenge: "", response: "", UserAgent: "", cookies: "", captchacookies: "", thumb: ""}}\n'
+	jsondata = jsondata + '{3 : {host: "Clicktoview", url: "", HostPage: "", page: "", recaptcha_challenge_field: "", response: "", UserAgent: "", cookies: "", captchacookies: "", thumb: ""}},\n'
+	jsondata = jsondata + '{4 : {host: "Fileloby", url: "",  HostPage: "", page: "", adcopy_challenge: "", response: "", UserAgent: "", cookies: "", captchacookies: "", thumb: ""}},\n'
+	jsondata = jsondata + '{5 : {host: "Vidbux", url: "",  HostPage: "", page: "", adcopy_challenge: "", response: "", UserAgent: "", cookies: "", captchacookies: "", thumb: ""}},\n'
+	jsondata = jsondata + '{6 : {host: "Vidplay", url: "",  HostPage: "", page: "", adcopy_challenge: "", response: "", UserAgent: "", cookies: "", captchacookies: "", thumb: ""}},\n'
+	jsondata = jsondata + '{7 : {host: "Vidxden", url: "",  HostPage: "", page: "", adcopy_challenge: "", response: "", UserAgent: "", cookies: "", captchacookies: "", thumb: ""}}\n'
 	jsondata = jsondata + ']'
 	
 	JsonWrite(fp=fp, jsondata=jsondata)

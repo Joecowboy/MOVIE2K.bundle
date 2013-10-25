@@ -34,7 +34,7 @@ UserAgent = ['Mozilla/4.0 (compatible; MSIE 5.5; Windows NT)', 'Opera/9.25 (Wind
 UserAgentNum = random.randrange(0, len(UserAgent)-1, 1)
 
 # Movie2k Plugin Version
-Version = "1.5.0"
+Version = Prefs['version']
 
 # Set up Host Services
 HostServices.Version = Version
@@ -1708,7 +1708,7 @@ def TheMovieListings(title, page, date, dateadd, thumb, type, PageOfHosts, Host=
 
 			url = MOVIE_PAGE+"?title="+String.Quote(title, usePlus=True)+"&summary="+String.Quote(summary, usePlus=True)+"&show="+String.Quote(show, usePlus=True)+"&date="+String.Quote(str(date), usePlus=True)+"&thumb="+String.Quote(thumb, usePlus=True)+"&host="+Host+"&season="+str(season)+"&index="+str(index)+"&type="+String.Quote(type, usePlus=True)+"&genres="+String.Quote(genre, usePlus=True)+"&director="+String.Quote(director, usePlus=True)+"&actors="+String.Quote(actors, usePlus=True)+"&duration="+str(duration)+"&rating="+str(rating)+"&content_rating="+content_rating
 
-			if Host == '180upload' or Host == 'Clicktoview' or Host == 'Vidbux' or Host == 'Vidplay' or Host == 'Vidxden':
+			if Host == '180upload' or Host == 'Clicktoview' or Host == 'Fileloby' or Host == 'Vidbux' or Host == 'Vidplay' or Host == 'Vidxden':
 				show_update = "Click here if you want OCR to try and decode Captcha text."
 				oc.add(DirectoryObject(key=Callback(CaptchaSection, title=title, page=page, date=date, thumb=thumb, type=type, summary=summary, directors=directors, guest_stars=guest_stars, genres=genres, duration=duration, rating=rating, season=season, index=index, show=show_update, content_rating=content_rating, source_title=source_title, url=url, Host=Host), title=title, thumb=Callback(GetThumb, url=thumb), summary=show))
 			else:
@@ -1834,7 +1834,7 @@ def CaptchaInput(title, page, date, thumb, type, summary, directors, guest_stars
 	i = 1
 	for gethost in hosts:
 		if gethost[i]['host'] == Host:
-			gethost[i]['response'] = query
+			gethost[i]['response'] = query.replace('\n', '')
 			break
 		else:
 			i += 1
@@ -1954,13 +1954,13 @@ def GetThumb(url, HostPage=None, GetUserAgent=None, cookies={}):
 			imgData = HTTP.Request(url, cacheTime=CACHE_1HOUR).content
 		else:
 			headers = {}
-			headers['Accept'] = 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
+			headers['Accept'] = 'image/png,image/*;q=0.8,*/*;q=0.5'
 			headers['Connection'] = 'keep-alive'
 			headers['Host'] = url.split('/')[2]
 			headers['Referer'] = HostPage
 			headers['User-Agent'] = GetUserAgent
-
-			imgData = requests.get(url, headers=headers, cookies=cookies).content
+			response = requests.get(url, headers=headers)
+			imgData = response.content
 
 		return DataObject(imgData, 'image/jpeg')
 	except:
