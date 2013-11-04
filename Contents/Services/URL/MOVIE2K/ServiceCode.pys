@@ -630,15 +630,14 @@ def GetMovie(Host, HostPage, url, LinkType):
 			VideoStream = ErrorMessage(Host=Host, LogError=4)
 	elif Host == "2gb-hosting":
 		try:
-			VideoPage = SecondButtonPress(url=url, HostPage=HostPage, addkey={'submit': 'Continue'})
-			VideoInfo = HTML.ElementFromString(VideoPage.content).xpath('//div[@id="left"]/script')[2].text
-			VideoStream = ScriptConvert(script=VideoInfo)
+			VideoPage = SecondButtonPress(url=url, HostPage=HostPage)
+			VideoStream = HTML.ElementFromString(VideoPage.content).xpath('//div[@class="container"]/div/div/video/source')[0].get('src')
 		except:
 			VideoStream = ErrorMessage(Host=Host, LogError=1)
 	elif Host == "Allmyvideos":
 		try:
 			VideoPage = SecondButtonPress(url=url, HostPage=HostPage)
-			VideoStream = HTML.ElementFromString(VideoPage.content).xpath('//div[@id="player_code"]/script')[2].text.split('"file" : "')[1].split('"')[0]
+			VideoStream = HTML.ElementFromString(VideoPage.content).xpath('//div[@id="player_code"]/script')[1].text.split('"file" : "')[2].split('"')[0]
 		except:
 			VideoStream = ErrorMessage(Host=Host, LogError=1)
 	elif Host == "Altervideo":
@@ -924,7 +923,7 @@ def GetMovie(Host, HostPage, url, LinkType):
 	elif Host == "Filenuke":
 		try:
 			VideoPage = SecondButtonPress(url=url, HostPage=HostPage, elm='div[@id="content"]//', addkey={'method_free': 'Free'}, cookies={'cf_use_ob': '0'})
-			VideoInfo = HTML.ElementFromString(VideoPage.content).xpath('//div[@id="player_code"]/script')[1].text
+			VideoInfo = HTML.ElementFromString(VideoPage.content).xpath('//div[@id="player_code"]/script')[0].text
 			VideoURL = ScriptConvert(script=VideoInfo)
 			cookies = {'cf_use_ob': '0', 'lang': 'english', 'ref_ur': urllib.quote_plus(url)}
 			headers = {'User-Agent': UserAgent[UserAgentNum], 'Host': VideoURL.split('/')[2], 'Referer': 'http://filenuke.com/player/player.swf'}
@@ -995,10 +994,8 @@ def GetMovie(Host, HostPage, url, LinkType):
 			VideoStream = ErrorMessage(Host=Host, LogError=1)
 	elif Host == "Gigabyteupload":
 		try:
-			HostPage = "http://www.gigabytevideo.com/"+ HostPage.split('/')[3]
 			VideoPage = SecondButtonPress(url=url, HostPage=HostPage, addkey={'submit': 'watch'})
-			VideoInfo = HTML.ElementFromString(VideoPage.content).xpath('//div[@id="player"]/script')[1].text
-			VideoStream = ScriptConvert(script=VideoInfo)
+			VideoStream = HTML.ElementFromString(VideoPage.content).xpath('//div[@id="video-player"]/div/video/source')[0].get('src')
 		except:
 			VideoStream = ErrorMessage(Host=Host, LogError=1)
 	elif Host == "Ginbig":
@@ -1083,6 +1080,32 @@ def GetMovie(Host, HostPage, url, LinkType):
 			VideoStream = VideoInfo.split('file:"')[1].split('"')[0]
 		except:
 			VideoStream = ErrorMessage(Host=Host, LogError=1)
+	elif Host == "Lemuploads"or Host == "Lemuploads_2":
+		try:
+			if Host == "Lemuploads":
+				session = requests.session()
+				headers = {'Host': 'lemuploads.com', 'Referer': url, 'User-Agent': UserAgent[UserAgentNum]}
+				cookies = {}
+				VideoInfo = session.get(HostPage, headers=headers)
+				for key, value in session.cookies.items():
+					cookies[key] = value
+				VideoPage = GoogleCaptcha(url=url, HostPage=HostPage, Host=Host, VideoInfo=VideoInfo.content, cookies=cookies)
+			elif Host == "Lemuploads_2":
+				VideoPage = GoogleCaptcha(url=url, HostPage=HostPage, Host=Host, RecaptchaResponse=2)
+
+			try:
+				VideoScript = HTML.ElementFromString(VideoPage.content).xpath('//div[@id="player_code"]/script')[0].text
+				VideoStream = ScriptConvert(script=VideoScript)
+			except:
+				VideoStream = ErrorMessage(Host=Host, LogError=4)
+
+			if Host == "Lemuploads":
+				VideoInfo = session.get(HostPage, headers=headers)
+				for key, value in session.cookies.items():
+					cookies[key] = value
+				VOID = GoogleCaptcha(url=url, HostPage=HostPage, Host=Host, VideoInfo=VideoInfo.content, RecaptchaResponse=1, cookies=cookies)
+		except:
+			VideoStream = ErrorMessage(Host=Host, LogError=4)
 	elif Host == "Limevideo":
 		try:
 			VideoPage = SecondButtonPress(url=url, HostPage=HostPage, addkey={"referer": url})
@@ -1145,10 +1168,8 @@ def GetMovie(Host, HostPage, url, LinkType):
 			VideoStream = ErrorMessage(Host=Host, LogError=1)
 	elif Host == "Miloyski":
 		try:
-			cookies = {"path": "/", "popnum": "1", "cpmgoPop": "yes", "a4gPopUnder25512": "1"}
-			VideoPage = SecondButtonPress(url=url, HostPage=HostPage, cookies=cookies, addkey={"submit": "Continue"})
-			VideoInfo = VideoPage.content.split('<div id="player"')[1].split("<script type='text/javascript'>")[1].split('</script>')[0]
-			VideoStream = ScriptConvert(script=VideoInfo)
+			VideoPage = SecondButtonPress(url=url, HostPage=HostPage, addkey={"submit": "watch"})
+			VideoStream = HTML.ElementFromString(VideoPage.content).xpath('//div[@class="container content"]/div/div/video/source')[0].get('src')
 		except:
 			VideoStream = ErrorMessage(Host=Host, LogError=1)
 	elif Host == "Mk-tube":
@@ -1199,7 +1220,7 @@ def GetMovie(Host, HostPage, url, LinkType):
 			VideoStream = ErrorMessage(Host=Host, LogError=1)
 	elif Host == "Movshare":
 		try:
-			VideoInfo = HTML.ElementFromURL(HostPage).xpath('//div[@id="mainContent"]/table//script[@type="text/javascript"]')[4].text
+			VideoInfo = HTML.ElementFromURL(HostPage).xpath('//div[@id="mainContent"]/table//script[@type="text/javascript"]')[5].text
 			CodeString = VideoInfo.split("eval")[1].split(";}('")[1].split("'));")[0]
 			CharSrc = CharConvert(w=CodeString.split("','")[0],i=CodeString.split("','")[1],s=CodeString.split("','")[2],e=CodeString.split("','")[3])
 			CodeString = CharSrc.split("eval")[1].split(";}('")[1].split("'));")[0]
@@ -1479,7 +1500,7 @@ def GetMovie(Host, HostPage, url, LinkType):
 			VideoStream = ErrorMessage(Host=Host, LogError=1)
 	elif Host == "Streamcloud":
 		try:
-			cookies = {'domain': '.streamcloud.eu', 'path': '/', 'age_ver': '1'}
+			cookies = {'age_ver': '1'}
 			VideoPage = SecondButtonPress(url=url, HostPage=HostPage, cookies=cookies, wait=10, addkey={'referer': url})
 			VideoURL = HTML.ElementFromString(VideoPage.content).xpath('//div[@id="player_code"]/script')[1].text.split('file: "')[1].split('"')[0]
 			headers = {'User-Agent': UserAgent[UserAgentNum], 'Host': VideoURL.split('/')[2], 'Referer': HostPage}
@@ -1588,6 +1609,17 @@ def GetMovie(Host, HostPage, url, LinkType):
 				HostPage = "http://v-vids.com/embed-" + HostPage.split('/')[3] + "-640x360.html"
 			VideoPage = HTML.ElementFromURL(HostPage).xpath('//div[@id="player_code"]/script')[1].text
 			VideoStream = VideoPage.split("file: '")[1].split("'")[0]
+		except:
+			VideoStream = ErrorMessage(Host=Host, LogError=1)
+	elif Host == "Veehd":
+		try:
+			headers = {'User-Agent': UserAgent[UserAgentNum], 'Host': 'veehd.com'}
+			session = requests.session()
+			s = session.get(HostPage, headers=headers)
+			VideoPage = HTML.ElementFromString(s.content).xpath('//div[@class="main"]/script')[1].text
+			VideoURL = "http://veehd.com"+VideoPage.split('src : "')[1].split('"')[0]
+			VideoInfo = session.get(VideoURL, headers=headers)
+			VideoStream = HTML.ElementFromString(VideoInfo.content).xpath('//object[id="veehdplayer"]/param[name="flashvars"]')[0].get('value').split('url":"')[1].split('"')[0]
 		except:
 			VideoStream = ErrorMessage(Host=Host, LogError=1)
 	elif Host == "Veevr":
@@ -2105,9 +2137,8 @@ def GetMovieDebugger(Host, HostPage, url, LinkType):
 		if Host == "180upload":
 			VideoPage = SolveMediaCaptcha(url=url, HostPage=HostPage, Host=Host, wScript=2, RecaptchaResponse=1)
 	elif Host == "2gb-hosting":
-		VideoPage = SecondButtonPress(url=url, HostPage=HostPage, addkey={'submit': 'Continue'})
-		VideoInfo = HTML.ElementFromString(VideoPage.content).xpath('//div[@id="left"]/script')[2].text
-		VideoStream = ScriptConvert(script=VideoInfo)
+		VideoPage = SecondButtonPress(url=url, HostPage=HostPage)
+		VideoStream = HTML.ElementFromString(VideoPage.content).xpath('//div[@class="container"]/div/div/video/source')[0].get('src')
 	elif Host == "Allmyvideos":
 		VideoPage = SecondButtonPress(url=url, HostPage=HostPage)
 		VideoStream = HTML.ElementFromString(VideoPage.content).xpath('//div[@id="player_code"]/script')[2].text.split('"file" : "')[1].split('"')[0]
@@ -2468,9 +2499,8 @@ def GetMovieDebugger(Host, HostPage, url, LinkType):
 		VideoPage = session.head(VideoInfo, headers=headers)
 		VideoStream = VideoPage.headers['Location']
 	elif Host == "Miloyski":
-		VideoPage = SecondButtonPress(url=url, HostPage=HostPage, addkey={"submit": "Continue"})
-		VideoInfo = VideoPage.content.split('<div id="player"')[1].split("<script type='text/javascript'>")[1].split('</script>')[0]
-		VideoStream = ScriptConvert(script=VideoInfo)
+		VideoPage = SecondButtonPress(url=url, HostPage=HostPage, addkey={"submit": "watch"})
+		VideoStream = HTML.ElementFromString(VideoPage.content).xpath('//div[@class="container content"]/div/div/video/source')[0].get('src')
 	elif Host == "Mk-tube":
 		VideoPage = HTML.ElementFromURL(HostPage).xpath('//div[@class="zn_post_wrap"]/a')[0].get('href')
 		VideoStream = HTML.ElementFromURL(VideoPage).xpath('//a[@id="player"]')[0].get('href')
@@ -2809,6 +2839,14 @@ def GetMovieDebugger(Host, HostPage, url, LinkType):
 			HostPage = "http://v-vids.com/embed-" + HostPage.split('/')[3] + "-640x360.html"
 		VideoPage = HTML.ElementFromURL(HostPage).xpath('//div[@id="player_code"]/script')[1].text
 		VideoStream = VideoPage.split("file: '")[1].split("'")[0]
+	elif Host == "Veehd":
+		headers = {'User-Agent': UserAgent[UserAgentNum], 'Host': 'veehd.com'}
+		session = requests.session()
+		s = session.get(HostPage, headers=headers)
+		VideoPage = HTML.ElementFromString(s.content).xpath('//div[@class="main"]/script')[1].text
+		VideoURL = "http://veehd.com"+VideoPage.split('src : "')[1].split('"')[0]
+		VideoInfo = session.get(VideoURL, headers=headers)
+		VideoStream = HTML.ElementFromString(VideoInfo.content).xpath('//object[id="veehdplayer"]/param[name="flashvars"]')[0].get('value').split('url":"')[1].split('"')[0]
 	elif Host == "Veevr":
 		#Example: http://veevr.com/videos/RwsL0GfL
 		cookies = {}

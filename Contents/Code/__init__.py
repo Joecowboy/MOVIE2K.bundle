@@ -24,6 +24,9 @@ from HostServices import StripArray
 from HostServices import LoadData
 from HostServices import JsonWrite
 
+import subprocess
+PROXIFIER_PROCESS = None
+
 # Import SocksiPy
 import sockschain as socks
 def DEBUG(msg): Log(msg)
@@ -1447,13 +1450,13 @@ def SubMoviePageAdd(title, page, date, dateadd, thumbck, type):
 		NumHostListing2 = NumHostListing2 + NumHosts
 		nsl += 1
 
-	p = (float(NumHostListing1)+float(NumHostListing2))/4.0 - (NumHostListing1+NumHostListing2)/4
-	jj = (NumHostListing1+NumHostListing2)/4
+	p = (float(NumHostListing1)+float(NumHostListing2))/5.0 - (NumHostListing1+NumHostListing2)/5
+	jj = (NumHostListing1+NumHostListing2)/5
 	if p > 0:
 		jj += 1
 
 	while i <= jj:
-		while HostCount <= 4:
+		while HostCount <= 5:
 			if Num1 < NumHostListing1:
 				try:
 					Host = Listing[Num1].xpath("./td/a/img")[0].get('title').split(' ')[0].split('.')[0].capitalize()
@@ -1476,7 +1479,7 @@ def SubMoviePageAdd(title, page, date, dateadd, thumbck, type):
 				Num2 += 1
 				Hosts = Hosts + Host + ", "
 			else:
-				HostCount = 4
+				HostCount = 5
 			HostCount += 1
 
 		MOVIES_SUMMARY = "Page - " + str(i) + " | Hosts: " + Hosts[:-2]
@@ -1494,278 +1497,306 @@ def TheMovieListings(title, page, date, dateadd, thumb, type, PageOfHosts, Host=
 
 	oc = ObjectContainer(title2=title)
 
-	if page.split('/')[0] != "http:":
-		CURRENT_MOVIE2K_URL = MOVIE2K_URL
-		page = "http://"+MOVIE2K_URL+"/"+page
-	else:
-		CURRENT_MOVIE2K_URL = page.split('/')[2]
+	@parallelize
+	def GetMovieList(title=title, page=page, date=date, dateadd=dateadd, thumb=thumb, type=type, PageOfHosts=PageOfHosts, Host=Host):
 
-	cookies = Dict['_movie2k_uid']
-	headers = {"Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8", "Accept-Charset": "ISO-8859-1,utf-8;q=0.7,*;q=0.3", "Accept-Encoding": "gzip,deflate,sdch", "Accept-Language": "en-US,en;q=0.8", "Connection": "keep-alive", "Host": CURRENT_MOVIE2K_URL, "Referer": "http://"+CURRENT_MOVIE2K_URL, "User-Agent": UserAgent[UserAgentNum]}
-	req = requests.get(page, headers=headers, cookies=cookies)
+		if page.split('/')[0] != "http:":
+			CURRENT_MOVIE2K_URL = MOVIE2K_URL
+			page = "http://"+MOVIE2K_URL+"/"+page
+		else:
+			CURRENT_MOVIE2K_URL = page.split('/')[2]
 
-	MOVIE_PAGE_HTML = HTML.ElementFromString(req.content)
+		cookies = Dict['_movie2k_uid']
+		headers = {"Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8", "Accept-Charset": "ISO-8859-1,utf-8;q=0.7,*;q=0.3", "Accept-Encoding": "gzip,deflate,sdch", "Accept-Language": "en-US,en;q=0.8", "Connection": "keep-alive", "Host": CURRENT_MOVIE2K_URL, "Referer": "http://"+CURRENT_MOVIE2K_URL, "User-Agent": UserAgent[UserAgentNum]}
+		req = requests.get(page, headers=headers, cookies=cookies)
 
-	MOVIE_INFO = MOVIE_PAGE_HTML.xpath('//div[@id="details"]')[0].text_content()
-	source_title = "Movie2k"
+		MOVIE_PAGE_HTML = HTML.ElementFromString(req.content)
 
-	summary = MOVIE_PAGE_HTML.xpath('//div[@class="moviedescription"]')[0].text
-	if summary.strip() == "":
-		summary = "Description not given..."
+		MOVIE_INFO = MOVIE_PAGE_HTML.xpath('//div[@id="details"]')[0].text_content()
+		source_title = "Movie2k"
 
-	try:
-		rating = float(MOVIE_PAGE_HTML.xpath('//div[@id="details"]/a')[0].text)
-	except:
-		rating = 0.0
+		summary = MOVIE_PAGE_HTML.xpath('//div[@class="moviedescription"]')[0].text
+		if summary.strip() == "":
+			summary = "Description not given..."
 
-	if date == "N/A":
 		try:
-			date = re.sub('[^0-9]', '', MOVIE_INFO.split('Land/Year: ')[1])
-			if date == "":
-				date =  "0001"
+			rating = float(MOVIE_PAGE_HTML.xpath('//div[@id="details"]/a')[0].text)
 		except:
-			date = re.sub('[^0-9]', '', MOVIE_INFO.split('Land/Jahr: ')[1])
-			if date == "":
-				date =  "0001"
+			rating = 0.0
 
-	date = Datetime.ParseDate(date, "%Y")
+		if date == "N/A":
+			try:
+				date = re.sub('[^0-9]', '', MOVIE_INFO.split('Land/Year: ')[1])
+				if date == "":
+					date =  "0001"
+			except:
+				date = re.sub('[^0-9]', '', MOVIE_INFO.split('Land/Jahr: ')[1])
+				if date == "":
+					date =  "0001"
+
+		date = Datetime.ParseDate(date, "%Y")
 	
-	genres = []
-	genre = MOVIE_INFO.split('Genre:')[1].split('|')[0]
-	genres = StripArray(arraystrings=genre.split(','))
+		genres = []
+		genre = MOVIE_INFO.split('Genre:')[1].split('|')[0]
+		genres = StripArray(arraystrings=genre.split(','))
 
-	try:
-		try:
-			duration = int(float(MOVIE_INFO.split('Length: ')[1].split(' minutes')[0])*60*1000)
-		except:
-			try:
-				duration = int(float(MOVIE_INFO.split('nge: ')[1].split(' Minuten')[0])*60*1000)
-			except:
-				duration = int(float(MOVIE_INFO.split('nge: ')[1].split(' Minutes')[0])*60*1000)
-	except:
-		duration = None
-
-	directors = []
-	try:
-		try:
-			director = MOVIE_INFO.split('Director:')[1].split('|')[0]
-			directors = StripArray(arraystrings=director.split(','))
-		except:
-			director = MOVIE_INFO.split('Regie:')[1].split('|')[0]
-			directors = StripArray(arraystrings=director.split(','))
-	except:
-		director = 'Not Available'
-		directors.append(director)
-
-	guest_stars = []
-	try:
-		try:
-			actors = MOVIE_INFO.split('Actors:')[1]
-			guest_stars = StripArray(arraystrings=actors.split(','))
-		except:
-			actors = MOVIE_INFO.split('Schauspieler:')[1]
-			guest_stars = StripArray(arraystrings=actors.split(','))
-	except:
-		actors = None
-
-	try:
-		try:
-			content_rating = MOVIE_INFO.split('Rated ')[1].split(' ')[0]
-		except:
-			content_rating = MOVIE_INFO.split('MPAA: ')[1].split(' ')[0]
-	except:
-		try:
-			movie_rating = MOVIE_INFO.split('Freigegeben ')[1].split(' Jahren')[0]
-			if movie_rating == 'ab 0':
-				content_rating = 'NR'
-			elif movie_rating == 'ab 6':
-				content_rating = 'G'
-			elif movie_rating == 'ab 12':
-				content_rating = 'PG'
-			elif movie_rating == 'ab 16':
-				content_rating = 'R'
-			elif movie_rating == 'ab 18':
-				content_rating = 'NC-17'
-			else:
-				content_rating = 'NR'
-		except:
-			content_rating = 'NR'
-
-	try:
-		subtitle = MOVIE_PAGE_HTML.xpath('//div[@id="maincontent5"]/div/div')[1]
 		try:
 			try:
-				season = int(subtitle.xpath('./span/h1/a/span')[0].text.split('Season ')[1].split(',')[0].replace(' ', ''))
-				index = int(subtitle.xpath('./span/h1/a/span')[0].text.split('Episode ')[1].replace(' ', ''))
+				duration = int(float(MOVIE_INFO.split('Length: ')[1].split(' minutes')[0])*60*1000)
 			except:
-				season = int(subtitle.xpath('./h1/span/a')[0].text.split('Season ')[1].split(',')[0].replace(' ', ''))
-				index = int(subtitle.xpath('./h1/span/a')[0].text.split('Episode ')[1].replace(' ', ''))
+				try:
+					duration = int(float(MOVIE_INFO.split('nge: ')[1].split(' Minuten')[0])*60*1000)
+				except:
+					duration = int(float(MOVIE_INFO.split('nge: ')[1].split(' Minutes')[0])*60*1000)
 		except:
-			season = int(subtitle.xpath('./span/h1/a')[0].text.split('Staffel ')[1].split(',')[0].replace(' ', ''))
-			index = int(subtitle.xpath('./span/h1/a')[0].text.split('Episode ')[1].replace(' ', ''))
-		if type == 'N/A':
-			type = 'TV Shows'
-	except:
-		season = 0
-		index = 0
-		if type == 'N/A':
-			type = 'Movies'
+			duration = None
 
-	Listing = MOVIE_PAGE_HTML.xpath('//div[@id="menu"]//tr[@id="tablemoviesindex2"]')
-	StringListing = MOVIE_PAGE_HTML.xpath('//div[@id="menu"]//script[@type="text/javascript"]')
-	NumHostListing1 = len(Listing)
-	NumStringListing = len(StringListing)
-	NumHostListing2 = 0
-	CreatePage = True
-	CurrentPage = 1
-	HostCountTotal = 1
-	HostCount = 1
-	nsl = 0
-	sll = 1
-	i = 0
-	k = 0
-	jj = 0
+		directors = []
+		try:
+			try:
+				director = MOVIE_INFO.split('Director:')[1].split('|')[0]
+				directors = StripArray(arraystrings=director.split(','))
+			except:
+				director = MOVIE_INFO.split('Regie:')[1].split('|')[0]
+				directors = StripArray(arraystrings=director.split(','))
+		except:
+			director = 'Not Available'
+			directors.append(director)
 
-	while nsl < NumStringListing:
-		NumHosts = len(StringListing[nsl].text.split('links[')) - 2
-		NumHostListing2 = NumHostListing2 + NumHosts
-		nsl += 1
+		guest_stars = []
+		try:
+			try:
+				actors = MOVIE_INFO.split('Actors:')[1]
+				guest_stars = StripArray(arraystrings=actors.split(','))
+			except:
+				actors = MOVIE_INFO.split('Schauspieler:')[1]
+				guest_stars = StripArray(arraystrings=actors.split(','))
+		except:
+			actors = None
 
-	p = (float(NumHostListing1)+float(NumHostListing2))/4.0 - (NumHostListing1+NumHostListing2)/4
-	NumPages = (NumHostListing1+NumHostListing2)/4
-	if p > 0:
-		NumPages += 1
+		try:
+			try:
+				content_rating = MOVIE_INFO.split('Rated ')[1].split(' ')[0]
+			except:
+				content_rating = MOVIE_INFO.split('MPAA: ')[1].split(' ')[0]
+		except:
+			try:
+				movie_rating = MOVIE_INFO.split('Freigegeben ')[1].split(' Jahren')[0]
+				if movie_rating == 'ab 0':
+					content_rating = 'NR'
+				elif movie_rating == 'ab 6':
+					content_rating = 'G'
+				elif movie_rating == 'ab 12':
+					content_rating = 'PG'
+				elif movie_rating == 'ab 16':
+					content_rating = 'R'
+				elif movie_rating == 'ab 18':
+					content_rating = 'NC-17'
+				else:
+					content_rating = 'NR'
+			except:
+				content_rating = 'NR'
 
-	TotalHosts = NumHostListing1 + NumHostListing2
-
-	Log("Listing Length: "+str(NumHostListing1))
-	Log("Listing Script Length: "+str(NumStringListing))
-	Log("Number of Pages: "+str(NumPages))
-	Log("Total Hosts: "+str(TotalHosts))
-	Log("Page of Hosts: "+str(PageOfHosts))
-
-	while CreatePage:
-		if int(PageOfHosts) != 0:
-			if i < NumHostListing1:
+		try:
+			subtitle = MOVIE_PAGE_HTML.xpath('//div[@id="maincontent5"]/div/div')[1]
+			try:
 				try:
-					Host = Listing[i].xpath("./td/a/img")[0].get('title').split(' ')[0].split('.')[0].capitalize()
+					season = int(subtitle.xpath('./span/h1/a/span')[0].text.split('Season ')[1].split(',')[0].replace(' ', ''))
+					index = int(subtitle.xpath('./span/h1/a/span')[0].text.split('Episode ')[1].replace(' ', ''))
 				except:
-					Host = Listing[i].xpath("./td/a/img")[0].get('title').split(' ')[0].capitalize()
-				MOVIE_PAGE = Listing[i].xpath("./td/a")[0].get('href')
-				if MOVIE_PAGE.split('/')[0] != "http:":
-					MOVIE_PAGE = "http://" + MOVIE2K_URL + "/" + MOVIE_PAGE
+					season = int(subtitle.xpath('./h1/span/a')[0].text.split('Season ')[1].split(',')[0].replace(' ', ''))
+					index = int(subtitle.xpath('./h1/span/a')[0].text.split('Episode ')[1].replace(' ', ''))
+			except:
+				season = int(subtitle.xpath('./span/h1/a')[0].text.split('Staffel ')[1].split(',')[0].replace(' ', ''))
+				index = int(subtitle.xpath('./span/h1/a')[0].text.split('Episode ')[1].replace(' ', ''))
+			if type == 'N/A':
+				type = 'TV Shows'
+		except:
+			season = 0
+			index = 0
+			if type == 'N/A':
+				type = 'Movies'
+
+		Listing = MOVIE_PAGE_HTML.xpath('//div[@id="menu"]//tr[@id="tablemoviesindex2"]')
+		StringListing = MOVIE_PAGE_HTML.xpath('//div[@id="menu"]//script[@type="text/javascript"]')
+		NumHostListing1 = len(Listing)
+		NumStringListing = len(StringListing)
+		NumHostListing2 = 0
+		nsl = 0
+		out = {'CreatePage': True, 'CurrentPage': 1, 'HostCountTotal': 1, 'sll': 1, 'k': 0}
+
+		while nsl < NumStringListing:
+			NumHosts = len(StringListing[nsl].text.split('links[')) - 2
+			NumHostListing2 = NumHostListing2 + NumHosts
+			nsl += 1
+
+		p = (float(NumHostListing1)+float(NumHostListing2))/5.0 - (NumHostListing1+NumHostListing2)/5
+		NumPages = (NumHostListing1+NumHostListing2)/5
+		if p > 0:
+			NumPages += 1
+
+		TotalHosts = NumHostListing1 + NumHostListing2
+
+		Log("Listing Length: "+str(NumHostListing1))
+		Log("Listing Script Length: "+str(NumStringListing))
+		Log("Number of Pages: "+str(NumPages))
+		Log("Total Hosts: "+str(TotalHosts))
+		Log("Page of Hosts: "+str(PageOfHosts))
+
+		for num in range(0,TotalHosts):
+			if int(PageOfHosts) != 0:
+				num2 = num - NumHostListing1
+				if num < NumHostListing1:
+					try:
+						Host = Listing[num].xpath("./td/a/img")[0].get('title').split(' ')[0].split('.')[0].capitalize()
+					except:
+						Host = Listing[num].xpath("./td/a/img")[0].get('title').split(' ')[0].capitalize()
+					MOVIE_PAGE = Listing[num].xpath("./td/a")[0].get('href')
+					if MOVIE_PAGE.split('/')[0] != "http:":
+						MOVIE_PAGE = "http://" + MOVIE2K_URL + "/" + MOVIE_PAGE
+					if type == 'TV Shows':
+						DateAdded = dateadd
+						Quality = "DVDRip/BDRip"
+					else:
+						DateAdded = Listing[num].xpath("./td/a")[0].text
+						Quality = Listing[num].xpath("./td/img")[0].get('title').split(' ')[2]
+				elif num2 < NumHostListing2:
+					ScriptListing = StringListing[out['k']].text.split('links[')
+					NumHosts = len(ScriptListing) - 2	
+					try:
+						Host = ScriptListing[out['sll']].split('title=\\"')[1].split('\\"')[0].split(' ')[0].split('.')[0].capitalize()
+					except:
+						Host = ScriptListing[out['sll']].split('title=\\"')[1].split('\\"')[0].split(' ')[0].capitalize()
+					MOVIE_PAGE = ScriptListing[out['sll']].split('href=\\"')[1].split('\\"')[0]
+					if MOVIE_PAGE.split('/')[0] != "http:":
+						MOVIE_PAGE = "http://" + MOVIE2K_URL + "/" + MOVIE_PAGE
+					if type == 'TV Shows':
+						DateAdded = dateadd
+						Quality = "DVDRip/BDRip"
+					else:
+						DateAdded = ScriptListing[out['sll']].split('href=\\"')[1].split('\\">')[1].split(' <')[0]
+						Quality = ScriptListing[out['sll']].split('title=\\"')[2].split('\\"')[0].split(' ')[2]
+
+					if out['sll'] == NumHosts:
+						out['k'] = out['k'] + 1
+						out['sll'] = 1
+					else:
+						out['sll'] = out['sll'] + 1
+			else:
+				out['CurrentPage'] = 0
+				DateAdded = dateadd
 				if type == 'TV Shows':
-					DateAdded = dateadd
 					Quality = "DVDRip/BDRip"
 				else:
-					DateAdded = Listing[i].xpath("./td/a")[0].text
-					Quality = Listing[i].xpath("./td/img")[0].get('title').split(' ')[2]
-				
-				i += 1
+					QualitySub = MOVIE_PAGE_HTML.xpath('//div[@id="maincontent5"]/div/div')[1]
+					Quality = QualitySub.xpath("./span/span/img")[0].get('title').split(' ')[2]
 
-			elif jj < NumHostListing2:
-				ScriptListing = StringListing[k].text.split('links[')
-				NumHosts = len(ScriptListing) - 2	
-				try:
-					Host = ScriptListing[sll].split('title=\\"')[1].split('\\"')[0].split(' ')[0].split('.')[0].capitalize()
-				except:
-					Host = ScriptListing[sll].split('title=\\"')[1].split('\\"')[0].split(' ')[0].capitalize()
-				MOVIE_PAGE = ScriptListing[sll].split('href=\\"')[1].split('\\"')[0]
-				if MOVIE_PAGE.split('/')[0] != "http:":
-					MOVIE_PAGE = "http://" + MOVIE2K_URL + "/" + MOVIE_PAGE
-				if type == 'TV Shows':
-					DateAdded = dateadd
-					Quality = "DVDRip/BDRip"
+			@task
+			def GetMovieObjects(num=num, Host=Host, MOVIE_PAGE=MOVIE_PAGE, DateAdded=DateAdded, Quality=Quality, CreatePage=out['CreatePage'], CurrentPage=out['CurrentPage']):
+				if CreatePage:
+					if CurrentPage == int(PageOfHosts):
+						if Host == 'N/a' or Host == 'Divx' or Host == 'DivX Hoster' or Host == 'Flash' or Host == 'Flash Hoster' or Host == 'Embed':
+							Host = GetHost(Host=Host, url=MOVIE_PAGE)
+
+						show = "ADDED: "+ DateAdded +" | HOST: "+ Host + " | QUALITY: " + Quality
+
+						url = MOVIE_PAGE+"?title="+String.Quote(title, usePlus=True)+"&summary="+String.Quote(summary, usePlus=True)+"&show="+String.Quote(show, usePlus=True)+"&date="+String.Quote(str(date), usePlus=True)+"&thumb="+String.Quote(thumb, usePlus=True)+"&host="+Host+"&season="+str(season)+"&index="+str(index)+"&type="+String.Quote(type, usePlus=True)+"&genres="+String.Quote(genre, usePlus=True)+"&director="+String.Quote(director, usePlus=True)+"&actors="+String.Quote(actors, usePlus=True)+"&duration="+str(duration)+"&rating="+str(rating)+"&content_rating="+content_rating
+
+						if Host == '180upload' or Host == 'Clicktoview' or Host == 'Fileloby' or Host == 'Lemuploads' or Host == 'Vidbux' or Host == 'Vidplay' or Host == 'Vidxden':
+							show_update = "Click here if you want OCR to try and decode Captcha text."
+							oc.add(DirectoryObject(key=Callback(CaptchaSection, title=title, page=page, date=date, thumb=thumb, type=type, summary=summary, directors=directors, guest_stars=guest_stars, genres=genres, duration=duration, rating=float(rating), season=season, index=index, show=show_update, content_rating=content_rating, source_title=source_title, url=url, Host=Host), title=title, thumb=Callback(GetThumb, url=thumb), summary=show))
+						else:
+							if type == 'TV Shows':
+								oc.add(EpisodeObject(
+										url = url,
+										title = title,
+										summary = summary,
+										directors = directors,
+										guest_stars = guest_stars,
+										#genres = genres,
+										duration = duration,
+										rating = rating,
+										season = season,
+										index = index,
+										show = show,
+										content_rating = content_rating,
+										source_title = source_title,
+										originally_available_at = date,
+										thumb = Callback(GetThumb, url=thumb)))
+							else:
+								oc.add(MovieObject(
+										url = url,
+										title = title,
+										summary = summary,
+										directors = directors,
+										genres = genres,
+										duration = duration,
+										rating = rating,
+											content_rating = content_rating,
+										source_title = show,
+										originally_available_at = date,
+										thumb = Callback(GetThumb, url=thumb)))
+
+			if (num+1)%5 == 0:
+				if out['CurrentPage'] == int(PageOfHosts):
+					out['CreatePage'] = False
 				else:
-					DateAdded = ScriptListing[sll].split('href=\\"')[1].split('\\">')[1].split(' <')[0]
-					Quality = ScriptListing[sll].split('title=\\"')[2].split('\\"')[0].split(' ')[2]
-				
-				if sll == NumHosts:
-					k += 1
-					sll = 1
-				else:
-					sll += 1
-				jj += 1
-		else:
-			CurrentPage = 0
-			HostCount = 4
-			DateAdded = dateadd
-			if type == 'TV Shows':
-				Quality = "DVDRip/BDRip"
+					out['CurrentPage'] = out['CurrentPage'] + 1
+
+			if out['HostCountTotal'] == TotalHosts:
+				out['CreatePage'] = False
 			else:
-				QualitySub = MOVIE_PAGE_HTML.xpath('//div[@id="maincontent5"]/div/div')[1]
-				Quality = QualitySub.xpath("./span/span/img")[0].get('title').split(' ')[2]
-
-		if CurrentPage == int(PageOfHosts):
-			if Host == 'N/a' or Host == 'Divx' or Host == 'DivX Hoster' or Host == 'Flash' or Host == 'Flash Hoster' or Host == 'Embed':
-				Host = GetHost(Host=Host, url=MOVIE_PAGE)
-
-			show = "ADDED: "+ DateAdded +" | HOST: "+ Host + " | QUALITY: " + Quality
-
-			url = MOVIE_PAGE+"?title="+String.Quote(title, usePlus=True)+"&summary="+String.Quote(summary, usePlus=True)+"&show="+String.Quote(show, usePlus=True)+"&date="+String.Quote(str(date), usePlus=True)+"&thumb="+String.Quote(thumb, usePlus=True)+"&host="+Host+"&season="+str(season)+"&index="+str(index)+"&type="+String.Quote(type, usePlus=True)+"&genres="+String.Quote(genre, usePlus=True)+"&director="+String.Quote(director, usePlus=True)+"&actors="+String.Quote(actors, usePlus=True)+"&duration="+str(duration)+"&rating="+str(rating)+"&content_rating="+content_rating
-
-			if Host == '180upload' or Host == 'Clicktoview' or Host == 'Fileloby' or Host == 'Vidbux' or Host == 'Vidplay' or Host == 'Vidxden':
-				show_update = "Click here if you want OCR to try and decode Captcha text."
-				oc.add(DirectoryObject(key=Callback(CaptchaSection, title=title, page=page, date=date, thumb=thumb, type=type, summary=summary, directors=directors, guest_stars=guest_stars, genres=genres, duration=duration, rating=rating, season=season, index=index, show=show_update, content_rating=content_rating, source_title=source_title, url=url, Host=Host), title=title, thumb=Callback(GetThumb, url=thumb), summary=show))
-			else:
-				if type == 'TV Shows':
-					oc.add(EpisodeObject(
-							url = url,
-							title = title,
-							summary = summary,
-							directors = directors,
-							guest_stars = guest_stars,
-							#genres = genres,
-							duration = duration,
-							rating = rating,
-							season = season,
-							index = index,
-							show = show,
-							content_rating = content_rating,
-							source_title = source_title,
-							originally_available_at = date,
-							thumb = Callback(GetThumb, url=thumb)))
-				else:
-					oc.add(MovieObject(
-							url = url,
-							title = title,
-							summary = summary,
-							directors = directors,
-							genres = genres,
-							duration = duration,
-							rating = rating,
-							content_rating = content_rating,
-							source_title = show,
-							originally_available_at = date,
-							thumb = Callback(GetThumb, url=thumb)))
-
-		if HostCount == 4:
-			if CurrentPage == int(PageOfHosts):
-				CreatePage = False
-			CurrentPage += 1
-			HostCount = 1
-		else:
-			HostCount += 1
-
-		if HostCountTotal == TotalHosts:
-			CreatePage = False
-		else:
-			HostCountTotal += 1
-
+				out['HostCountTotal'] = out['HostCountTotal'] + 1
+		
 	if len(oc) < 1:
 		oc = ObjectContainer(header="Sorry", message="This section does not contain any videos")
 
 	return oc
 
 
+####################################################################################################
+def run_proxifier():
+	global PROXIFIER_PROCESS
+
+	try:
+		Log("1 - I am here now!!!!!")
+		Log(PROXIFIER_PROCESS)
+		stdout = PROXIFIER_PROCESS.stdout.read()
+		stderr = PROXIFIER_PROCESS.stderr.read()
+		Log(stdout)
+		Log(stderr)
+		Log("2 - I am here now!!!!!")
+	except:
+		pass
+
+	cmd = "C:\\Program Files\\Proxifier\\Proxifier.exe"
+	PROXIFIER_PROCESS = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+	code = PROXIFIER_PROCESS.wait()
+
+	#PROXIFIER_PROCESS.terminate()
+	stdoutdata, stderrdata = PROXIFIER_PROCESS.communicate()
+
+	return code
+
+
 #####################################################################################################
 # This is the section for Host sites using Captcha
+@route(PREFIX + '/CaptchaSection')
 def CaptchaSection(title, page, date, thumb, type, summary, directors, guest_stars, genres, duration, rating, season, index, show, content_rating, source_title, url, Host):
 
 	oc = ObjectContainer(title2=title)
 
 	ICON_INSTRUCTIONS = "icon-instructions.png"
 	INSTRUCTIONS_THUMB = R(ICON_INSTRUCTIONS)
+	date = Datetime.ParseDate(date, "%Y")
+	directors = [directors]
+	guest_stars = [guest_stars]
+	genres = [genres]
+	duration = int(duration)
+	rating = float(rating)
+	season = int(season)
+	index = int(index)
 
 	oc.add(DirectoryObject(key=Callback(RokuUsers, title="Special Instructions for Roku Users"), title="Special Instructions for Roku Users", thumb=INSTRUCTIONS_THUMB, summary="Click here to see special instructions necessary for Roku Users to input captcha text."))
 	if type == 'TV Shows':
@@ -1820,12 +1851,21 @@ def CaptchaSection(title, page, date, thumb, type, summary, directors, guest_sta
 
 #####################################################################################################
 # This is captcha input for Roku users
+@route(PREFIX + '/CaptchaInput')
 def CaptchaInput(title, page, date, thumb, type, summary, directors, guest_stars, genres, duration, rating, season, index, content_rating, source_title, url, Host, query):
 
 	oc = ObjectContainer(title2=title)
 
 	show = "Host: " + Host + " - Captcha has been processed"
 	hosts = LoadData(fp=CAPTCHA_DATA)
+	date = Datetime.ParseDate(date, "%Y")
+	directors = [directors]
+	guest_stars = [guest_stars]
+	genres = [genres]
+	duration = int(duration)
+	rating = float(rating)
+	season = int(season)
+	index = int(index)
 
 	i = 1
 	for gethost in hosts:

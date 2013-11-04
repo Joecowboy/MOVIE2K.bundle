@@ -1,3 +1,5 @@
+[B]Version 1.6.0[/B]
+- Added Threading to Plugin, added missing route for Captcha functions, updated few hosts
 [B]Version 1.5.2[/B]
 - Fixed issue with Favorite Playback if Site URL different. Updated multiple hosts 
 [B]Version 1.5.1[/B]
