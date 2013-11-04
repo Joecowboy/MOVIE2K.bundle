@@ -50,6 +50,7 @@ ART            = "art-default.jpg"
 ICON           = "icon-default.png"
 MOVIE2K_URL    = Prefs['movie2k_url']
 TOP_PAGES      = Prefs['toppages']
+HOST_COUNT     = Prefs['host_count']
 CAPTCHA_DATA   = "captcha.data.json"
 FAVORITES_DATA = "favorites.data.json"
 
@@ -1450,13 +1451,13 @@ def SubMoviePageAdd(title, page, date, dateadd, thumbck, type):
 		NumHostListing2 = NumHostListing2 + NumHosts
 		nsl += 1
 
-	p = (float(NumHostListing1)+float(NumHostListing2))/5.0 - (NumHostListing1+NumHostListing2)/5
-	jj = (NumHostListing1+NumHostListing2)/5
+	p = (float(NumHostListing1)+float(NumHostListing2))/float(HOST_COUNT) - (NumHostListing1+NumHostListing2)/int(HOST_COUNT)
+	jj = (NumHostListing1+NumHostListing2)/int(HOST_COUNT)
 	if p > 0:
 		jj += 1
 
 	while i <= jj:
-		while HostCount <= 5:
+		while HostCount <= int(HOST_COUNT):
 			if Num1 < NumHostListing1:
 				try:
 					Host = Listing[Num1].xpath("./td/a/img")[0].get('title').split(' ')[0].split('.')[0].capitalize()
@@ -1479,7 +1480,7 @@ def SubMoviePageAdd(title, page, date, dateadd, thumbck, type):
 				Num2 += 1
 				Hosts = Hosts + Host + ", "
 			else:
-				HostCount = 5
+				HostCount = int(HOST_COUNT)
 			HostCount += 1
 
 		MOVIES_SUMMARY = "Page - " + str(i) + " | Hosts: " + Hosts[:-2]
@@ -1630,8 +1631,8 @@ def TheMovieListings(title, page, date, dateadd, thumb, type, PageOfHosts, Host=
 			NumHostListing2 = NumHostListing2 + NumHosts
 			nsl += 1
 
-		p = (float(NumHostListing1)+float(NumHostListing2))/5.0 - (NumHostListing1+NumHostListing2)/5
-		NumPages = (NumHostListing1+NumHostListing2)/5
+		p = (float(NumHostListing1)+float(NumHostListing2))/float(HOST_COUNT) - (NumHostListing1+NumHostListing2)/int(HOST_COUNT)
+		NumPages = (NumHostListing1+NumHostListing2)/int(HOST_COUNT)
 		if p > 0:
 			NumPages += 1
 
@@ -1692,7 +1693,7 @@ def TheMovieListings(title, page, date, dateadd, thumb, type, PageOfHosts, Host=
 					Quality = QualitySub.xpath("./span/span/img")[0].get('title').split(' ')[2]
 
 			@task
-			def GetMovieObjects(num=num, Host=Host, MOVIE_PAGE=MOVIE_PAGE, DateAdded=DateAdded, Quality=Quality, CreatePage=out['CreatePage'], CurrentPage=out['CurrentPage']):
+			def GetMovieObjects(Host=Host, MOVIE_PAGE=MOVIE_PAGE, DateAdded=DateAdded, Quality=Quality, CreatePage=out['CreatePage'], CurrentPage=out['CurrentPage']):
 				if CreatePage:
 					if CurrentPage == int(PageOfHosts):
 						if Host == 'N/a' or Host == 'Divx' or Host == 'DivX Hoster' or Host == 'Flash' or Host == 'Flash Hoster' or Host == 'Embed':
@@ -1737,7 +1738,7 @@ def TheMovieListings(title, page, date, dateadd, thumb, type, PageOfHosts, Host=
 										originally_available_at = date,
 										thumb = Callback(GetThumb, url=thumb)))
 
-			if (num+1)%5 == 0:
+			if (num+1)%int(HOST_COUNT) == 0:
 				if out['CurrentPage'] == int(PageOfHosts):
 					out['CreatePage'] = False
 				else:

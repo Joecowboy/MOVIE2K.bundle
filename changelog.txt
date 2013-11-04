@@ -1,3 +1,5 @@
+[B]Version 1.6.1[/B]
+- Added Number Hosts Per in plugin preferences
 [B]Version 1.6.0[/B]
 - Added Threading to Plugin, added missing route for Captcha functions, updated few hosts
 [B]Version 1.5.2[/B]
