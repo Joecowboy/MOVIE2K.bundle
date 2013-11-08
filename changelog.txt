@@ -1,3 +1,5 @@
+[B]Version 1.6.2[/B]
+- Updated multiple hosts and added another Site URL in the plugin preferences.
 [B]Version 1.6.1[/B]
 - Added Number Hosts Per in plugin preferences
 [B]Version 1.6.0[/B]

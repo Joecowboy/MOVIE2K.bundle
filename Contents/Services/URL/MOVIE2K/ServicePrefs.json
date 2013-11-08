@@ -3,8 +3,8 @@
 		"id": "version",
 		"type": "enum",
 		"label": "Version",
-		"values": ["1.6.1"],
-		"default": "1.6.1"
+		"values": ["1.6.2"],
+		"default": "1.6.2"
 	},
 	{
 		"id": "video_resolution",
@@ -25,6 +25,7 @@
 			"www.movie4k.to",
 			"91.202.63.145",
 			"www.movie.to",
+			"movie4k.co.in",
 			"movie4k.to.come.in",
 			"www.movie4kunblocked.co",
 			"www.movie2kproxy.org",

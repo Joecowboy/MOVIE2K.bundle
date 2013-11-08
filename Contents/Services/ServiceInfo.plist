@@ -65,25 +65,42 @@
 				<string>http://www\.movie\.to/tvshows-genre+</string>
 				<string>http://www\.movie\.to/tvshows-season+</string>
 				<string>http://www\.movie\.to/+</string>
-				<string>http://movie\.to.\come\.in/movies-all+</string>
-				<string>http://movie4k\.to.\come\.in/movies-all+</string>
-				<string>http://movie4k\.to.\come\.in/movies-updates+</string>
-				<string>http://movie4k\.to.\come\.in/movies-top+</string>
-				<string>http://movie4k\.to.\come\.in/genre-movies+</string>
-				<string>http://movie4k\.to.\come\.in/movies-genre+</string>
-				<string>http://movie4k\.to.\come\.in/xxx-all+</string>
-				<string>http://movie4k\.to.\come\.in/xxx-updates+</string>
-				<string>http://movie4k\.to.\come\.in/xxx-top+</string>
-				<string>http://movie4k\.to.\come\.in/genre-xxx+</string>
-				<string>http://movie4k\.to.\come\.in/xxx-genre-+</string>
-				<string>http://movie4k\.to.\come\.in/tvshows-all+</string>
-				<string>http://movie4k\.to.\come\.in/tvshows_featured+</string>
-				<string>http://movie4k\.to.\come\.in/tvshows-updates+</string>
-				<string>http://movie4k\.to.\come\.in/tvshows-top+</string>
-				<string>http://movie4k\.to.\come\.in/genre-tvshows+</string>
-				<string>http://movie4k\.to.\come\.in/tvshows-genre+</string>
-				<string>http://movie4k\.to.\come\.in/tvshows-season+</string>
-				<string>http://movie4k\.to.\come\.in/+</string>
+				<string>http://movie4k\.co\.in/movies-all+</string>
+				<string>http://movie4k\.co\.in/movies-updates+</string>
+				<string>http://movie4k\.co\.in/movies-top+</string>
+				<string>http://movie4k\.co\.in/genre-movies+</string>
+				<string>http://movie4k\.co\.in/movies-genre+</string>
+				<string>http://movie4k\.co\.in/xxx-all+</string>
+				<string>http://movie4k\.co\.in/xxx-updates+</string>
+				<string>http://movie4k\.co\.in/xxx-top+</string>
+				<string>http://movie4k\.co\.in/genre-xxx+</string>
+				<string>http://movie4k\.co\.in/xxx-genre-+</string>
+				<string>http://movie4k\.co\.in/tvshows-all+</string>
+				<string>http://movie4k\.co\.in/tvshows_featured+</string>
+				<string>http://movie4k\.co\.in/tvshows-updates+</string>
+				<string>http://movie4k\.co\.in/tvshows-top+</string>
+				<string>http://movie4k\.co\.in/genre-tvshows+</string>
+				<string>http://movie4k\.co\.in/tvshows-genre+</string>
+				<string>http://movie4k\.co\.in/tvshows-season+</string>
+				<string>http://movie4k\.co\.in/+</string>
+				<string>http://movie4k\.to\.come\.in/movies-all+</string>
+				<string>http://movie4k\.to\.come\.in/movies-updates+</string>
+				<string>http://movie4k\.to\.come\.in/movies-top+</string>
+				<string>http://movie4k\.to\.come\.in/genre-movies+</string>
+				<string>http://movie4k\.to\.come\.in/movies-genre+</string>
+				<string>http://movie4k\.to\.come\.in/xxx-all+</string>
+				<string>http://movie4k\.to\.come\.in/xxx-updates+</string>
+				<string>http://movie4k\.to\.come\.in/xxx-top+</string>
+				<string>http://movie4k\.to\.come\.in/genre-xxx+</string>
+				<string>http://movie4k\.to\.come\.in/xxx-genre-+</string>
+				<string>http://movie4k\.to\.come\.in/tvshows-all+</string>
+				<string>http://movie4k\.to\.come\.in/tvshows_featured+</string>
+				<string>http://movie4k\.to\.come\.in/tvshows-updates+</string>
+				<string>http://movie4k\.to\.come\.in/tvshows-top+</string>
+				<string>http://movie4k\.to\.come\.in/genre-tvshows+</string>
+				<string>http://movie4k\.to\.come\.in/tvshows-genre+</string>
+				<string>http://movie4k\.to\.come\.in/tvshows-season+</string>
+				<string>http://movie4k\.to\.come\.in/+</string>
 				<string>http://www\.movie4kunblocked\.co/movies-all+</string>
 				<string>http://www\.movie4kunblocked\.co/movies-updates+</string>
 				<string>http://www\.movie4kunblocked\.co/movies-top+</string>
