@@ -1753,8 +1753,8 @@ def TheMovieListings(title, page, date, dateadd, thumb, type, PageOfHosts, Host=
 		else:
 			out['HostCountTotal'] = out['HostCountTotal'] + 1
 		
-		if len(oc) < 1:
-			oc = ObjectContainer(header="Sorry", message="This section does not contain any videos")
+	if len(oc) < 1:
+		oc = ObjectContainer(header="Sorry", message="This section does not contain any videos")
 
 	return oc
 
