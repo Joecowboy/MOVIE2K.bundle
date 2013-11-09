@@ -51,6 +51,7 @@ ICON           = "icon-default.png"
 MOVIE2K_URL    = Prefs['movie2k_url']
 TOP_PAGES      = Prefs['toppages']
 HOST_COUNT     = Prefs['host_count']
+SWAP_TITLE     = Prefs['swaptitle']
 CAPTCHA_DATA   = "captcha.data.json"
 FAVORITES_DATA = "favorites.data.json"
 
@@ -1484,7 +1485,11 @@ def SubMoviePageAdd(title, page, date, dateadd, thumbck, type):
 			HostCount += 1
 
 		MOVIES_SUMMARY = "Page - " + str(i) + " | Hosts: " + Hosts[:-2]
-		oc.add(DirectoryObject(key=Callback(TheMovieListings, title=title, page=page, date=date, dateadd=dateadd, thumb=thumb, type=type, PageOfHosts=i), title=title, summary=MOVIES_SUMMARY, thumb=Callback(GetThumb, url=thumb)))
+		MOVIES_TITLE = title
+		if SWAP_TITLE == "Enabled":
+			MOVIES_SUMMARY = title
+			MOVIES_TITLE = str(i) + ": " + Hosts[:-2]
+		oc.add(DirectoryObject(key=Callback(TheMovieListings, title=title, page=page, date=date, dateadd=dateadd, thumb=thumb, type=type, PageOfHosts=i), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=Callback(GetThumb, url=thumb)))
 		HostCount = 1
 		Hosts = ""
 		i += 1
@@ -1699,18 +1704,22 @@ def TheMovieListings(title, page, date, dateadd, thumb, type, PageOfHosts, Host=
 						if Host == 'N/a' or Host == 'Divx' or Host == 'DivX Hoster' or Host == 'Flash' or Host == 'Flash Hoster' or Host == 'Embed':
 							Host = GetHost(Host=Host, url=MOVIE_PAGE)
 
-						show = "ADDED: "+ DateAdded +" | HOST: "+ Host + " | QUALITY: " + Quality
+						show = "ADDED: "+ DateAdded + " | HOST: " + Host + " | QUALITY: " + Quality
+						Show_title = title
+						if SWAP_TITLE == "Enabled":
+							show = title
+							show_title = "QUALITY: " + Quality +" | HOST: " + Host + " | ADDED: " + DateAdded
 
 						url = MOVIE_PAGE+"?title="+String.Quote(title, usePlus=True)+"&summary="+String.Quote(summary, usePlus=True)+"&show="+String.Quote(show, usePlus=True)+"&date="+String.Quote(str(date), usePlus=True)+"&thumb="+String.Quote(thumb, usePlus=True)+"&host="+Host+"&season="+str(season)+"&index="+str(index)+"&type="+String.Quote(type, usePlus=True)+"&genres="+String.Quote(genre, usePlus=True)+"&director="+String.Quote(director, usePlus=True)+"&actors="+String.Quote(actors, usePlus=True)+"&duration="+str(duration)+"&rating="+str(rating)+"&content_rating="+content_rating
 
 						if Host == '180upload' or Host == 'Clicktoview' or Host == 'Fileloby' or Host == 'Lemuploads' or Host == 'Vidbux' or Host == 'Vidplay' or Host == 'Vidxden':
 							show_update = "Click here if you want OCR to try and decode Captcha text."
-							oc.add(DirectoryObject(key=Callback(CaptchaSection, title=title, page=page, date=date, thumb=thumb, type=type, summary=summary, directors=directors, guest_stars=guest_stars, genres=genres, duration=duration, rating=float(rating), season=season, index=index, show=show_update, content_rating=content_rating, source_title=source_title, url=url, Host=Host), title=title, thumb=Callback(GetThumb, url=thumb), summary=show))
+							oc.add(DirectoryObject(key=Callback(CaptchaSection, title=title, page=page, date=date, thumb=thumb, type=type, summary=summary, directors=directors, guest_stars=guest_stars, genres=genres, duration=duration, rating=float(rating), season=season, index=index, show=show_update, content_rating=content_rating, source_title=source_title, url=url, Host=Host), title=show_title, thumb=Callback(GetThumb, url=thumb), summary=show))
 						else:
 							if type == 'TV Shows':
 								oc.add(EpisodeObject(
 										url = url,
-										title = title,
+										title = show_title,
 										summary = summary,
 										directors = directors,
 										guest_stars = guest_stars,
@@ -1727,13 +1736,13 @@ def TheMovieListings(title, page, date, dateadd, thumb, type, PageOfHosts, Host=
 							else:
 								oc.add(MovieObject(
 										url = url,
-										title = title,
+										title = show_title,
 										summary = summary,
 										directors = directors,
 										genres = genres,
 										duration = duration,
 										rating = rating,
-											content_rating = content_rating,
+										content_rating = content_rating,
 										source_title = show,
 										originally_available_at = date,
 										thumb = Callback(GetThumb, url=thumb)))

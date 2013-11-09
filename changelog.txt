@@ -1,3 +1,5 @@
+[B]Version 1.6.3[/B]
+- Updated one host and added Use Description as Title in the plugin preferences.
 [B]Version 1.6.2[/B]
 - Updated multiple hosts and added another Site URL in the plugin preferences.
 [B]Version 1.6.1[/B]
