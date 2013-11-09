@@ -977,9 +977,9 @@ def GetMovie(Host, HostPage, url, LinkType):
 				VideoInfo = HostPage
 
 			v = SecondButtonPress(url=url, HostPage=VideoInfo, cookies=cookies)
-			VideoLink = HTML.ElementFromString(v.content).xpath('//head/script')[0].text.split('<object id="nuevoplayer"')[1].split('config=')[1].split('"')[0]
+			VideoLink = HTML.ElementFromString(v.content).xpath('//head/script')[2].text.split('<object id="nuevoplayer"')[1].split('config=')[1].split('"')[0]
 			headers['Host'] = 'play.flashx.tv'
-			headers['Referer'] = HTML.ElementFromString(v.content).xpath('//head/script')[0].text.split('<object id="nuevoplayer"')[1].split('data="')[1].split('"')[0]
+			headers['Referer'] = HTML.ElementFromString(v.content).xpath('//head/script')[2].text.split('<object id="nuevoplayer"')[1].split('data="')[1].split('"')[0]
 			xmlreq = session.get(VideoLink, headers=headers)
 			if xmlreq.content.split('<config>')[1].strip() == "wrong user/ip 1":
 				VideoStream = ErrorMessage(Host=Host, LogError=9)
@@ -2417,9 +2417,9 @@ def GetMovieDebugger(Host, HostPage, url, LinkType):
 			VideoInfo = HostPage
 
 		v = SecondButtonPress(url=url, HostPage=VideoInfo, cookies=cookies)
-		VideoLink = HTML.ElementFromString(v.content).xpath('//head/script')[0].text.split('<object id="nuevoplayer"')[1].split('config=')[1].split('"')[0]
+		VideoLink = HTML.ElementFromString(v.content).xpath('//head/script')[2].text.split('<object id="nuevoplayer"')[1].split('config=')[1].split('"')[0]
 		headers['Host'] = 'play.flashx.tv'
-		headers['Referer'] = HTML.ElementFromString(v.content).xpath('//head/script')[0].text.split('<object id="nuevoplayer"')[1].split('data="')[1].split('"')[0]
+		headers['Referer'] = HTML.ElementFromString(v.content).xpath('//head/script')[2].text.split('<object id="nuevoplayer"')[1].split('data="')[1].split('"')[0]
 		xmlreq = session.get(VideoLink, headers=headers)
 		if xmlreq.content.split('<config>')[1].strip() == "wrong user/ip 1":
 			VideoStream = ErrorMessage(Host=Host, LogError=9)
