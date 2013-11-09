@@ -138,7 +138,7 @@ To enter My Favorite Movie4k URL, Parental Lock password or Captcha text, Roku u
 
 3.  With the latest version of Plex Media Server.  Plexconnect now works with Apple TV with this RTMP channel.
 
-[dashboard-thumbnail]: https://github.com/Joecowboy/MOVIE2K.bundle/blob/master/Contents/Resources/art-default.jpg
+[dashboard-thumbnail]: https://raw.github.com/Joecowboy/MOVIE2K.bundle/master/Contents/Resources/icon-default.png
 [plexforum]: http://forums.plexapp.com/index.php/topic/75524-new-channel-movie2k-plugin-for-movie4kto-website/
 [torlink]: https://www.torproject.org/download/download-easy.html
 [proxifierlink]: http://www.proxifier.com/
