@@ -1705,7 +1705,7 @@ def TheMovieListings(title, page, date, dateadd, thumb, type, PageOfHosts, Host=
 							Host = GetHost(Host=Host, url=MOVIE_PAGE)
 
 						show = "ADDED: "+ DateAdded + " | HOST: " + Host + " | QUALITY: " + Quality
-						Show_title = title
+						show_title = title
 						if SWAP_TITLE == "Enabled":
 							show = title
 							show_title = "QUALITY: " + Quality +" | HOST: " + Host + " | ADDED: " + DateAdded
