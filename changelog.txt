@@ -1,3 +1,5 @@
+[B]Version 1.6.4[/B]
+- Threading removed for testing of PlexConnect - Apple TV
 [B]Version 1.6.3[/B]
 - Updated one host and added Use Description as Title in the plugin preferences.
 [B]Version 1.6.2[/B]
