@@ -3,8 +3,8 @@
 		"id": "version",
 		"type": "enum",
 		"label": "Version",
-		"values": ["1.6.5"],
-		"default": "1.6.5"
+		"values": ["1.7.0"],
+		"default": "1.7.0"
 	},
 	{
 		"id": "video_resolution",

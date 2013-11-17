@@ -134,7 +134,7 @@ def MainMenu():
 	#Add Movie4k Added Links and Inbox
 	ICON_MYMOVIE2k = "icon-mymovie2k.png"
 	MYMOVIE2K_TITLE = "My Movie2k"
-	MYMOVIE2K_SUMMARY = "List My Uploads and Inbox on Movie2k and My Favoriates Links!"
+	MYMOVIE2K_SUMMARY = "List My Uploads and Inbox on Movie2k and My Favorites Links!"
 	MYMOVIE2K_THUMB = R(ICON_MYMOVIE2k)
 	oc.add(DirectoryObject(key = Callback(MyMovie2k, title=MYMOVIE2K_TITLE), title=MYMOVIE2K_TITLE, summary=MYMOVIE2K_SUMMARY, thumb=MYMOVIE2K_THUMB))
 
@@ -168,7 +168,7 @@ def Movie2kLogin():
 
 	username = Prefs["username"]
 	password = Prefs["password"]
-	cookiejar = {"xxx2": "ok", "domain": ".movie4k.to", "path": "/", "onlylanguage": "", "lang": "en"}
+	cookiejar = {"xxx2": "ok", "xxx": "ok", "domain": ".movie4k.to", "path": "/", "onlylanguage": "", "lang": "en"}
 	Dict['_movie2k_uid'] = cookiejar
 	HTTP.Headers['Cookie'] = cookiejar
 
@@ -178,10 +178,19 @@ def Movie2kLogin():
 			cookies = {}
 			session = requests.session()
 			url = "http://" + MOVIE2K_URL + "/login.php?ua=login"
-			authentication_values = {"username": username, "password": password}
+			if MOVIE2K_URL == "www.movie2k.tl":
+				authentication_values = {"login_username": username, "login_pass": password}
+			else:
+				authentication_values = {"username": username, "password": password}
 			authentication_headers = {"Host": MOVIE2K_URL, "Referer": url, "User-Agent": UserAgent[UserAgentNum]}
 			req = session.post(url, data=authentication_values, headers=authentication_headers, files=files, allow_redirects=True)
-			data = req.content.split('<div id="maincontent4">')[1].split('<STRONG>')[1].split('</STRONG>')[0]
+			if MOVIE2K_URL == "www.movie2k.tl":
+				try:
+					data = HTML.ElementFromString(req.content).xpath('//div[@id="maincontent4"]/p')[0].text
+				except:
+					data = "Logged in!"
+			else:
+				data = req.content.split('<div id="maincontent4">')[1].split('<STRONG>')[1].split('</STRONG>')[0]
 
 			if data == "Logged in!":			
 				for key, value in session.cookies.items():
@@ -291,8 +300,11 @@ def Search(query):
 		if MOVIES_HOST == "downloadnow!":
 			oc = MessageContainer("Search Error", "Search did not return any positive results.  Please try another key word search!")
 		elif MOVIES_LANG == GetLanguage() or MOVIES_LANG == 'N/A' or GetLanguage() == 'All':
-			oc.add(DirectoryObject(key=Callback(SubMoviePageAdd, title=MOVIES_TITLE, page=MOVIES_PAGE, date=MOVIES_YEAR, dateadd=dateadd, thumbck=MOVIES_THUMB, type=type), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=Callback(GetThumb, url=MOVIES_THUMB)))
+			oc.add(DirectoryObject(key=Callback(SubGroupMoviePageAdd, title=MOVIES_TITLE, page=MOVIES_PAGE, date=MOVIES_YEAR, dateadd=dateadd, thumbck=MOVIES_THUMB, type=type, summary=MOVIES_SUMMARY), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=Callback(GetThumb, url=MOVIES_THUMB)))
 		i += 1
+
+	if len(oc) < 1:
+		oc = MessageContainer("Search Error", "Search did not return any positive results.  Please try another key word search!")
 
 	return oc
 
@@ -392,34 +404,54 @@ def InputFavoriteURL(title, query):
 	oc = ObjectContainer(title2=title)
 	try:
 		checkURL = query.split('/')[2]
-		if checkURL != 'www.movie4k.to' and checkURL != 'www.movie2kproxy.org' and checkURL != 'www.movie2kproxy.com' and checkURL != '91.202.63.145' and checkURL != 'www.movie2k.tv' and checkURL != '91.202.62.123':
+		if checkURL != 'www.movie4k.to' and checkURL != '91.202.63.145' and checkURL != 'www.movie.to' and checkURL != 'movie4k.co.in' and checkURL != 'movie4k.to.come.in' and checkURL != 'www.movie4kunblocked.co' and checkURL != 'www.movie2kproxy.org' and checkURL != 'www.movie2kproxy.com' and checkURL != 'www.movie2k.tv' and checkURL != '91.202.62.123' and checkURL != 'www.movie2k.tl':
 			return ObjectContainer(header="Not a Movie4k URL", message="The entered URL is not a valid Movie4k video URL. Example of a valid Movie4k video URL: http://www.movie4k.to/Oblivion-watch-movie-3777965.html  Please try again and click Ok to exit this screen.")
 	except:
 		return ObjectContainer(header="Not a Movie4k URL", message="The entered URL is not a valid Movie4k video URL. Example of a valid Movie4k video URL: http://www.movie4k.to/Oblivion-watch-movie-3777965.html  Please try again and click Ok to exit this screen.")
 
 	try:
 		Num = query.split('-')
-		checkNum = Num[len(Num)-1].split('.')[0]
-		if len(checkNum) != 7 and len(checkNum) != 8:
+		checkNum = Num[-1].split('.')[0]
+		if isinstance(checkNum, int) == False:
+			checkNum = Num[-3]
+
+		if len(checkNum) < 5 and len(checkNum) > 8:
 			return ObjectContainer(header="Not a Valid Video Link", message="The entered URL is not a valid Movie4k video URL. Example of a valid Movie4k video URL: http://www.movie4k.to/Oblivion-watch-movie-3777966.html  Please try again and click Ok to exit this screen.")
 	except:
 		return ObjectContainer(header="Not a Valid Video Link", message="The entered URL is not a valid Movie4k video URL. Example of a valid Movie4k video URL: http://www.movie4k.to/Oblivion-watch-movie-3777967.html  Please try again and click Ok to exit this screen.")
 
-	MOVIE_PAGE_HTML = HTML.ElementFromURL(query)
+	session_cookies = Dict['_movie2k_uid']
+	session_headers = {"Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8", "Accept-Charset": "ISO-8859-1,utf-8;q=0.7,*;q=0.3", "Accept-Encoding": "gzip,deflate,sdch", "Accept-Language": "en-US,en;q=0.8", "Connection": "keep-alive", "Host": MOVIE2K_URL, "Referer": "http://"+MOVIE2K_URL, "User-Agent": UserAgent[UserAgentNum]}
+	values = dict(session_token = Dict['_movie2k_uid'])
+	
+	req = requests.get(query, headers=session_headers, cookies=session_cookies)
+	MOVIE_PAGE_HTML = HTML.ElementFromString(req.content)
 	MOVIE_INFO = MOVIE_PAGE_HTML.xpath('//div[@id="details"]')[0].text_content()
+
 	try:
-		date = re.sub('[^0-9]', '', MOVIE_INFO.split('Land/Year: ')[1])
+		date = re.sub('[^0-9]', '', MOVIE_INFO.split('Land/Year: ')[1].split(':')[0])
 		if date == "":
 			date =  "0001"
 	except:
-		re.sub('[^0-9]', '', MOVIE_INFO.split('Land/Jahr: ')[1])
+		re.sub('[^0-9]', '', MOVIE_INFO.split('Land/Jahr: ')[1].split(':')[0])
 		if date == "":
 			date =  "0001"
 
 	MOVIE_INFO = MOVIE_PAGE_HTML.xpath('//div[@id="maincontent5"]/div/div')
-	MOVIES_LANG = GetLang(lang=MOVIE_INFO[1].xpath("./span/img")[0].get('src').split('.')[0])
-	MOVIES_TITLE = MOVIE_INFO[1].xpath("./span/h1/a")[0].text.strip()
-	MOVIES_QUALITY = MOVIE_INFO[1].xpath("./span/span/img")[0].get('title').split(' ')[2]
+	lang = MOVIE_INFO[1].xpath("./span/img")[0].get('src').split('.')
+	if len(lang) > 2:
+		lang = lang[-2].split('/')[-1]
+	else:
+		lang = lang[0]
+	MOVIES_LANG = GetLang(lang=lang)
+	try:
+		MOVIES_TITLE = MOVIE_INFO[1].xpath("./span/h1/a")[0].text.strip()
+	except:
+		MOVIES_TITLE = MOVIE_INFO[1].xpath("./h1/span/a")[0].text.strip()
+	try:
+		MOVIES_QUALITY = MOVIE_INFO[1].xpath("./span/span/img")[0].get('title').split(' ')[2]
+	except:
+		MOVIES_QUALITY = "DVDRip/BDRip"
 	MOVIES_THUMB = MOVIE_INFO[0].xpath("./a/img")[0].get('src')
 
 	MOVIES_SUMMARY = "Year: "+date+" | Lang: "+MOVIES_LANG+" | Quality: "+MOVIES_QUALITY
@@ -788,10 +820,11 @@ def FeaturedTVShowsPageAdd(title, page, type):
 
 	i = 0
 	while i < TVShowsLength:
-		TVSHOW_PAGE = TVSHOWS_DIV[i].xpath("./a")[0].get('href')
 		TVSHOW_THUMB = TVSHOWS_DIV[i].xpath("./a/img")[0].get('src')
 		TVSHOW_TITLE = TVSHOWS_DIV[i].xpath("./a/img")[0].get('title')
 		i += 1
+		TVSHOW_TITLE = TVSHOW_TITLE + "  [ " + TVSHOWS_DIV[i].xpath('./div[@class="beschreibung"]/table[@id="tablemoviesindex"]//td')[1].text.strip() + " ]"
+		TVSHOW_PAGE = TVSHOWS_DIV[i].xpath('./div[@class="beschreibung"]/table[@id="tablemoviesindex"]//a')[0].get('href')
 		TVSHOW_YEAR_SUB = TVSHOWS_DIV[i].xpath('./div[@class="beschreibung"]/span')[0]
 		try:
 			TVSHOW_YEAR = re.sub('[^0-9]', '', TVSHOW_YEAR_SUB.text_content().split('| Country/Year: ')[1])
@@ -805,7 +838,7 @@ def FeaturedTVShowsPageAdd(title, page, type):
 			TVSHOW_LANG = GetLang(lang=LANGUAGE_URL.split('/')[4].split('.')[0])
 		TVSHOW_SUMMARY = "Year: "+TVSHOW_YEAR+" | Lang: "+TVSHOW_LANG+" | Part of the Featured TV Show line up on Movie2k."
 		i += 2
-		oc.add(DirectoryObject(key=Callback(SubMoviePageAdd, title=TVSHOW_TITLE, page=TVSHOW_PAGE, date=TVSHOW_YEAR, dateadd=dateadd, thumbck=TVSHOW_THUMB, type=type), title=TVSHOW_TITLE, summary=TVSHOW_SUMMARY, thumb=Callback(GetThumb, url=TVSHOW_THUMB)))
+		oc.add(DirectoryObject(key=Callback(SubGroupMoviePageAdd, title=TVSHOW_TITLE, page=TVSHOW_PAGE, date=TVSHOW_YEAR, dateadd=dateadd, thumbck=TVSHOW_THUMB, type=type, summary=TVSHOW_SUMMARY), title=TVSHOW_TITLE, summary=TVSHOW_SUMMARY, thumb=Callback(GetThumb, url=TVSHOW_THUMB)))
 
 	return oc
 
@@ -885,7 +918,7 @@ def TVShowEpisodes(title, page, genre, type):
 			MOVIES_THUMB = GET_THUMB.xpath('./a/img')[0].get('src')
 			THUMB = 1
 
-		oc.add(DirectoryObject(key=Callback(SubMoviePageAdd, title=MOVIES_TITLE, page=MOVIES_PAGE, date=DATE_ADDED, dateadd=DATE_ADDED, thumbck=MOVIES_THUMB, type=type), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=Callback(GetThumb, url=MOVIES_THUMB)))
+		oc.add(DirectoryObject(key=Callback(SubGroupMoviePageAdd, title=MOVIES_TITLE, page=MOVIES_PAGE, date=DATE_ADDED, dateadd=DATE_ADDED, thumbck=MOVIES_THUMB, type=type, summary=MOVIES_SUMMARY), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=Callback(GetThumb, url=MOVIES_THUMB)))
 
 	return oc
 
@@ -1270,7 +1303,7 @@ def CinemaMoviePageAdd(title, page, type):
 			MOVIES_THUMB = MOVIES_TD.xpath("."+elm+"/a/img")[0].get('src')
 			MOVIES_SUMMARY = "Year: "+MOVIES_YEAR+" | Lang: "+MOVIES_LANG+" | Part of the Cinema Movies line up on Movie2k."
 
-			oc.add(DirectoryObject(key=Callback(SubMoviePageAdd, title=MOVIES_TITLE, page=MOVIES_PAGE, date=MOVIES_YEAR, dateadd=dateadd, thumbck=MOVIES_THUMB, type=type), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=Callback(GetThumb, url=MOVIES_THUMB)))			
+			oc.add(DirectoryObject(key=Callback(SubGroupMoviePageAdd, title=MOVIES_TITLE, page=MOVIES_PAGE, date=MOVIES_YEAR, dateadd=dateadd, thumbck=MOVIES_THUMB, type=type, summary=MOVIES_SUMMARY), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=Callback(GetThumb, url=MOVIES_THUMB)))			
 		except:
 			pass
 
@@ -1283,7 +1316,7 @@ def CinemaMoviePageAdd(title, page, type):
 			MOVIES_THUMB = MOVIES_TD.xpath("."+elm+"/a/img")[0].get('src')
 			MOVIES_SUMMARY = "Year: "+MOVIES_YEAR+" | Lang: "+MOVIES_LANG+" | Part of the Older Cinema Movies line up on Movie2k."
 
-			oc.add(DirectoryObject(key=Callback(SubMoviePageAdd, title=MOVIES_TITLE, page=MOVIES_PAGE, date=MOVIES_YEAR, dateadd=dateadd, thumbck=MOVIES_THUMB, type=type), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=Callback(GetThumb, url=MOVIES_THUMB)))
+			oc.add(DirectoryObject(key=Callback(SubGroupMoviePageAdd, title=MOVIES_TITLE, page=MOVIES_PAGE, date=MOVIES_YEAR, dateadd=dateadd, thumbck=MOVIES_THUMB, type=type, summary=MOVIES_SUMMARY), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=Callback(GetThumb, url=MOVIES_THUMB)))
 		except:
 			pass
 
@@ -1313,7 +1346,7 @@ def FeaturedMoviePageAdd(title, page, type):
 			MOVIES_LANG = "English"
 			MOVIES_SUMMARY = "Year: "+MOVIES_YEAR+" | Lang: "+MOVIES_LANG+" | Part of the Featured XXX Movies line up on Movie2k."
 
-			oc.add(DirectoryObject(key=Callback(SubMoviePageAdd, title=MOVIES_TITLE, page=MOVIES_PAGE, date=MOVIES_YEAR, dateadd=dateadd, thumbck=MOVIES_THUMB, type=type), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=Callback(GetThumb, url=MOVIES_THUMB)))
+			oc.add(DirectoryObject(key=Callback(SubGroupMoviePageAdd, title=MOVIES_TITLE, page=MOVIES_PAGE, date=MOVIES_YEAR, dateadd=dateadd, thumbck=MOVIES_THUMB, type=type, summary=MOVIES_SUMMARY), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=Callback(GetThumb, url=MOVIES_THUMB)))
 		i += 1
 
 	return oc
@@ -1403,8 +1436,31 @@ def MoviePageAdd(title, page, genre, type):
 				MOVIES_THUMB = ""
 
 		if MOVIES_LANG == GetLanguage() or MOVIES_LANG == 'N/A' or GetLanguage() == 'All':
-			oc.add(DirectoryObject(key=Callback(SubMoviePageAdd, title=MOVIES_TITLE, page=MOVIES_PAGE, date=MOVIES_YEAR, dateadd=dateadd, thumbck=MOVIES_THUMB, type=type), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=Callback(GetThumb, url=MOVIES_THUMB)))
+			oc.add(DirectoryObject(key=Callback(SubGroupMoviePageAdd, title=MOVIES_TITLE, page=MOVIES_PAGE, date=MOVIES_YEAR, dateadd=dateadd, thumbck=MOVIES_THUMB, type=type, summary=MOVIES_SUMMARY), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=Callback(GetThumb, url=MOVIES_THUMB)))
 
+	return oc
+
+
+
+####################################################################################################
+@route(PREFIX + '/TVandMovieGroupPage')
+def SubGroupMoviePageAdd(title, page, date, dateadd, thumbck, type, summary):
+
+	oc = ObjectContainer(title2=title)
+
+	# List Host Sites for Playback
+	summary = summary.split(" | ")[0] + " | " + summary.split(" | ")[1] + " | List the Host Sites from Movie2k."
+	oc.add(DirectoryObject(key=Callback(SubMoviePageAdd, title=title, page=page, date=date, dateadd=dateadd, thumbck=thumbck, type=type), title=title, summary=summary, thumb=Callback(GetThumb, url=thumbck)))
+
+	# Add Favorite Movie4k.to link
+	ICON_ADDFAVORITE = "icon-add-favorite.png"
+	ADDFAVORITE_THUMB = R(ICON_ADDFAVORITE)
+	summary = "Add \""+title+"\" as a favorite link from Movie2k!"
+	title = "Add to My Favorite Links"
+	prompt = "Add a favorite link from Movie2k!"
+	if page.split('/')[0] != "http:":
+		page = "http://"+MOVIE2K_URL+"/"+page
+	oc.add(DirectoryObject(key=Callback(InputFavoriteURL, title=title, query=page), title=title, summary=summary, thumb=ADDFAVORITE_THUMB))
 	return oc
 
 
@@ -1548,7 +1604,10 @@ def TheMovieListings(title, page, date, dateadd, thumb, type, PageOfHosts, Host=
 
 		try:
 			try:
-				duration = int(float(MOVIE_INFO.split('Length: ')[1].split(' minutes')[0])*60*1000)
+				try:
+					duration = int(float(MOVIE_INFO.split('Length: ')[1].split(' minutes')[0])*60*1000)
+				except:
+					duration = int(float(re.sub('[^0-9]', '', MOVIE_INFO.split('Length: ')[1].split(' min.')[0]))*60*1000)
 			except:
 				try:
 					duration = int(float(MOVIE_INFO.split('nge: ')[1].split(' Minuten')[0])*60*1000)
