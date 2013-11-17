@@ -433,7 +433,7 @@ def InputFavoriteURL(title, query):
 		if date == "":
 			date =  "0001"
 	except:
-		re.sub('[^0-9]', '', MOVIE_INFO.split('Land/Jahr: ')[1].split(':')[0])
+		date = re.sub('[^0-9]', '', MOVIE_INFO.split('Land/Jahr: ')[1].split(':')[0])
 		if date == "":
 			date =  "0001"
 
