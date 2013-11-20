@@ -8,7 +8,7 @@ requests.utils imports from here, so be careful with imports.
 
 import time
 import collections
-from .compat import cookielib, urlparse, Morsel
+from .compat import cookielib, urlparse, urlunparse, Morsel
 
 try:
     import threading
@@ -45,7 +45,18 @@ class MockRequest(object):
         return self.get_host()
 
     def get_full_url(self):
-        return self._r.url
+        # Only return the response's URL if the user hadn't set the Host
+        # header
+        if not self._r.headers.get('Host'):
+            return self._r.url
+        # If they did set it, retrieve it and reconstruct the expected domain
+        host = self._r.headers['Host']
+        parsed = urlparse(self._r.url)
+        # Reconstruct the URL as we expect it
+        return urlunparse([
+            parsed.scheme, host, parsed.path, parsed.params, parsed.query,
+            parsed.fragment
+        ])
 
     def is_unverifiable(self):
         return True
@@ -73,6 +84,10 @@ class MockRequest(object):
     @property
     def origin_req_host(self):
         return self.get_origin_req_host()
+
+    @property
+    def host(self):
+        return self.get_host()
 
 
 class MockResponse(object):
@@ -103,6 +118,9 @@ def extract_cookies_to_jar(jar, request, response):
     :param request: our own requests.Request object
     :param response: urllib3.HTTPResponse object
     """
+    if not (hasattr(response, '_original_response') and
+            response._original_response):
+        return
     # the _original_response field is the wrapped httplib.HTTPResponse object,
     req = MockRequest(request)
     # pull out the HTTPMessage with the headers and put it in the mock:
@@ -385,15 +403,21 @@ def morsel_to_cookie(morsel):
     return c
 
 
-def cookiejar_from_dict(cookie_dict, cookiejar=None):
+def cookiejar_from_dict(cookie_dict, cookiejar=None, overwrite=True):
     """Returns a CookieJar from a key/value dictionary.
 
     :param cookie_dict: Dict of key/values to insert into CookieJar.
+    :param cookiejar: (optional) A cookiejar to add the cookies to.
+    :param overwrite: (optional) If False, will not replace cookies
+        already in the jar with new ones.
     """
     if cookiejar is None:
         cookiejar = RequestsCookieJar()
 
     if cookie_dict is not None:
+        names_from_jar = [cookie.name for cookie in cookiejar]
         for name in cookie_dict:
-            cookiejar.set_cookie(create_cookie(name, cookie_dict[name]))
+            if overwrite or (name not in names_from_jar):
+                cookiejar.set_cookie(create_cookie(name, cookie_dict[name]))
+
     return cookiejar

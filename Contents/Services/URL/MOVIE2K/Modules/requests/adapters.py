@@ -11,18 +11,20 @@ and maintain connections.
 import socket
 
 from .models import Response
-from .packages.urllib3.poolmanager import PoolManager, ProxyManager
+from .packages.urllib3.poolmanager import PoolManager, proxy_from_url
 from .packages.urllib3.response import HTTPResponse
+from .packages.urllib3.util import Timeout as TimeoutSauce
 from .compat import urlparse, basestring, urldefrag, unquote
 from .utils import (DEFAULT_CA_BUNDLE_PATH, get_encoding_from_headers,
-                    prepend_scheme_if_needed, get_auth_from_url)
+                    except_on_missing_scheme, get_auth_from_url)
 from .structures import CaseInsensitiveDict
 from .packages.urllib3.exceptions import MaxRetryError
 from .packages.urllib3.exceptions import TimeoutError
 from .packages.urllib3.exceptions import SSLError as _SSLError
 from .packages.urllib3.exceptions import HTTPError as _HTTPError
+from .packages.urllib3.exceptions import ProxyError as _ProxyError
 from .cookies import extract_cookies_to_jar
-from .exceptions import ConnectionError, Timeout, SSLError
+from .exceptions import ConnectionError, Timeout, SSLError, ProxyError
 from .auth import _basic_auth_str
 
 DEFAULT_POOLBLOCK = False
@@ -71,6 +73,7 @@ class HTTPAdapter(BaseAdapter):
                  pool_block=DEFAULT_POOLBLOCK):
         self.max_retries = max_retries
         self.config = {}
+        self.proxy_manager = {}
 
         super(HTTPAdapter, self).__init__()
 
@@ -184,7 +187,7 @@ class HTTPAdapter(BaseAdapter):
     def get_connection(self, url, proxies=None):
         """Returns a urllib3 connection for the given URL. This should not be
         called from user code, and is only exposed for use when subclassing the
-        :class:`HTTPAdapter <reqeusts.adapters.HTTPAdapter>`.
+        :class:`HTTPAdapter <requests.adapters.HTTPAdapter>`.
 
         :param url: The URL to connect to.
         :param proxies: (optional) A Requests-style dictionary of proxies used on this request.
@@ -193,8 +196,15 @@ class HTTPAdapter(BaseAdapter):
         proxy = proxies.get(urlparse(url.lower()).scheme)
 
         if proxy:
-            proxy = prepend_scheme_if_needed(proxy, urlparse(url.lower()).scheme)
-            conn = ProxyManager(self.poolmanager.connection_from_url(proxy))
+            except_on_missing_scheme(proxy)
+            proxy_headers = self.proxy_headers(proxy)
+
+            if not proxy in self.proxy_manager:
+                self.proxy_manager[proxy] = proxy_from_url(
+                                                proxy,
+                                                proxy_headers=proxy_headers)
+
+            conn = self.proxy_manager[proxy].connection_from_url(url)
         else:
             conn = self.poolmanager.connection_from_url(url.lower())
 
@@ -211,8 +221,8 @@ class HTTPAdapter(BaseAdapter):
     def request_url(self, request, proxies):
         """Obtain the url to use when making the final request.
 
-        If the message is being sent through a proxy, the full URL has to be
-        used. Otherwise, we should only use the path portion of the URL.
+        If the message is being sent through a HTTP proxy, the full URL has to
+        be used. Otherwise, we should only use the path portion of the URL.
 
         This should not be called from user code, and is only exposed for use
         when subclassing the
@@ -222,9 +232,10 @@ class HTTPAdapter(BaseAdapter):
         :param proxies: A dictionary of schemes to proxy URLs.
         """
         proxies = proxies or {}
-        proxy = proxies.get(urlparse(request.url).scheme)
+        scheme = urlparse(request.url).scheme.lower()
+        proxy = proxies.get(scheme)
 
-        if proxy:
+        if proxy and scheme != 'https':
             url, _ = urldefrag(request.url)
         else:
             url = request.path_url
@@ -232,8 +243,9 @@ class HTTPAdapter(BaseAdapter):
         return url
 
     def add_headers(self, request, **kwargs):
-        """Add any headers needed by the connection. Currently this adds a
-        Proxy-Authorization header.
+        """Add any headers needed by the connection. As of v2.0 this does
+        nothing by default, but is left for overriding by users that subclass
+        the :class:`HTTPAdapter <requests.adapters.HTTPAdapter>`.
 
         This should not be called from user code, and is only exposed for use
         when subclassing the
@@ -242,12 +254,22 @@ class HTTPAdapter(BaseAdapter):
         :param request: The :class:`PreparedRequest <PreparedRequest>` to add headers to.
         :param kwargs: The keyword arguments from the call to send().
         """
-        proxies = kwargs.get('proxies', {})
+        pass
 
-        if proxies is None:
-            proxies = {}
+    def proxy_headers(self, proxy):
+        """Returns a dictionary of the headers to add to any request sent
+        through a proxy. This works with urllib3 magic to ensure that they are
+        correctly sent to the proxy, rather than in a tunnelled request if
+        CONNECT is being used.
 
-        proxy = proxies.get(urlparse(request.url).scheme)
+        This should not be called from user code, and is only exposed for use
+        when subclassing the
+        :class:`HTTPAdapter <requests.adapters.HTTPAdapter>`.
+
+        :param proxies: The url of the proxy being used for this request.
+        :param kwargs: Optional additional keyword arguments.
+        """
+        headers = {}
         username, password = get_auth_from_url(proxy)
 
         if username and password:
@@ -255,8 +277,10 @@ class HTTPAdapter(BaseAdapter):
             # to decode them.
             username = unquote(username)
             password = unquote(password)
-            request.headers['Proxy-Authorization'] = _basic_auth_str(username,
-                                                                     password)
+            headers['Proxy-Authorization'] = _basic_auth_str(username,
+                                                             password)
+
+        return headers
 
     def send(self, request, stream=False, timeout=None, verify=True, cert=None, proxies=None):
         """Sends PreparedRequest object. Returns Response object.
@@ -265,7 +289,7 @@ class HTTPAdapter(BaseAdapter):
         :param stream: (optional) Whether to stream the request content.
         :param timeout: (optional) The timeout on the request.
         :param verify: (optional) Whether to verify SSL certificates.
-        :param vert: (optional) Any user-provided SSL certificate to be trusted.
+        :param cert: (optional) Any user-provided SSL certificate to be trusted.
         :param proxies: (optional) The proxies dictionary to apply to the request.
         """
 
@@ -273,9 +297,14 @@ class HTTPAdapter(BaseAdapter):
 
         self.cert_verify(conn, request.url, verify, cert)
         url = self.request_url(request, proxies)
-        self.add_headers(request, proxies=proxies)
+        self.add_headers(request)
 
         chunked = not (request.body is None or 'Content-Length' in request.headers)
+
+        if stream:
+            timeout = TimeoutSauce(connect=timeout)
+        else:
+            timeout = TimeoutSauce(connect=timeout, read=timeout)
 
         try:
             if not chunked:
@@ -325,6 +354,9 @@ class HTTPAdapter(BaseAdapter):
 
         except MaxRetryError as e:
             raise ConnectionError(e)
+
+        except _ProxyError as e:
+            raise ProxyError(e)
 
         except (_SSLError, _HTTPError) as e:
             if isinstance(e, _SSLError):
