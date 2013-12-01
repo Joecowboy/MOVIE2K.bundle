@@ -3,7 +3,7 @@
 		"id": "version",
 		"type": "enum",
 		"label": "Version",
-		"values": ["1.7.1"],
+		"values": ["1.7.5"],
 		"default": "1.7.5"
 	},
 	{
