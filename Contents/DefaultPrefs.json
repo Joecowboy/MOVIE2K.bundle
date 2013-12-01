@@ -4,7 +4,7 @@
 		"type": "enum",
 		"label": "Version",
 		"values": ["1.7.1"],
-		"default": "1.7.1"
+		"default": "1.7.5"
 	},
 	{
 		"id": "video_resolution",
@@ -62,7 +62,7 @@
 		"label": "Use Description as Title",
 		"values": [
 			"Disabled",
-			"Enabled",
+			"Enabled"
 		],
 		"default": "Disabled" 
 	},
@@ -72,7 +72,7 @@
 		"label": "Play Error Video",
 		"values": [
 			"Disabled",
-			"Enabled",
+			"Enabled"
 		],
 		"default": "Enabled" 
 	},
@@ -82,7 +82,7 @@
 		"label": "Top Pages Displayed",
 		"values": [
 			"Disabled",
-			"Enabled",
+			"Enabled"
 		],
 		"default": "Disabled" 
 	},
@@ -92,7 +92,7 @@
 		"label": "Adult Content",
 		"values": [
 			"Disabled",
-			"Enabled",
+			"Enabled"
 		],
 		"default": "Disabled" 
 	},
@@ -102,7 +102,7 @@
 		"label": "Parental Lock",
 		"values": [
 			"Disabled",
-			"Enabled",
+			"Enabled"
 		],
 		"default": "Disabled" 
 	},
@@ -146,7 +146,7 @@
 		"label": "Connect to Tor Network",
 		"values": [
 			"Disabled",
-			"Enabled",
+			"Enabled"
 		],
 		"default": "Disabled" 
 	},
@@ -156,7 +156,7 @@
 		"label": "Get New Tor IP Address",
 		"values": [
 			"Disabled",
-			"Enabled",
+			"Enabled"
 		],
 		"default": "Disabled" 
 	},
@@ -166,7 +166,7 @@
 		"label": "Generate Tor Hashed Password",
 		"values": [
 			"Disabled",
-			"Enabled",
+			"Enabled"
 		],
 		"default": "Disabled" 
 	},
@@ -183,9 +183,21 @@
 		"label": "Debug Options",
 		"values": [
 			"Disabled",
-			"Enabled",
+			"Enabled"
 		],
 		"default": "Disabled" 
+	},
+	{
+		"id": "linktype",
+		"type": "enum",
+		"label": "Link Type",
+		"values": [
+			"1",
+			"2",
+			"3",
+			"4"
+		],
+		"default": "" 
 	},
 	{
 		"id": "hostoverride",

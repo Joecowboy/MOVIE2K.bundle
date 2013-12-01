@@ -1,12 +1,28 @@
 ####################################################################################################
 # Setting up imports
 
+import inspect, os, sys
+try:
+	path = os.getcwd().split("?\\")[1].split('Plug-in Support')[0]+"Plug-ins\MOVIE2K.bundle\Contents\Services\URL\MOVIE2K\Modules"
+except:
+	path = os.getcwd().split("Plug-in Support")[0]+"Plug-ins/MOVIE2K.bundle/Contents/Services/URL/MOVIE2K/Modules"
+sys.path.append(path)
+
+try:
+	import requests
+except:
+	import requests25 as requests
+
 import simplejson
 import demjson
 import urllib
 import urllib2
 import re
-import os
+
+from OCR import GetImgValue
+from ordereddict import OrderedDict
+
+CAPTCHA_DATA = 'captcha.data.json'
 
 
 ####################################################################################################
@@ -40,9 +56,12 @@ def JsonStruct(fp, ParentalPassword, GetVersion):
 	jsondata = jsondata + '{2 : {host: "180upload", url: "",  HostPage: "", page: "", adcopy_challenge: "", response: "", UserAgent: "", cookies: "", captchacookies: "", thumb: ""}},\n'
 	jsondata = jsondata + '{3 : {host: "Clicktoview", url: "", HostPage: "", page: "", recaptcha_challenge_field: "", response: "", UserAgent: "", cookies: "", captchacookies: "", thumb: ""}},\n'
 	jsondata = jsondata + '{4 : {host: "Fileloby", url: "",  HostPage: "", page: "", adcopy_challenge: "", response: "", UserAgent: "", cookies: "", captchacookies: "", thumb: ""}},\n'
-	jsondata = jsondata + '{5 : {host: "Vidbux", url: "",  HostPage: "", page: "", adcopy_challenge: "", response: "", UserAgent: "", cookies: "", captchacookies: "", thumb: ""}},\n'
-	jsondata = jsondata + '{6 : {host: "Vidplay", url: "",  HostPage: "", page: "", adcopy_challenge: "", response: "", UserAgent: "", cookies: "", captchacookies: "", thumb: ""}},\n'
-	jsondata = jsondata + '{7 : {host: "Vidxden", url: "",  HostPage: "", page: "", adcopy_challenge: "", response: "", UserAgent: "", cookies: "", captchacookies: "", thumb: ""}}\n'
+	jsondata = jsondata + '{5 : {host: "Grifthost", url: "", HostPage: "", page: "", recaptcha_challenge_field: "", response: "", UserAgent: "", cookies: "", captchacookies: "", thumb: ""}},\n'
+	jsondata = jsondata + '{6 : {host: "Lemuploads", url: "", HostPage: "", page: "", recaptcha_challenge_field: "", response: "", UserAgent: "", cookies: "", captchacookies: "", thumb: ""}},\n'
+	jsondata = jsondata + '{7 : {host: "Megarelease", url: "", HostPage: "", page: "", recaptcha_challenge_field: "", response: "", UserAgent: "", cookies: "", captchacookies: "", thumb: ""}},\n'
+	jsondata = jsondata + '{8 : {host: "Vidbux", url: "",  HostPage: "", page: "", adcopy_challenge: "", response: "", UserAgent: "", cookies: "", captchacookies: "", thumb: ""}},\n'
+	jsondata = jsondata + '{9 : {host: "Vidplay", url: "",  HostPage: "", page: "", adcopy_challenge: "", response: "", UserAgent: "", cookies: "", captchacookies: "", thumb: ""}},\n'
+	jsondata = jsondata + '{10 : {host: "Vidxden", url: "",  HostPage: "", page: "", adcopy_challenge: "", response: "", UserAgent: "", cookies: "", captchacookies: "", thumb: ""}}\n'
 	jsondata = jsondata + ']'
 	
 	JsonWrite(fp=fp, jsondata=jsondata)
@@ -116,7 +135,7 @@ def StripArray(arraystrings):
 
 ####################################################################################################
 def ScriptConvert(script):
-	DEBUG(script)
+	Log(script)
 	try:
 		parameters = script.split(";',")
 		CKtable = int(parameters[1].split(',')[0])
@@ -129,7 +148,7 @@ def ScriptConvert(script):
 	p = parameters[0].split('return p}')[1].replace("\\", "")
 
 	if CKtable <= 36:
-		table = ['0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z','10','11','12','13','14','15','16','17','18','19','1a','1b','1c','1d','1e','1f','1g','1h','1i','1j','1k','1l','1m','1n','1o','1p','1q','1r','1s','1t','1u','1v','1w','1x','1y','1z','20','21','22','23','24','25','26','27','28','29','2a','2b','2c','2d','2e','2f','2g','2h','2i','2j','2k','2l','2m','2n','2o','2p','2q','2r','2s','2t','2u','2v','2w','2x','2y','2z','30','31','32','33','34','35','36','37','38','39','3a','3b','3c','3d','3e','3f','3g']
+		table = ['0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z','10','11','12','13','14','15','16','17','18','19','1a','1b','1c','1d','1e','1f','1g','1h','1i','1j','1k','1l','1m','1n','1o','1p','1q','1r','1s','1t','1u','1v','1w','1x','1y','1z','20','21','22','23','24','25','26','27','28','29','2a','2b','2c','2d','2e','2f','2g','2h','2i','2j','2k','2l','2m','2n','2o','2p','2q','2r','2s','2t','2u','2v','2w','2x','2y','2z','30','31','32','33','34','35','36','37','38','39','3a','3b','3c','3d','3e','3f','3g','3h','3i','3j','3k','3l','3m','3n','3o','3p','3q','3r','3s','3t','3u','3v','3w','3x','3y','3z','40','41','42','43','44','45','46','47','48','49']
 	elif CKtable <= 62:
 		table = ['0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z','A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z','10','11','12','13','14','15','16','17','18','19','1a','1b','1c','1d','1e','1f','1g','1h','1i','1j','1k','1l','1m','1n','1o','1p','1q','1r','1s','1t','1u','1v','1w','1x','1y','1z','1A','1B','1C','1D','1E','1F','1G','1H','1I','1J','1K','1L','1M','1N','1O','1P','1Q','1R','1S','1T','1U','1V','1W','1X','1Y','1Z','20','21','22','23','24','25','26','27','28','29','2a','2b','2c','2d','2e','2f','2g','2h','2i','2j','2k','2l','2m','2n','2o','2p','2q','2r','2s','2t','2u','2v','2w','2x','2y','2z','2A','2B','2C','2D','2E','2F','2G','2H','2I','2J','2K','2L','2M','2N','2O','2P','2Q','2R','2S','2T','2U','2V','2W','2X','2Y','2Z','30','31','32','34','35','36','37','38','39','3a','3b','3c','3d','3e','3f','3g','3h','3i','3j','3k','3l','3m','3n','3o','3p','3q','3r','3s','3t','3u','3v','3w','3x','3y','3z','3A','3B','3C','3D','3E','3F','3G','3H','3I','3J','3K','3L','3M','3N','3M','3O','3P','3Q','3R','3S','3T','3U','3V','3W','3X','3Y','3Z','40','41','42','43','44','45','46','47','48','49','4a','4b','4c','4d','4e','4f','4g','4h','4i','4j','4k','4l','4m','4n','4o','4p','4q','4r','4s','4t','4u','4v','4w','4x','4y','4z']
 
@@ -137,7 +156,7 @@ def ScriptConvert(script):
 		c = c - 1
 		if k[c] != "":
 			p = re.sub(r'\b'+table[c]+r'\b', k[c], p)
-	DEBUG(p)
+	Log(p)
 	try:
 		try:
 			try:
@@ -158,9 +177,9 @@ def ScriptConvert(script):
 						p = p.split(VideoKeyVar)[1].split('="')[1].split('"')[0]
 		except:			
 			try:
-				p = p.split("file':'")[1].split("'")[0]
-			except:
 				p = p.split('file:"')[1].split('"')[0]
+			except:
+				p = p.split("file':'")[1].split("'")[0]
 	except:
 		try:
 			try:
@@ -173,7 +192,7 @@ def ScriptConvert(script):
 			except:
 				p = p.split("clip:{url:'")[1].split("'")[0]
 		
-	DEBUG(p)
+	Log(p)
 	return p
 
 
@@ -348,7 +367,7 @@ def decodeurl(encodedurl):
     tempp4="1071045098811121041051095255102103119"
     strlen = len(encodedurl)
     temp5=int(encodedurl[strlen-4:strlen],10)
-    DEBUG(temp5)
+    Log(temp5)
     encodedurl=encodedurl[0:strlen-4]
     strlen = len(encodedurl)
     temp6=""
@@ -412,3 +431,331 @@ def CharConvert(w,i,s,e):
 			ll1I = 0
 
 	return ''.join(l1ll)
+
+
+##################################################################################################################
+def SecondButtonPress(url, HostPage, page=None, elm="", elm2="", wform=0, addkey=None, removekey=None, cookies={}, wait=0, captchakey=None, captchaimg=None, captchacookies={}, split=None, GetUserAgent=None):
+
+	domain = HostPage.split('/')[2]
+	payload = OrderedDict()
+	headers = OrderedDict()
+	headers['Accept'] = 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
+	headers['Accept-Charset'] = 'ISO-8859-1,utf-8;q=0.7,*;q=0.3'
+	headers['Accept-Encoding'] = 'gzip,deflate,sdch'
+	headers['Accept-Language'] = 'en-US,en;q=0.8'
+	headers['Cache-Control'] = 'max-age=0'
+	headers['Connection'] = 'keep-alive'
+	headers['Referer'] = url
+	if GetUserAgent == None:
+		headers['User-Agent'] = UserAgent
+	else:
+		headers['User-Agent'] = GetUserAgent
+	files = {}
+
+	session = requests.session()
+	requests.utils.add_dict_to_cookiejar(session.cookies, cookies)
+
+	if page != None:
+		s = page
+	else:
+		s = session.get(HostPage, headers=headers)
+
+	try:
+		form = HTML.ElementFromString(s.content)
+	except:
+		form = HTML.ElementFromString(s)
+
+	try:
+		post = form.xpath('//'+elm+'form')[wform].get('method')
+	
+		if len(form.xpath('//'+elm+'form[@method="'+post+'"]/'+elm2+'input')) != 0:
+			for input in form.xpath('//'+elm+'form[@method="'+post+'"]/'+elm2+'input'):
+				if input.get('name') != None:
+					key = input.get('name')
+					value = input.get('value')
+					if key != 'method_premium':
+						if not payload.has_key(key):
+							payload[key] = [value]
+						else:
+							payload[key].append(value)
+		else:
+			for input in form.xpath('//input'):
+				if input.get('name') != None:
+					key = input.get('name')
+					value = input.get('value')
+					if key != 'method_premium':
+						if not payload.has_key(key):
+							payload[key] = [value]
+						else:
+							payload[key].append(value)
+
+		if captchakey != None:
+			try:
+				payload[captchakey] = GetImgValue(url=captchaimg, HostPage=HostPage, UserAgent=UserAgent, cookies=captchacookies, split=split)
+			except:
+				payload[captchakey] = "Processing Issue"
+		if addkey != None:
+			payload.update(addkey)
+		if removekey != None:
+			for key in removekey:
+				try:
+					del payload[key]
+				except KeyError:
+					pass
+		Log(payload)	
+
+		if wait != 0:
+			#wait required
+			time.sleep(wait)
+
+		headers['Content-Type'] = 'application/x-www-form-urlencoded'
+		headers['Origin'] = 'http://'+domain
+		headers['Referer'] = HostPage
+
+		formaction = form.xpath('//'+elm+'form')[wform].get('action')
+		if formaction != None and formaction != "":
+			if formaction.split('/')[0] == 'http:':
+				HostPage = formaction
+			elif len(formaction.split('/')) == 2:
+				HostPage = 'http://' + HostPage.split('/')[2] + formaction
+			elif len(formaction.split('/')) == 1:
+				HostPage = HostPage.rpartition('/')[0] + '/' + formaction
+
+		r = session.post(HostPage, data=payload, headers=headers, files=files, allow_redirects=True)
+		r.raise_for_status()
+		r.cookies = session.cookies
+		return r
+	except:
+		return s
+
+
+####################################################################################################
+def SoftCaptcha(VideoPage):
+	captchavalue1 = [chr(int(VideoPage.split("<span style='position:absolute;padding-left:")[1].split('#')[1].split(';')[0])), chr(int(VideoPage.split("<span style='position:absolute;padding-left:")[2].split('#')[1].split(';')[0])), chr(int(VideoPage.split("<span style='position:absolute;padding-left:")[3].split('#')[1].split(';')[0])), chr(int(VideoPage.split("<span style='position:absolute;padding-left:")[4].split('#')[1].split(';')[0]))] 
+	px1 = [int(VideoPage.split("<span style='position:absolute;padding-left:")[1].split('px')[0]), int(VideoPage.split("<span style='position:absolute;padding-left:")[2].split('px')[0]), int(VideoPage.split("<span style='position:absolute;padding-left:")[3].split('px')[0]), int(VideoPage.split("<span style='position:absolute;padding-left:")[4].split('px')[0])]
+	px2 = [int(VideoPage.split("<span style='position:absolute;padding-left:")[1].split('px')[0]), int(VideoPage.split("<span style='position:absolute;padding-left:")[2].split('px')[0]), int(VideoPage.split("<span style='position:absolute;padding-left:")[3].split('px')[0]), int(VideoPage.split("<span style='position:absolute;padding-left:")[4].split('px')[0])]
+	px2.sort()
+	captchavalue = ""
+	i = 0
+	k = 0
+	while i < 4:
+		while k < 4:
+			if px2[i] == px1[k]:
+				captchavalue = captchavalue + captchavalue1[k]
+			k += 1
+		k = 0
+		i += 1
+	Log("captchavalue: "+captchavalue)
+
+	return captchavalue
+
+
+####################################################################################################
+def SolveMediaCaptcha(url, HostPage, Host, elm="", elm2="", wform=0, wScript=0, RecaptchaResponse=0, SessionCookies=None):
+
+	if RecaptchaResponse == 0 or RecaptchaResponse == 1:
+		headers = {'User-Agent': UserAgent, 'Referer': url}
+		try:
+			session1 = requests.session()
+			if SessionCookies != None:
+				session1.cookies = SessionCookies
+			OpenUrl = session1.get(HostPage, headers=headers)
+			VideoInfo = HTML.ElementFromString(OpenUrl.content).xpath('//noscript/iframe')[wScript].get('src')
+			Log(VideoInfo)
+			HostPageHTML = re.sub("\r\n\t", "", String.Quote(OpenUrl.content, usePlus=True))
+			cookies = CookieDict(cookies=session1.cookies)
+
+			session = requests.session()
+			headers['Referer'] = HostPage
+			req = session.get(VideoInfo, headers=headers)
+			captchacookies = CookieDict(cookies=session.cookies)
+			VideoSRC = HTML.ElementFromString(req.content).xpath('//div[@id="adcopy-outer"]/table/tr')
+			try:
+				VideoID = VideoSRC[0].xpath('./td/img')[0].get('src')
+			except:
+				VideoID = VideoSRC[0].xpath('./td/div/iframe')[0].get('src')
+			adcopy_challenge = VideoID.split('=')[1]
+			captchaimg = "http://api.solvemedia.com" + VideoID
+		except:
+			adcopy_challenge = ""
+			HostPageHTML = ""
+			captchaimg = "http://googlechromesupportnow.com/wp-content/uploads/2012/06/Installation-103-error-in-Chrome.png"
+
+	if RecaptchaResponse == 0:
+		VideoPage = SecondButtonPress(url=url, HostPage=HostPage, page=OpenUrl, elm=elm, elm2=elm2, wform=wform, cookies=cookies, addkey={"adcopy_challenge": adcopy_challenge, "referer": url}, captchakey="adcopy_response", captchaimg=captchaimg, captchacookies=captchacookies, split='TOP')
+	elif RecaptchaResponse == 1:
+		hosts = LoadData(fp=CAPTCHA_DATA)
+
+		i = 1
+		for gethost in hosts:
+			if gethost[i]['host'] == Host:
+				gethost[i]['url'] = url
+				gethost[i]['HostPage'] = HostPage
+				gethost[i]['page'] = HostPageHTML
+				gethost[i]['adcopy_challenge'] = adcopy_challenge
+				gethost[i]['UserAgent'] = UserAgent
+				gethost[i]['captchacookies'] = captchacookies
+				gethost[i]['thumb'] = captchaimg
+				gethost[i]['cookies'] = cookies
+				break
+			else:
+				i += 1
+
+		JsonWrite(fp=CAPTCHA_DATA, jsondata=hosts)
+
+		return True
+	elif RecaptchaResponse == 2:
+		hosts = LoadData(fp=CAPTCHA_DATA)
+		Host = Host.replace("_2", "")
+
+		i = 1
+		for gethost in hosts:
+			if gethost[i]['host'] == Host:
+				RecaptchaResponse = gethost[i]['response']
+				adcopy_challenge = gethost[i]['adcopy_challenge']
+				VideoInfo = gethost[i]['page']
+				VideoInfo = String.Unquote(VideoInfo, usePlus=True)
+				GetUserAgent = gethost[i]['UserAgent']
+				cookies = gethost[i]['cookies']
+				break
+			else:
+				i += 1
+
+		VideoPage = SecondButtonPress(url=url, HostPage=HostPage, page=VideoInfo, elm=elm, elm2=elm2, wform=wform, cookies=cookies, addkey={"adcopy_challenge": adcopy_challenge, "adcopy_response": RecaptchaResponse, "referer": url}, GetUserAgent=GetUserAgent)
+
+	return VideoPage
+
+
+####################################################################################################
+def GoogleCaptcha(url, HostPage, Host, VideoInfo=None, RecaptchaResponse=0, cookies={}):
+
+	if RecaptchaResponse == 0 or RecaptchaResponse == 1:
+		savecookies = CookieDict(cookies=cookies)
+		try:
+			GoogleImgLink = "http://www.google.com/recaptcha/api/image?c="
+			Googleurl = VideoInfo.split('<div id="recaptcha_widget"')[1].split('<script type="text/javascript" src="')[1].split(' ">')[0]
+			headers = {'User-Agent': UserAgent}
+			VideoID = requests.get(Googleurl, headers=headers)
+			GoogleKey = VideoID.content.split("challenge : '")[1].split("'")[0]
+			captchaimg = GoogleImgLink + GoogleKey
+			HostPageHTML = re.sub("\r\n\t", "", String.Quote(VideoInfo, usePlus=True))
+		except:
+			GoogleKey = ""
+			HostPageHTML = ""
+			captchaimg = "http://googlechromesupportnow.com/wp-content/uploads/2012/06/Installation-103-error-in-Chrome.png"
+
+	if RecaptchaResponse == 0:
+		VideoPage = SecondButtonPress(url=url, HostPage=HostPage, page=VideoInfo, cookies=savecookies, addkey={"recaptcha_challenge_field": GoogleKey, "referer": url, "down_direct": 1, "method_premium": ""}, captchakey="recaptcha_response_field", captchaimg=captchaimg, split='LR')
+
+	elif RecaptchaResponse == 1:
+		hosts = LoadData(fp=CAPTCHA_DATA)
+
+		i = 1
+		for gethost in hosts:
+			if gethost[i]['host'] == Host:
+				gethost[i]['url'] = url
+				gethost[i]['HostPage'] = HostPage
+				gethost[i]['page'] = HostPageHTML
+				gethost[i]['recaptcha_challenge_field'] = GoogleKey
+				gethost[i]['UserAgent'] = UserAgent
+				gethost[i]['thumb'] = captchaimg
+				gethost[i]['cookies'] = savecookies
+				break
+			else:
+				i += 1
+
+		JsonWrite(fp=CAPTCHA_DATA, jsondata=hosts)
+
+		return True
+	elif RecaptchaResponse == 2:
+		hosts = LoadData(fp=CAPTCHA_DATA)
+		Host = Host.replace("_2", "")
+
+		i = 1
+		for gethost in hosts:
+			if gethost[i]['host'] == Host:
+				RecaptchaResponse = gethost[i]['response']
+				VideoInfo = gethost[i]['page']
+				VideoInfo = String.Unquote(VideoInfo, usePlus=True)
+				GoogleKey = gethost[i]['recaptcha_challenge_field']
+				GetUserAgent = gethost[i]['UserAgent']
+				cookies = gethost[i]['cookies']
+				break
+			else:
+				i += 1
+
+		VideoPage = SecondButtonPress(url=url, HostPage=HostPage, page=VideoInfo, cookies=cookies, addkey={"recaptcha_challenge_field": GoogleKey, "recaptcha_response_field": RecaptchaResponse, "referer": url, "down_direct": 1, "method_premium": ""}, GetUserAgent=GetUserAgent)
+		
+	return VideoPage
+
+
+####################################################################################################
+def IncapsulaScript(DeString):
+	b = DeString.split('b="')[1].split('"')[0]
+	z = ""
+
+	for i in xrange(0, len(b)-1, 2):
+		z = z + chr(int(b[i:i+2], 16))
+	URL = "http://billionuploads.com" + z.split('"GET","')[1].split('"')[0]
+
+	return URL
+
+
+####################################################################################################
+def CookieDict(cookies):
+	savecookies = {}
+	for key, value in cookies.items():
+		savecookies[key] = value
+
+	return savecookies
+
+
+####################################################################################################
+def ErrorMessage(Host, LogError=0, InputError="", ErrorType=""):
+
+	if LogError == 1:
+		InputError = "Failed!  Host has changed code base of site!"
+	elif LogError == 2:
+		InputError = "Form Process issue -- Returns you to same page"
+	elif LogError == 3:
+		InputError = "Site is currently offline"
+	elif LogError == 4:
+		InputError = "Disabled do to recaptcha text enter"
+	elif LogError == 5:
+		InputError = "Disabled do to Chunked MP4"
+	elif LogError == 6:
+		InputError = "May Not work do to country restrictions"
+	elif LogError == 7:
+		InputError = "Not in list!!!"
+	elif LogError == 8:
+		InputError = "HTTP Steaming f4m not supported"
+	elif LogError == 9:
+		InputError = "Incorrect IP. Please refresh!!"
+
+	Log(Host+" -- " + InputError)
+
+	return ErrorVideo(ErrorType=ErrorType)
+
+
+####################################################################################################
+def ErrorVideo(ErrorType):
+
+	if VideoError == "Enabled":
+		if ErrorType == "":
+			VideoMessage = "http://d3macfshcnzosd.cloudfront.net/010871413_main_l.mp4"
+		elif ErrorType == "HostDown":
+			VideoMessage = R("Host_Down.mp4")
+		elif ErrorType == "VideoRemoved":
+			VideoMessage = R("Video_Removed.mp4")
+		elif ErrorType == "WrongIP":
+			VideoMessage = R("Wrong_IP.mp4")
+		elif ErrorType == "WrongCaptcha":
+			VideoMessage = R("Wrong_Captcha.mp4")
+		elif ErrorType == "UploadError":
+			VideoMessage = R("Host_Down.mp4")
+		elif ErrorType == "GeolocationLockout":
+			VideoMessage = R("Host_Down.mp4")
+	else:
+		VideoMessage = "Error: Problem with getting Video File to play!"
+
+	return VideoMessage

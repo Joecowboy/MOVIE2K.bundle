@@ -20,17 +20,15 @@ import socket
 import httplib
 import random
 import HostServices
-from HostServices import StripArray
-from HostServices import LoadData
-from HostServices import JsonWrite
-
 import subprocess
-PROXIFIER_PROCESS = None
 
 # Import SocksiPy
 import sockschain as socks
-def DEBUG(msg): Log(msg)
-socks.DEBUG = DEBUG
+socks.DEBUG = Log
+
+from HostServices import StripArray
+from HostServices import LoadData
+from HostServices import JsonWrite
 
 # Random User Agent
 UserAgent = ['Mozilla/4.0 (compatible; MSIE 5.5; Windows NT)', 'Opera/9.25 (Windows NT 6.0; U; ja)', 'Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 6.0)', 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.31 (KHTML, like Gecko) Chrome/26.0.1410.64 Safari/537.31', 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:20.0) Gecko/20100101 Firefox/20.0', 'Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.1; WOW64; Trident/6.0)', 'Mozilla/4.0 (compatible; MSIE 5.0; Windows 2000) Opera 6.01 [ja]', 'Mozilla/5.0 (Windows; U; Windows NT 5.0; ja-JP; m18) Gecko/20010131 Netscape6/6.01', 'Mozilla/5.0 (Macintosh; U; PPC Mac OS X; ja-jp) AppleWebKit/85.7 (KHTML, like Gecko) Safari/85.7']
@@ -41,19 +39,21 @@ Version = Prefs['version']
 
 # Set up Host Services
 HostServices.Version = Version
-HostServices.DEBUG = DEBUG
+HostServices.Log = Log
 HostServices.UserAgent = UserAgent[UserAgentNum]
+HostServices.HTML = HTML
 
-PREFIX         = "/video/movie2k"
-NAME           = "Movie2k"
-ART            = "art-default.jpg"
-ICON           = "icon-default.png"
-MOVIE2K_URL    = Prefs['movie2k_url']
-TOP_PAGES      = Prefs['toppages']
-HOST_COUNT     = Prefs['host_count']
-SWAP_TITLE     = Prefs['swaptitle']
-CAPTCHA_DATA   = "captcha.data.json"
-FAVORITES_DATA = "favorites.data.json"
+PREFIX            = "/video/movie2k"
+NAME              = "Movie2k"
+ART               = "art-default.jpg"
+ICON              = "icon-default.png"
+MOVIE2K_URL       = Prefs['movie2k_url']
+TOP_PAGES         = Prefs['toppages']
+HOST_COUNT        = Prefs['host_count']
+SWAP_TITLE        = Prefs['swaptitle']
+CAPTCHA_DATA      = "captcha.data.json"
+FAVORITES_DATA    = "favorites.data.json"
+PROXIFIER_PROCESS = None
 
 
 ####################################################################################################
@@ -168,7 +168,7 @@ def Movie2kLogin():
 
 	username = Prefs["username"]
 	password = Prefs["password"]
-	cookiejar = {"xxx2": "ok", "xxx": "ok", "domain": ".movie4k.to", "path": "/", "onlylanguage": "", "lang": "en"}
+	cookiejar = {"xxx2": "ok", "xxx": "ok", "onlylanguage": "", "lang": "en"}
 	Dict['_movie2k_uid'] = cookiejar
 	HTTP.Headers['Cookie'] = cookiejar
 
@@ -1607,7 +1607,7 @@ def TheMovieListings(title, page, date, dateadd, thumb, type, PageOfHosts, Host=
 				try:
 					duration = int(float(MOVIE_INFO.split('Length: ')[1].split(' minutes')[0])*60*1000)
 				except:
-					duration = int(float(re.sub('[^0-9]', '', MOVIE_INFO.split('Length: ')[1].split(' min.')[0]))*60*1000)
+					duration = int(float(re.sub('[^0-9]', '', MOVIE_INFO.split('Length: ')[1].split(' min')[0]))*60*1000)
 			except:
 				try:
 					duration = int(float(MOVIE_INFO.split('nge: ')[1].split(' Minuten')[0])*60*1000)
@@ -1771,8 +1771,9 @@ def TheMovieListings(title, page, date, dateadd, thumb, type, PageOfHosts, Host=
 
 						url = MOVIE_PAGE+"?title="+String.Quote(title, usePlus=True)+"&summary="+String.Quote(summary, usePlus=True)+"&show="+String.Quote(show, usePlus=True)+"&date="+String.Quote(str(date), usePlus=True)+"&thumb="+String.Quote(thumb, usePlus=True)+"&host="+Host+"&season="+str(season)+"&index="+str(index)+"&type="+String.Quote(type, usePlus=True)+"&genres="+String.Quote(genre, usePlus=True)+"&director="+String.Quote(director, usePlus=True)+"&actors="+String.Quote(actors, usePlus=True)+"&duration="+str(duration)+"&rating="+str(rating)+"&content_rating="+content_rating
 
-						if Host == '180upload' or Host == 'Clicktoview' or Host == 'Fileloby' or Host == 'Lemuploads' or Host == 'Vidbux' or Host == 'Vidplay' or Host == 'Vidxden':
+						if Host == '180upload' or Host == 'Clicktoview' or Host == 'Fileloby' or Host == 'Grifthost' or Host == 'Lemuploads' or Host == 'Megarelease' or Host == 'Vidbux' or Host == 'Vidplay' or Host == 'Vidxden':
 							show_update = "Click here if you want OCR to try and decode Captcha text."
+							show_title =  show_title +  " - [Uses Captcha]"
 							oc.add(DirectoryObject(key=Callback(CaptchaSection, title=title, page=page, date=date, thumb=thumb, type=type, summary=summary, directors=directors, guest_stars=guest_stars, genres=genres, duration=duration, rating=float(rating), season=season, index=index, show=show_update, content_rating=content_rating, source_title=source_title, url=url, Host=Host), title=show_title, thumb=Callback(GetThumb, url=thumb), summary=show))
 						else:
 							if type == 'TV Shows':
@@ -1866,6 +1867,7 @@ def CaptchaSection(title, page, date, thumb, type, summary, directors, guest_sta
 	rating = float(rating)
 	season = int(season)
 	index = int(index)
+	title = title
 
 	oc.add(DirectoryObject(key=Callback(RokuUsers, title="Special Instructions for Roku Users"), title="Special Instructions for Roku Users", thumb=INSTRUCTIONS_THUMB, summary="Click here to see special instructions necessary for Roku Users to input captcha text."))
 	if type == 'TV Shows':
