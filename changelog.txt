@@ -1,3 +1,5 @@
+[B]Version 1.7.6[/B]
+- Updated More hosts to support new error vids.  Also, fixed couple issues caused plugin to error out.
 [B]Version 1.7.5[/B]
 - Updating Host processing to support new error vids.  NOT TOTALLY DONE...  
 [B]Version 1.7.1[/B]

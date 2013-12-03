@@ -1468,7 +1468,7 @@ def SubGroupMoviePageAdd(title, page, date, dateadd, thumbck, type, summary):
 @route(PREFIX + '/TVandMovieHostPage')
 def SubMoviePageAdd(title, page, date, dateadd, thumbck, type):
 
-	oc = ObjectContainer(title2="PAGES OF "+HOST_COUNT+" HOSTS")
+	oc = ObjectContainer(title2=title+" - ["+HOST_COUNT+" HOSTS per Page]")
 
 	if page.split('/')[0] != "http:":
 		CURRENT_MOVIE2K_URL = MOVIE2K_URL
@@ -1557,7 +1557,7 @@ def SubMoviePageAdd(title, page, date, dateadd, thumbck, type):
 @route(PREFIX + '/TVandTheMovieListings')
 def TheMovieListings(title, page, date, dateadd, thumb, type, PageOfHosts, Host=None):
 
-	oc = ObjectContainer(title2="HOST INFORMATION")
+	oc = ObjectContainer(title2=title+" - [HOST VIDEO INFO]")
 
 	@parallelize
 	def GetMovieList(title=title, page=page, date=date, dateadd=dateadd, thumb=thumb, type=type, PageOfHosts=PageOfHosts, Host=Host):
@@ -1588,31 +1588,25 @@ def TheMovieListings(title, page, date, dateadd, thumb, type, PageOfHosts, Host=
 
 		if date == "N/A":
 			try:
-				date = re.sub('[^0-9]', '', MOVIE_INFO.split('Land/Year: ')[1])
+				date = re.sub('[^0-9]', '', MOVIE_INFO.split('Land/Year:')[1])
 				if date == "":
 					date =  "0001"
 			except:
-				date = re.sub('[^0-9]', '', MOVIE_INFO.split('Land/Jahr: ')[1])
+				date = re.sub('[^0-9]', '', MOVIE_INFO.split('Land/Jahr:')[1])
 				if date == "":
 					date =  "0001"
 
-		date = Datetime.ParseDate(date, "%Y")
-	
+		date = Datetime.ParseDate(date[:4], "%Y")
+
 		genres = []
 		genre = MOVIE_INFO.split('Genre:')[1].split('|')[0]
 		genres = StripArray(arraystrings=genre.split(','))
 
 		try:
 			try:
-				try:
-					duration = int(float(MOVIE_INFO.split('Length: ')[1].split(' minutes')[0])*60*1000)
-				except:
-					duration = int(float(re.sub('[^0-9]', '', MOVIE_INFO.split('Length: ')[1].split(' min')[0]))*60*1000)
+				duration = int(float(re.sub('[^0-9]', '', MOVIE_INFO.split('Length:')[1].split('min')[0]))*60*1000)
 			except:
-				try:
-					duration = int(float(MOVIE_INFO.split('nge: ')[1].split(' Minuten')[0])*60*1000)
-				except:
-					duration = int(float(MOVIE_INFO.split('nge: ')[1].split(' Minutes')[0])*60*1000)
+				duration = int(float(re.sub('[^0-9]', '', MOVIE_INFO.split('nge:')[1].split('Min')[0]))*60*1000)
 		except:
 			duration = None
 
@@ -1718,7 +1712,7 @@ def TheMovieListings(title, page, date, dateadd, thumb, type, PageOfHosts, Host=
 						Host = Listing[num].xpath("./td/a/img")[0].get('title').split(' ')[0].capitalize()
 					MOVIE_PAGE = Listing[num].xpath("./td/a")[0].get('href')
 					if MOVIE_PAGE.split('/')[0] != "http:":
-						MOVIE_PAGE = "http://" + MOVIE2K_URL + "/" + MOVIE_PAGE
+						MOVIE_PAGE = "http://" + CURRENT_MOVIE2K_URL + "/" + MOVIE_PAGE
 					if type == 'TV Shows':
 						DateAdded = dateadd
 						Quality = "DVDRip/BDRip"
@@ -1734,7 +1728,7 @@ def TheMovieListings(title, page, date, dateadd, thumb, type, PageOfHosts, Host=
 						Host = ScriptListing[out['sll']].split('title=\\"')[1].split('\\"')[0].split(' ')[0].capitalize()
 					MOVIE_PAGE = ScriptListing[out['sll']].split('href=\\"')[1].split('\\"')[0]
 					if MOVIE_PAGE.split('/')[0] != "http:":
-						MOVIE_PAGE = "http://" + MOVIE2K_URL + "/" + MOVIE_PAGE
+						MOVIE_PAGE = "http://" + CURRENT_MOVIE2K_URL + "/" + MOVIE_PAGE
 					if type == 'TV Shows':
 						DateAdded = dateadd
 						Quality = "DVDRip/BDRip"
@@ -1773,7 +1767,7 @@ def TheMovieListings(title, page, date, dateadd, thumb, type, PageOfHosts, Host=
 
 						if Host == '180upload' or Host == 'Clicktoview' or Host == 'Fileloby' or Host == 'Grifthost' or Host == 'Lemuploads' or Host == 'Megarelease' or Host == 'Vidbux' or Host == 'Vidplay' or Host == 'Vidxden':
 							show_update = "Click here if you want OCR to try and decode Captcha text."
-							show_title =  show_title +  " - [Uses Captcha]"
+							show_title = show_title +  " - [USES CAPTCHA]"
 							oc.add(DirectoryObject(key=Callback(CaptchaSection, title=title, page=page, date=date, thumb=thumb, type=type, summary=summary, directors=directors, guest_stars=guest_stars, genres=genres, duration=duration, rating=float(rating), season=season, index=index, show=show_update, content_rating=content_rating, source_title=source_title, url=url, Host=Host), title=show_title, thumb=Callback(GetThumb, url=thumb), summary=show))
 						else:
 							if type == 'TV Shows':

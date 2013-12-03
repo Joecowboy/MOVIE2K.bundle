@@ -466,10 +466,10 @@ def SecondButtonPress(url, HostPage, page=None, elm="", elm2="", wform=0, addkey
 		form = HTML.ElementFromString(s)
 
 	try:
-		post = form.xpath('//'+elm+'form')[wform].get('method')
+		whichform = form.xpath('//'+elm+'form')[wform]
 	
-		if len(form.xpath('//'+elm+'form[@method="'+post+'"]/'+elm2+'input')) != 0:
-			for input in form.xpath('//'+elm+'form[@method="'+post+'"]/'+elm2+'input'):
+		if len(whichform.xpath('./'+elm2+'input')) != 0:
+			for input in whichform.xpath('./'+elm2+'input'):
 				if input.get('name') != None:
 					key = input.get('name')
 					value = input.get('value')
@@ -752,9 +752,9 @@ def ErrorVideo(ErrorType):
 		elif ErrorType == "WrongCaptcha":
 			VideoMessage = R("Wrong_Captcha.mp4")
 		elif ErrorType == "UploadError":
-			VideoMessage = R("Host_Down.mp4")
+			VideoMessage = R("Video_Removed.mp4")
 		elif ErrorType == "GeolocationLockout":
-			VideoMessage = R("Host_Down.mp4")
+			VideoMessage = R("Geolocation_Lockout.mp4")
 	else:
 		VideoMessage = "Error: Problem with getting Video File to play!"
 
