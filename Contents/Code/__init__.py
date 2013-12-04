@@ -1467,8 +1467,13 @@ def SubGroupMoviePageAdd(title, page, date, dateadd, thumbck, type, summary):
 ####################################################################################################
 @route(PREFIX + '/TVandMovieHostPage')
 def SubMoviePageAdd(title, page, date, dateadd, thumbck, type):
+	
+	if HOST_COUNT != "1":
+		pl = "s"
+	else:
+		pl = ""
 
-	oc = ObjectContainer(title2=title+" - ["+HOST_COUNT+" HOSTS per Page]")
+	oc = ObjectContainer(title2=title+" - ["+HOST_COUNT+" HOST"+pl+" per Page]")
 
 	if page.split('/')[0] != "http:":
 		CURRENT_MOVIE2K_URL = MOVIE2K_URL
@@ -1999,7 +2004,8 @@ def GetHost(Host, url):
 	#Check for Real Video Hoster if set to N/A or DivX Hoster or Flash Hoster is set
 	#
 	cookies = Dict['_movie2k_uid']
-	headers = {"Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8", "Accept-Charset": "ISO-8859-1,utf-8;q=0.7,*;q=0.3", "Accept-Encoding": "gzip,deflate,sdch", "Accept-Language": "en-US,en;q=0.8", "Connection": "keep-alive", "Host": MOVIE2K_URL, "Referer": "http://"+MOVIE2K_URL, "User-Agent": UserAgent[UserAgentNum]}
+	CURRENT_MOVIE2K_URL = url.split('/')[2]
+	headers = {"Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8", "Accept-Charset": "ISO-8859-1,utf-8;q=0.7,*;q=0.3", "Accept-Encoding": "gzip,deflate,sdch", "Accept-Language": "en-US,en;q=0.8", "Connection": "keep-alive", "Host": CURRENT_MOVIE2K_URL, "Referer": "http://"+CURRENT_MOVIE2K_URL, "User-Agent": UserAgent[UserAgentNum]}
 	req = requests.get(url, headers=headers, cookies=cookies)
 
 	HostPageInfo = HTML.ElementFromString(req.content)

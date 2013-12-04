@@ -502,7 +502,7 @@ def SecondButtonPress(url, HostPage, page=None, elm="", elm2="", wform=0, addkey
 					del payload[key]
 				except KeyError:
 					pass
-		Log(payload)	
+		Log(payload)
 
 		if wait != 0:
 			#wait required
