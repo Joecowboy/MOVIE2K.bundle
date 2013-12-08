@@ -285,8 +285,12 @@ def CheckforMultiPart(Host, url, type):
 		jj = 1
 		PartNext = HostPageInfo.xpath('//div[@id="maincontent5"]/div')
 	else:
-		i = 3
-		jj = 3
+		if CURRENT_MOVIE2K_URL == "www.movie2k.sx":
+			i = 5
+			jj = 5
+		else:
+			i = 3
+			jj = 3
 		PartNext = HostPageInfo.xpath('//div[@id="maincontent5"]/div/div')
 
 	while i < len(PartNext):
@@ -318,10 +322,16 @@ def GetHostPage(Host, url):
 	req = session.get(url, headers=headers)
 	HostPageInfo = HTML.ElementFromString(req.content)
 
+	CURRENT_MOVIE2K_URL = url.split('/')[2]
+
 	try:
 		try:
 			HostPageElm = HostPageInfo.xpath('//div[@id="maincontent5"]/div')[0]
-			HostPage = HostPageElm.xpath('./iframe')[0].get('src')
+			if CURRENT_MOVIE2K_URL == "www.movie2k.sx":
+				GetDiv = HostPageElm.xpath('./div')[3]
+				HostPage = GetDiv.xpath('./iframe')[0].get('src')
+			else:
+				HostPage = HostPageElm.xpath('./iframe')[0].get('src')
 			LinkType = 1
 		except:
 			HostPageElm = HostPageInfo.xpath('//div[@id="maincontent5"]/div')[0]
@@ -334,10 +344,14 @@ def GetHostPage(Host, url):
 		except:
 			try:
 				HostPageElm = HostPageInfo.xpath('//div[@id="maincontent5"]/div')[0]
-				try:
-					HostPage = HostPageElm.xpath('./a')[0].get('href')
-				except:
-					HostPage = HostPageElm.xpath('./div[@id="emptydiv"]/a')[0].get('href')
+				if CURRENT_MOVIE2K_URL == "www.movie2k.sx":
+					GetDiv = HostPageElm.xpath('./div')[3]
+					HostPage = GetDiv.xpath('./a')[0].get('href')
+				else:
+					try:
+						HostPage = HostPageElm.xpath('./a')[0].get('href')
+					except:
+						HostPage = HostPageElm.xpath('./div[@id="emptydiv"]/a')[0].get('href')
 				LinkType = 4
 			except:
 				HostPage = None
@@ -353,7 +367,9 @@ def GetHostPage(Host, url):
 		Log("Testing Movie2k URL: "+url)
 		Log("Testing Link Type: "+str(LinkType))
 
-	VideoStream = GetMovie(Host=Host, HostPage=HostPage, url=url, LinkType=LinkType)
+		VideoStream = GetMovieDebugger(Host=Host, HostPage=HostPage, url=url, LinkType=LinkType)
+	else:
+		VideoStream = GetMovie(Host=Host, HostPage=HostPage, url=url, LinkType=LinkType)
 
 	return VideoStream
 
@@ -378,3 +394,38 @@ def HostOverride():
 	LinkType = Prefs["linktype"]
 
 	return Host, HostURL, Movie2kURL, LinkType
+
+
+####################################################################################################
+def GetMovieDebugger(Host, HostPage, url, LinkType):
+	from HostServices import ScriptConvert
+	from HostServices import ErrorMessage
+	from HostServices import CookieDict
+	from HostServices import SecondButtonPress
+	from HostServices import IncapsulaScript
+	from HostServices import GoogleCaptcha
+	from ordereddict import OrderedDict
+	import time
+	import random
+	import urllib
+
+	if Host == "Promptfile":
+		#try:
+			VideoPage = SecondButtonPress(url=url, HostPage=HostPage)
+			#try:
+			VideoInfo = HTML.ElementFromString(VideoPage.content).xpath('//body/script')[0].text.split("url: '")[1].split("'")[0]
+			session = requests.session()
+			session.cookies = VideoPage.cookies
+			headers = {'User-Agent': UserAgent, 'Host': 'www.promptfile.com'}
+			VideoID = session.head(VideoInfo, headers=headers)
+			try:
+				VideoStream = VideoID.headers['Location']
+			except:
+				VideoStream = ErrorMessage(Host=Host, LogError=1, ErrorType="HostDown")
+			#except:
+			#	InputError = HTML.ElementFromString(VideoPage.content).xpath('//div[@id="not_found_msg"]')[0].text
+			#	VideoStream = ErrorMessage(Host=Host, InputError=InputError, ErrorType="VideoRemoved")
+		#except:
+		#	VideoStream = ErrorMessage(Host=Host, LogError=1, ErrorType="HostDown")
+
+	return VideoStream

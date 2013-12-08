@@ -3,8 +3,8 @@
 		"id": "version",
 		"type": "enum",
 		"label": "Version",
-		"values": ["1.7.7"],
-		"default": "1.7.7"
+		"values": ["1.7.8"],
+		"default": "1.7.8"
 	},
 	{
 		"id": "video_resolution",
@@ -32,6 +32,7 @@
 			"www.movie2kproxy.com",
 			"www.movie2k.tv",
 			"91.202.62.123",
+			"www.movie2k.sx",
 			"www.movie2k.tl"
 		],
 		"default": "www.movie4k.to"

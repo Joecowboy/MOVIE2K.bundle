@@ -22,13 +22,18 @@ Video Resolution has three choices:  480, 720 and 1080.  This will allow you set
 
 ###Site URL:
 
-Site URL allows you to choose the URL you want to pull your Movie and TV Shows from.  If you change from the default Site URL may require Plex Media Server to be restarted. Proxy servers can be used if the www.movie4k.to site URL is being blocked.  This has no effect on Host site URLs only MOVIE4k.  Only proxy effects on Host sites will be using the Tor setup.
+Site URL allows you to choose the URL you want to pull your Movie and TV Shows from.  All the Main sites have a little bit different content with different Host line ups for the movies and tv shows.  If you change from the default Site URL may require Plex Media Server to be restarted. Proxy servers can be used if the www.movie4k.to site URL is being blocked.  This has no effect on Host site URLs only MOVIE4k.  Only proxy effects on Host sites will be using the Tor setup.
 
 Currently there are eleven URLs in the list:
+
 -**Main Site for Movie4k:** www.movie4k.to and it's IP address
--**Proxy sites for Movie4k:** www.movie.to, movie4k.co.in, movie4k.to.come.in, www.movie4kunblocked.co,
-			  www.movie2kproxy.org and www.movie2kproxy.com
+
+-**Proxy sites for Movie4k:** www.movie.to, movie4k.co.in, movie4k.to.come.in, www.movie4kunblocked.co, www.movie2kproxy.org and www.movie2kproxy.com
+
 -**Main Site for Movie2k.tv:** www.movie2k.tv and it's IP address
+
+-**Main Site for Movie2k.sx:** www.movie2k.sx
+
 -**Main Site for Movie2k.tl (German Content Only):** www.movie2k.tl
 
 ###Number of Hosts Per Page:
@@ -37,7 +42,7 @@ Allows you to change the number of Hosts per page to be displayed.  Default is 5
 
 ###Use Description as Title:
 
-For devices like the Apple TV PlexConnect that only display the title for an item with no summary discription underneath.  This will enable you to tell what hosts are on the next page and information about the host once selected.
+For devices like the Apple TV PlexConnect or Plex/Web that only display the title for an item with no summary discription underneath.  This will enable you to tell what hosts are on the next page and information about the host once selected.
 
 ###Play Error Video:
 
@@ -95,6 +100,10 @@ Tor Control Password is a password field used in generating the HashedControlPas
 
 Debug Options are for testing Host sites.  When enabled the Plugin will only playback content from the Host site being debugged.  The following fields will be used with this.  You will need to fill in the Debug Host name along with either the Debug Host URL or Debug Movie2k URL.  This will allow you to see what errors are thrown in the Movie2k plugin log file if a Host site has changed their code structure.
 
+###Link Type:
+
+Link Type is allows you to choose they type of link you want to test.  They are 1 - Iframe, 2 - Embeded, 3 - Script and 4 - Anchor links.
+
 ###Debug Host Name:
 
 Debug Host Name you will need to enter the enter the domain name with out the .com, .net, .tv, ect...  Example: www.flashx.tv and you would enter Flashx with the first letter in upper case.
@@ -129,13 +138,15 @@ To enter My Favorite Movie4k URL, Parental Lock password or Captcha text, Roku u
 
 6. Need to add OS check for these last two items.
 
+7. For timeout issues with Apple TV and Plex/Web go to the Movie2k Plugin Preferences change Number of Hosts Per Page from the default of 5 to 1.
+
 ##Resolved Issues:
 
 1.  It now loads up on Plex Media Server running on Mac OSX v10.6.8.
 
 2.  Now MOVIE2K plugin will work with the iOS.
 
-3.  With the latest version of Plex Media Server.  Plexconnect now works with Apple TV with this RTMP channel.
+3.  With the latest version of Plex Media Server.  Plexconnect now works with Apple TV with this RTMP channel.  You currently cannot search in any of the Channel plugins on Plexconnect, or set preferences for that matter. That input framework functionality has not been added yet. You have to do all that on another client/device.
 
 [dashboard-thumbnail]: https://raw.github.com/Joecowboy/MOVIE2K.bundle/master/Contents/Resources/icon-default.png
 [plexforum]: http://forums.plexapp.com/index.php/topic/75524-new-channel-movie2k-plugin-for-movie4kto-website/
