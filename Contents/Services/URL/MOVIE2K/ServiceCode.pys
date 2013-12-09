@@ -52,7 +52,7 @@ HostSites.UserAgent = UserAgent[UserAgentNum]
 ICON                 = 'icon-default.png'
 
 # Default Movie2k URL
-MOVIE2K_URL          = Prefs['movie2k_url']
+MOVIE2K_PROXY_URL    = Prefs['movie2k_url']
 SET_VIDEO_RESOLUTION = Prefs['video_resolution']
 
 
@@ -296,7 +296,7 @@ def CheckforMultiPart(Host, url, type):
 	while i < len(PartNext):
 		if PartNext[i].get('id') != "underplayer" and PartNext[i].get('id') != "emptydiv":
 			PartNext_Info = PartNext[i].xpath('./a')[0].get('href')
-			PartNext_Link = "http://" + MOVIE2K_URL + "/"+PartNext_Info
+			PartNext_Link = "http://" + CURRENT_MOVIE2K_URL + "/"+PartNext_Info
 			VideoStream.append(GetHostPage(Host=Host, url=PartNext_Link))
 			i += 1
 		else:
@@ -324,9 +324,9 @@ def GetHostPage(Host, url):
 
 	CURRENT_MOVIE2K_URL = url.split('/')[2]
 
+	HostPageElm = HostPageInfo.xpath('//div[@id="maincontent5"]/div')[0]
 	try:
 		try:
-			HostPageElm = HostPageInfo.xpath('//div[@id="maincontent5"]/div')[0]
 			if CURRENT_MOVIE2K_URL == "www.movie2k.sx":
 				GetDiv = HostPageElm.xpath('./div')[3]
 				HostPage = GetDiv.xpath('./iframe')[0].get('src')
@@ -334,16 +334,14 @@ def GetHostPage(Host, url):
 				HostPage = HostPageElm.xpath('./iframe')[0].get('src')
 			LinkType = 1
 		except:
-			HostPageElm = HostPageInfo.xpath('//div[@id="maincontent5"]/div')[0]
 			HostPage = HostPageElm.xpath('./embed')[0].get('src')
 			LinkType = 2
 	except:
 		try:
-			HostPage = HostPageInfo.xpath('//div[@id="emptydiv"]//script')[0].get('src')
-			LinkType = 3	
-		except:
 			try:
-				HostPageElm = HostPageInfo.xpath('//div[@id="maincontent5"]/div')[0]
+				HostPage = HostPageInfo.xpath('//div[@id="emptydiv"]//script')[0].get('src')
+				LinkType = 3	
+			except:
 				if CURRENT_MOVIE2K_URL == "www.movie2k.sx":
 					GetDiv = HostPageElm.xpath('./div')[3]
 					HostPage = GetDiv.xpath('./a')[0].get('href')
@@ -353,6 +351,10 @@ def GetHostPage(Host, url):
 					except:
 						HostPage = HostPageElm.xpath('./div[@id="emptydiv"]/a')[0].get('href')
 				LinkType = 4
+		except:
+			try:
+				HostPage = HostPageElm.xpath('./object/param')[0].get('value')
+				LinkType = 5
 			except:
 				HostPage = None
 				LinkType = 0
@@ -405,26 +407,35 @@ def GetMovieDebugger(Host, HostPage, url, LinkType):
 	from HostServices import IncapsulaScript
 	from HostServices import GoogleCaptcha
 	from ordereddict import OrderedDict
+	from HostServices import zDecrypt
 	import time
 	import random
 	import urllib
 
-	if Host == "Promptfile":
+	if Host == "Userporn":
 		#try:
-			VideoPage = SecondButtonPress(url=url, HostPage=HostPage)
-			#try:
-			VideoInfo = HTML.ElementFromString(VideoPage.content).xpath('//body/script')[0].text.split("url: '")[1].split("'")[0]
+			VideoID = HostPage.split('/')[4]
+
+			url = "http://www.userporn.com/player_control/settings.php?v="+VideoID+"&em=TRUE&fv=v1.1.55"
+			url2 = "http://www.userporn.com/player/player.swf?v="+VideoID+"&em=TRUE&sd=www.userporn.com"
+			HOSTER_KEY1 = "NTI2NzI5Cgo="
+			headers = {'User-Agent': UserAgent[UserAgentNum], 'Host': 'www.userporn.com', 'Referer': url2}
+			cookies = {'UP_disclaim': '1'}
 			session = requests.session()
-			session.cookies = VideoPage.cookies
-			headers = {'User-Agent': UserAgent, 'Host': 'www.promptfile.com'}
-			VideoID = session.head(VideoInfo, headers=headers)
-			try:
-				VideoStream = VideoID.headers['Location']
-			except:
-				VideoStream = ErrorMessage(Host=Host, LogError=1, ErrorType="HostDown")
-			#except:
-			#	InputError = HTML.ElementFromString(VideoPage.content).xpath('//div[@id="not_found_msg"]')[0].text
-			#	VideoStream = ErrorMessage(Host=Host, InputError=InputError, ErrorType="VideoRemoved")
+			requests.utils.add_dict_to_cookiejar(session.cookies, cookies)
+			OpenUrl = session.get(url, headers=headers)
+			VideoPage = OpenUrl.content.split('"token1":"')[1].split('"')[0].decode('base64', 'strict')
+			if VideoPage == None or VideoPage == "":
+				InputError = OpenUrl.content.split('"text":"')[1].split('"')[0]
+				VideoStream = ErrorMessage(Host=Host, InputError=InputError, ErrorType="VideoRemoved")
+			else:
+				KeyString = OpenUrl.content.split('"time":"')[1].split('"')[0]
+				KeyOne = int(OpenUrl.content.split('"rkts":')[1].split(',')[0])
+				KeyTwo = int(HOSTER_KEY1.decode('base64', 'strict'))
+				VideoKey = zDecrypt(KeyString, KeyOne, KeyTwo, 82, 84669, 48779, 32, 65598, 115498)
+				VideoURL = VideoPage+"&c="+VideoKey+"&start=0"
+				cookies.update(CookieDict(cookies=session.cookies))
+				VideoStream = VideoURL + "?cookies="+String.Quote(str(cookies), usePlus=True)+"&headers="+String.Quote(str(headers), usePlus=True)
 		#except:
 		#	VideoStream = ErrorMessage(Host=Host, LogError=1, ErrorType="HostDown")
 

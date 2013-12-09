@@ -48,7 +48,7 @@ PREFIX            = "/video/movie2k"
 NAME              = "Movie2k"
 ART               = "art-default.jpg"
 ICON              = "icon-default.png"
-MOVIE2K_URL       = Prefs['movie2k_url']
+MOVIE2K_PROXY_URL = Prefs['movie2k_url']
 TOP_PAGES         = Prefs['toppages']
 HOST_COUNT        = Prefs['host_count']
 SWAP_TITLE        = Prefs['swaptitle']
@@ -104,57 +104,49 @@ def MainMenu():
 	# Enable Tor Proxy
 	EnableTorConnect()
 
-	# INitialize My Movie2k Login
-	loginResult = Movie2kLogin()
-	Log("Login success: " + str(loginResult))
-
 	oc = ObjectContainer()
 
-	#Add Movie Links
-	ICON_MOVIES  = "icon-movies.png"
-	MOVIES_TITLE = "Movies"
-	MOVIES_SUMMARY = "Your Movie and Blockbuster database!"
-	MOVIES_THUMB = R(ICON_MOVIES)
-	oc.add(DirectoryObject(key=Callback(Movies, title=MOVIES_TITLE, type='Movies'), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=MOVIES_THUMB))
+	#Add Movie4k.to site
+	ICON_MOVIES4k_TO  = "icon-movie4k-to.png"
+	MOVIES_TITLE = "Movie4k.to"
+	MOVIES_SUMMARY = "Your Movies, Blockbuster and TV Shows database!"
+	MOVIES_THUMB = R(ICON_MOVIES4k_TO)
+	if MOVIE2K_PROXY_URL != "Disabled":
+		if MOVIE2K_PROXY_URL != "91.202.62.123":
+			MOVIE2K_URL = MOVIE2K_PROXY_URL
+	else:
+		MOVIE2K_URL = "www.movie4k.to"
+	oc.add(DirectoryObject(key=Callback(SubMainMenu, title=MOVIES_TITLE, MOVIE2K_URL=MOVIE2K_URL), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=MOVIES_THUMB))
 
-	#Add TV Show Links
-	ICON_TVSHOWS = "icon-tvshows.png"
-	TV_SHOWS_TITLE = "TV Shows"
-	TV_SHOWS_SUMMARY = "Your TV Shows database!"
-	TV_SHOWS_THUMB = R(ICON_TVSHOWS)
-	oc.add(DirectoryObject(key=Callback(TVShows, title=TV_SHOWS_TITLE, type='TV Shows'), title=TV_SHOWS_TITLE, summary=TV_SHOWS_SUMMARY, thumb=TV_SHOWS_THUMB))
+	#Add Movie2k.tv site
+	ICON_MOVIES2k_TV  = "icon-movie2k-tv.png"
+	MOVIES_TITLE = "Movie2k.tv"
+	MOVIES_SUMMARY = "Your Movies, Blockbuster and TV Shows database!"
+	MOVIES_THUMB = R(ICON_MOVIES2k_TV)
+	if MOVIE2K_PROXY_URL != "Disabled":
+		if MOVIE2K_PROXY_URL == "91.202.62.123":
+			MOVIE2K_URL = MOVIE2K_PROXY_URL
+	else:
+		MOVIE2K_URL = "www.movie2k.tv"
+	oc.add(DirectoryObject(key=Callback(SubMainMenu, title=MOVIES_TITLE, MOVIE2K_URL=MOVIE2K_URL), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=MOVIES_THUMB))
 
-	#Add Adult Movie Links
-	ICON_MOVIES  = "icon-xxx movies.png"
-	XXXMOVIES_TITLE = "XXX Movies"
-	XXXMOVIES_SUMMARY = "Your XXX Movies database!"
-	XXXMOVIES_THUMB = R(ICON_MOVIES)
-	if DisableAdult():
-		oc.add(DirectoryObject(key=Callback(Movies, title=XXXMOVIES_TITLE, type='XXX Movies'), title=XXXMOVIES_TITLE, summary=XXXMOVIES_SUMMARY, thumb=XXXMOVIES_THUMB))
+	#Add Movie2k.sx site
+	ICON_MOVIES2k_SX  = "icon-movie2k-sx.png"
+	MOVIES_TITLE = "Movie2k.sx"
+	MOVIES_SUMMARY = "Your Movies, Blockbuster and TV Shows database!"
+	MOVIES_THUMB = R(ICON_MOVIES2k_SX)
+	MOVIE2K_URL = "www.movie2k.sx"
+	oc.add(DirectoryObject(key=Callback(SubMainMenu, title=MOVIES_TITLE, MOVIE2K_URL=MOVIE2K_URL), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=MOVIES_THUMB))
 
-	#Add Movie4k Added Links and Inbox
-	ICON_MYMOVIE2k = "icon-mymovie2k.png"
-	MYMOVIE2K_TITLE = "My Movie2k"
-	MYMOVIE2K_SUMMARY = "List My Uploads and Inbox on Movie2k and My Favorites Links!"
-	MYMOVIE2K_THUMB = R(ICON_MYMOVIE2k)
-	oc.add(DirectoryObject(key = Callback(MyMovie2k, title=MYMOVIE2K_TITLE), title=MYMOVIE2K_TITLE, summary=MYMOVIE2K_SUMMARY, thumb=MYMOVIE2K_THUMB))
+	#Add Movie2k.tl site
+	ICON_MOVIES2k_TL  = "icon-movie2k-tl.png"
+	MOVIES_TITLE = "Movie2k.tl"
+	MOVIES_SUMMARY = "Your German Movies, Blockbuster and TV Shows database!"
+	MOVIES_THUMB = R(ICON_MOVIES2k_TL)
+	MOVIE2K_URL = "www.movie2k.tl"
+	oc.add(DirectoryObject(key=Callback(SubMainMenu, title=MOVIES_TITLE, MOVIE2K_URL=MOVIE2K_URL), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=MOVIES_THUMB))
 
-	#Add Search Links
-	ICON_SEARCH = "icon-search.png"
-	SEARCH_TITLE = "Search the Database"
-	SEARCH_SUMMARY ="Find a TV Show or Movie from the Movie2k database!"
-	SEARCH_THUMB = R(ICON_SEARCH)
-	oc.add(InputDirectoryObject(key=Callback(Search), title=SEARCH_TITLE, summary=SEARCH_SUMMARY, prompt="Search for", thumb=SEARCH_THUMB))
-	#oc.add(SearchDirectoryObject(identifier="com.plexapp.plugins.movie2k", title=TRAILERSEARCH_TITLE, prompt=TRAILERSEARCH_SUMMARY, thumb=TRAILERSEARCH_THUMB))
-
-	#Add Trailer Search Links
-	ICON_TRAILERSEARCH = "icon-trailer-addict.png"
-	TRAILERSEARCH_TITLE = "Search for Your Daily Dose of Hi-Res Movie Trailers"
-	TRAILERSEARCH_SUMMARY ="Find a Movie Trailer from the Trailer Addict database!"
-	TRAILERSEARCH_THUMB = R(ICON_TRAILERSEARCH)
-	oc.add(InputDirectoryObject(key=Callback(SearchTrailers), title=TRAILERSEARCH_TITLE, summary=TRAILERSEARCH_SUMMARY, prompt="Search for", thumb=TRAILERSEARCH_THUMB))
-
-	#Add Movie4k Plugin Setup
+	#Add Movie2k Plugin Setup
 	ICON_PREFS = "icon-preferences.png"
 	PREFS_TITLE = "Preferences"
 	PREFS_SUMMARY = "Update login and channel information!"
@@ -164,8 +156,65 @@ def MainMenu():
 	return oc
 
 
+####################################################################################################
+@route(PREFIX + '/SubMainMenu')
+def SubMainMenu(title, MOVIE2K_URL):
+
+	# INitialize My Movie2k Login
+	loginResult = Movie2kLogin(MOVIE2K_URL=MOVIE2K_URL)
+	Log("Login success: " + str(loginResult))
+
+	oc = ObjectContainer()
+
+	#Add Movie Links
+	ICON_MOVIES  = "icon-movies.png"
+	MOVIES_TITLE = "Movies"
+	MOVIES_SUMMARY = "Your Movie and Blockbuster database!"
+	MOVIES_THUMB = R(ICON_MOVIES)
+	oc.add(DirectoryObject(key=Callback(Movies, title=MOVIES_TITLE, type='Movies', MOVIE2K_URL=MOVIE2K_URL), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=MOVIES_THUMB))
+
+	#Add TV Show Links
+	ICON_TVSHOWS = "icon-tvshows.png"
+	TV_SHOWS_TITLE = "TV Shows"
+	TV_SHOWS_SUMMARY = "Your TV Shows database!"
+	TV_SHOWS_THUMB = R(ICON_TVSHOWS)
+	oc.add(DirectoryObject(key=Callback(TVShows, title=TV_SHOWS_TITLE, type='TV Shows', MOVIE2K_URL=MOVIE2K_URL), title=TV_SHOWS_TITLE, summary=TV_SHOWS_SUMMARY, thumb=TV_SHOWS_THUMB))
+
+	#Add Adult Movie Links
+	ICON_MOVIES  = "icon-xxx movies.png"
+	XXXMOVIES_TITLE = "XXX Movies"
+	XXXMOVIES_SUMMARY = "Your XXX Movies database!"
+	XXXMOVIES_THUMB = R(ICON_MOVIES)
+	if DisableAdult():
+		oc.add(DirectoryObject(key=Callback(Movies, title=XXXMOVIES_TITLE, type='XXX Movies', MOVIE2K_URL=MOVIE2K_URL), title=XXXMOVIES_TITLE, summary=XXXMOVIES_SUMMARY, thumb=XXXMOVIES_THUMB))
+
+	#Add Movie4k Added Links and Inbox
+	ICON_MYMOVIE2k = "icon-mymovie2k.png"
+	MYMOVIE2K_TITLE = "My Movie2k"
+	MYMOVIE2K_SUMMARY = "List My Uploads and Inbox on "+title+" and My Favorites Links!"
+	MYMOVIE2K_THUMB = R(ICON_MYMOVIE2k)
+	oc.add(DirectoryObject(key = Callback(MyMovie2k, title=MYMOVIE2K_TITLE, MOVIE2K_URL=MOVIE2K_URL), title=MYMOVIE2K_TITLE, summary=MYMOVIE2K_SUMMARY, thumb=MYMOVIE2K_THUMB))
+
+	#Add Search Links
+	ICON_SEARCH = "icon-search.png"
+	SEARCH_TITLE = "Search the Database"
+	SEARCH_SUMMARY ="Find a TV Show or Movie from the "+title+" database!"
+	SEARCH_THUMB = R(ICON_SEARCH)
+	oc.add(InputDirectoryObject(key=Callback(Search, title=title, MOVIE2K_URL=MOVIE2K_URL), title=SEARCH_TITLE, summary=SEARCH_SUMMARY, prompt="Search for", thumb=SEARCH_THUMB))
+	#oc.add(SearchDirectoryObject(identifier="com.plexapp.plugins.movie2k", title=TRAILERSEARCH_TITLE, prompt=TRAILERSEARCH_SUMMARY, thumb=TRAILERSEARCH_THUMB))
+
+	#Add Trailer Search Links
+	ICON_TRAILERSEARCH = "icon-trailer-addict.png"
+	TRAILERSEARCH_TITLE = "Search for Your Daily Dose of Hi-Res Movie Trailers"
+	TRAILERSEARCH_SUMMARY ="Find a Movie Trailer from the Trailer Addict database!"
+	TRAILERSEARCH_THUMB = R(ICON_TRAILERSEARCH)
+	oc.add(InputDirectoryObject(key=Callback(SearchTrailers), title=TRAILERSEARCH_TITLE, summary=TRAILERSEARCH_SUMMARY, prompt="Search for", thumb=TRAILERSEARCH_THUMB))
+
+	return oc
+
+
 ####################################################################################################  
-def Movie2kLogin():
+def Movie2kLogin(MOVIE2K_URL):
 
 	username = Prefs["username"]
 	password = Prefs["password"]
@@ -209,7 +258,7 @@ def Movie2kLogin():
 
 ################################################################################
 @route(PREFIX + '/Search')
-def Search(query):
+def Search(title, MOVIE2K_URL, query):
 
 	#Search movie4k.to for movies using user input, and populate a list with the results
 
@@ -301,7 +350,7 @@ def Search(query):
 			else:
 				MOVIES_LANG = "N/A"
 
-		MOVIES_SUMMARY = "Year: "+MOVIES_YEAR+" | Lang: "+MOVIES_LANG+" | Part of the search line up on Movie2k."
+		MOVIES_SUMMARY = "Year: "+MOVIES_YEAR+" | Lang: "+MOVIES_LANG+" | Part of the search line up on "+title+"."
 		MOVIES_PAGE = MOVIES_TD[0].xpath('./a')[0].get('href')
 
 		try:
@@ -320,7 +369,7 @@ def Search(query):
 		if MOVIES_HOST == "downloadnow!":
 			oc = MessageContainer("Search Error", "Search did not return any positive results.  Please try another key word search!")
 		elif MOVIES_LANG == GetLanguage() or MOVIES_LANG == 'N/A' or GetLanguage() == 'All':
-			oc.add(DirectoryObject(key=Callback(SubGroupMoviePageAdd, title=MOVIES_TITLE, page=MOVIES_PAGE, date=MOVIES_YEAR, dateadd=dateadd, thumbck=MOVIES_THUMB, type=type, summary=MOVIES_SUMMARY), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=Callback(GetThumb, url=MOVIES_THUMB)))
+			oc.add(DirectoryObject(key=Callback(SubGroupMoviePageAdd, title=MOVIES_TITLE, page=MOVIES_PAGE, date=MOVIES_YEAR, dateadd=dateadd, thumbck=MOVIES_THUMB, type=type, summary=MOVIES_SUMMARY, MOVIE2K_URL=MOVIE2K_URL), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=Callback(GetThumb, url=MOVIES_THUMB)))
 		i += 1
 
 	if len(oc) < 1:
@@ -331,12 +380,12 @@ def Search(query):
 
 ####################################################################################################
 @route(PREFIX + '/MyMovie2k')
-def MyMovie2k(title):
+def MyMovie2k(title, MOVIE2K_URL):
 
 	oc = ObjectContainer(title2=title)
 
 	# Attempt to login
-	loginResult = Movie2kLogin()
+	loginResult = Movie2kLogin(MOVIE2K_URL=MOVIE2K_URL)
 	Log("My Movie2k Login success: " + str(loginResult))
 
 	# User input instructions
@@ -350,30 +399,30 @@ def MyMovie2k(title):
 	ICON_MYUPLOADS = "icon-myuploads.png"
 	MYUPLOADS_THUMB = R(ICON_MYUPLOADS)
 	title = "My Uploads"
-	summary = "Show all online, offline, waiting and queued links!"
-	oc.add(DirectoryObject(key = Callback(Queue, title=title, loginResult=loginResult), title=title, summary=summary, thumb=MYUPLOADS_THUMB))
+	summary = "Show all online, offline, waiting and queued links on "+MOVIE2K_URL.split('www.')[1].capitalize()+"!"
+	oc.add(DirectoryObject(key = Callback(Queue, title=title, loginResult=loginResult, MOVIE2K_URL=MOVIE2K_URL), title=title, summary=summary, thumb=MYUPLOADS_THUMB))
 
 	# My Messages on Movie4k.to
 	ICON_MYMESSAGES = "icon-mymessages.png"
 	MYMESSAGES_THUMB = R(ICON_MYMESSAGES)
 	title = "My Messages"
-	summary = "Show messages from your Inbox!"
-	oc.add(DirectoryObject(key = Callback(Messages, title=title, loginResult=loginResult), title=title, summary=summary, thumb=MYMESSAGES_THUMB))
+	summary = "Show messages from your Inbox on "+MOVIE2K_URL.split('www.')[1].capitalize()+"!"
+	oc.add(DirectoryObject(key = Callback(Messages, title=title, loginResult=loginResult, MOVIE2K_URL=MOVIE2K_URL), title=title, summary=summary, thumb=MYMESSAGES_THUMB))
 
 	# My Favorite Movie4k.to links
 	ICON_MYFAVORITES = "icon-my-favorites.png"
 	MYFAVORITES_THUMB = R(ICON_MYFAVORITES)
 	title = "My Favorite Links"
-	summary = "Show my favorite links from Movie2k!"
+	summary = "Show my favorite links from Movie4k.to, Movie2k.tv, Movie2k.sx and Movie2k.tl!"
 	oc.add(DirectoryObject(key = Callback(MyFavoriteURL, title=title), title=title, summary=summary, thumb=MYFAVORITES_THUMB))
 
 	# Add Favorite Movie4k.to link
 	ICON_ADDFAVORITE = "icon-add-favorite.png"
 	ADDFAVORITE_THUMB = R(ICON_ADDFAVORITE)
 	title = "Add Favorite Link"
-	summary = "Add a favorite link from Movie2k!"
+	summary = "Add a favorite link from Movie4k.to, Movie2k.tv, Movie2k.sx and Movie2k.tl!"
 	prompt = "Add a favorite link from Movie2k!"
-	oc.add(InputDirectoryObject(key=Callback(InputFavoriteURL, title=title), title=title, summary=summary, thumb=ADDFAVORITE_THUMB, prompt=prompt))
+	oc.add(InputDirectoryObject(key=Callback(InputFavoriteURL, title=title, MOVIE2K_URL=MOVIE2K_URL), title=title, summary=summary, thumb=ADDFAVORITE_THUMB, prompt=prompt))
 
 	# Delete Favorite Movie4k.to link
 	ICON_DELETEFAVORITE = "icon-delete-favorite.png"
@@ -420,7 +469,7 @@ def MyFavoriteURL(title):
 
 ####################################################################################################
 @route(PREFIX + '/InputFavoriteURL')
-def InputFavoriteURL(title, query):
+def InputFavoriteURL(title, MOVIE2K_URL, query):
 
 	oc = ObjectContainer(title2=title)
 	try:
@@ -548,7 +597,7 @@ def DeleteURL(title, page):
 
 ####################################################################################################
 @route(PREFIX + '/Queue')
-def Queue(title, loginResult):
+def Queue(title, loginResult, MOVIE2K_URL):
 
 	if loginResult == "True":
 		try:
@@ -605,7 +654,7 @@ def Queue(title, loginResult):
 
 ####################################################################################################
 @route(PREFIX + '/Messages')
-def Messages(title, loginResult):
+def Messages(title, loginResult, MOVIE2K_URL):
 
 	if loginResult == "True":
 		try:
@@ -632,7 +681,7 @@ def Messages(title, loginResult):
 				summary2 = "Date: "+Date+" | Subject: "+Subject
 				title = "Inbox - Message " + str(i)
 
-				oc.add(DirectoryObject(key = Callback(ShowMessage, title=title, url=url, summary=summary2), title = title, summary=summary, thumb=MYMESSAGES_THUMB))
+				oc.add(DirectoryObject(key = Callback(ShowMessage, title=title, url=url, summary=summary2, MOVIE2K_URL=MOVIE2K_URL), title = title, summary=summary, thumb=MYMESSAGES_THUMB))
 				i += 1
 		except:
 			oc = ObjectContainer(header="User Login Error", message="Your user login and password are correct but there has been an error connecting to the website user account.  Please click ok to exit this screen and the back button to refresh login data. (MAY TAKE SEVERAL TRIES)")
@@ -643,7 +692,7 @@ def Messages(title, loginResult):
 
 
 ####################################################################################################
-def ShowMessage(title, url, summary):
+def ShowMessage(title, url, summary, MOVIE2K_URL):
 
 	session_cookies = Dict['_movie2k_uid']
 	session_headers = {"Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8", "Accept-Charset": "ISO-8859-1,utf-8;q=0.7,*;q=0.3", "Accept-Encoding": "gzip,deflate,sdch", "Accept-Language": "en-US,en;q=0.8", "Connection": "keep-alive", "Host": MOVIE2K_URL, "Referer": "http://"+MOVIE2K_URL, "User-Agent": UserAgent[UserAgentNum]}
@@ -659,7 +708,7 @@ def ShowMessage(title, url, summary):
 
 ####################################################################################################
 @route(PREFIX + '/TVShow')
-def TVShows(title, type):
+def TVShows(title, type, MOVIE2K_URL):
 	
 	oc = ObjectContainer(title2=title)
 
@@ -672,7 +721,7 @@ def TVShows(title, type):
 		TVSHOW_PAGE = "http://" + MOVIE2K_URL + "/series"
 	else:
 		TVSHOW_PAGE = "http://" + MOVIE2K_URL + "/tvshows_featured.php"
-	oc.add(DirectoryObject(key=Callback(FeaturedTVShowsPageAdd, title=TVSHOW_TITLE, page=TVSHOW_PAGE, type=type), title=TVSHOW_TITLE, summary=TVSHOW_SUMMARY, thumb=TVSHOW_THUMB))
+	oc.add(DirectoryObject(key=Callback(FeaturedTVShowsPageAdd, title=TVSHOW_TITLE, page=TVSHOW_PAGE, type=type, MOVIE2K_URL=MOVIE2K_URL), title=TVSHOW_TITLE, summary=TVSHOW_SUMMARY, thumb=TVSHOW_THUMB))
 
 	#Add Latest Updates TV Show
 	Genre_Type = "Latest Updates"
@@ -682,9 +731,9 @@ def TVShows(title, type):
 	TVSHOW_THUMB = R(ICON_UPDATES)
 	TVSHOW_PAGE = "http://" + MOVIE2K_URL + "/tvshows-updates.html"
 	if MOVIE2K_URL == "www.movie2k.sx":
-		oc.add(DirectoryObject(key=Callback(DisabledScreen, title=TVSHOW_TITLE), title=TVSHOW_TITLE, summary=TVSHOW_SUMMARY, thumb=TVSHOW_THUMB))
+		oc.add(DirectoryObject(key=Callback(DisabledScreen, title=TVSHOW_TITLE, MOVIE2K_URL=MOVIE2K_URL), title=TVSHOW_TITLE, summary=TVSHOW_SUMMARY, thumb=TVSHOW_THUMB))
 	else:
-		oc.add(DirectoryObject(key=Callback(MoviePageAdd, title=TVSHOW_TITLE, page=TVSHOW_PAGE, genre=Genre_Type, type=type), title=TVSHOW_TITLE, summary=TVSHOW_SUMMARY, thumb=TVSHOW_THUMB))
+		oc.add(DirectoryObject(key=Callback(MoviePageAdd, title=TVSHOW_TITLE, page=TVSHOW_PAGE, genre=Genre_Type, type=type, MOVIE2K_URL=MOVIE2K_URL), title=TVSHOW_TITLE, summary=TVSHOW_SUMMARY, thumb=TVSHOW_THUMB))
 
 	#Add Alphabitical listing to TV Show
 	Genre_Type = "Alphabitical Listing"
@@ -694,11 +743,11 @@ def TVShows(title, type):
 	TVSHOW_THUMB = R(ICON_ALPHA)
 	TVSHOW_PAGE = "http://" + MOVIE2K_URL + "/tvshows-all.html"
 	if MOVIE2K_URL == "www.movie2k.tl":
-		oc.add(DirectoryObject(key=Callback(TVShowsList, title=TVSHOW_TITLE, page=TVSHOW_PAGE, genre=Genre_Type, type=type), title=TVSHOW_TITLE, summary=TVSHOW_SUMMARY, thumb=TVSHOW_THUMB))
+		oc.add(DirectoryObject(key=Callback(TVShowsList, title=TVSHOW_TITLE, page=TVSHOW_PAGE, genre=Genre_Type, type=type, MOVIE2K_URL=MOVIE2K_URL), title=TVSHOW_TITLE, summary=TVSHOW_SUMMARY, thumb=TVSHOW_THUMB))
 	elif MOVIE2K_URL == "www.movie2k.sx":
-		oc.add(DirectoryObject(key=Callback(AlphabiticalPageAdd, title=TVSHOW_TITLE, page=TVSHOW_PAGE, type=type), title=TVSHOW_TITLE, summary=TVSHOW_SUMMARY, thumb=TVSHOW_THUMB))	
+		oc.add(DirectoryObject(key=Callback(AlphabiticalPageAdd, title=TVSHOW_TITLE, page=TVSHOW_PAGE, type=type, MOVIE2K_URL=MOVIE2K_URL), title=TVSHOW_TITLE, summary=TVSHOW_SUMMARY, thumb=TVSHOW_THUMB))	
 	else:
-		oc.add(DirectoryObject(key=Callback(AlphabiticalTVShowsPageAdd, title=TVSHOW_TITLE, page=TVSHOW_PAGE, type=type), title=TVSHOW_TITLE, summary=TVSHOW_SUMMARY, thumb=TVSHOW_THUMB))
+		oc.add(DirectoryObject(key=Callback(AlphabiticalTVShowsPageAdd, title=TVSHOW_TITLE, page=TVSHOW_PAGE, type=type, MOVIE2K_URL=MOVIE2K_URL), title=TVSHOW_TITLE, summary=TVSHOW_SUMMARY, thumb=TVSHOW_THUMB))
 
 	#Add Genre Pages to TV Page
 	ICON_GENRE = "icon-genre.png"
@@ -706,7 +755,7 @@ def TVShows(title, type):
 	TVSHOW_SUMMARY = "Listings sorted by Genre of the TV Shows database!"
 	TVSHOW_THUMB = R(ICON_GENRE)
 	TVSHOW_PAGE = "http://" + MOVIE2K_URL + "/genres-tvshows.html"
-	oc.add(DirectoryObject(key=Callback(GenreTVShowsPageAdd, title=TVSHOW_TITLE, page=TVSHOW_PAGE, type=type), title=TVSHOW_TITLE, summary=TVSHOW_SUMMARY, thumb=TVSHOW_THUMB))
+	oc.add(DirectoryObject(key=Callback(GenreTVShowsPageAdd, title=TVSHOW_TITLE, page=TVSHOW_PAGE, type=type, MOVIE2K_URL=MOVIE2K_URL), title=TVSHOW_TITLE, summary=TVSHOW_SUMMARY, thumb=TVSHOW_THUMB))
 
 	if MOVIE2K_URL == "www.movie2k.tl" or TOP_PAGES == "Enabled":
 		#Add Top TV Shows
@@ -715,21 +764,18 @@ def TVShows(title, type):
 		TVSHOW_TITLE = "Top TV Shows"
 		TVSHOW_SUMMARY = "Your Top TV Shows in the Movie2k database!"
 		TVSHOW_THUMB = R(ICON_UPDATES)
-		if MOVIE2K_URL == "www.movie2k.tl":
-			TVSHOW_PAGE = "http://" + MOVIE2K_URL + "/tvshows-top.html"
-		else:
-			TVSHOW_PAGE = "http://" + MOVIE2K_URL + "/tvshows-top"
+		TVSHOW_PAGE = "http://" + MOVIE2K_URL + "/tvshows-top.html"
 		if MOVIE2K_URL == "www.movie2k.sx":
-			oc.add(DirectoryObject(key=Callback(DisabledScreen, title=TVSHOW_TITLE), title=TVSHOW_TITLE, summary=TVSHOW_SUMMARY, thumb=TVSHOW_THUMB))
+			oc.add(DirectoryObject(key=Callback(DisabledScreen, title=TVSHOW_TITLE, MOVIE2K_URL=MOVIE2K_URL), title=TVSHOW_TITLE, summary=TVSHOW_SUMMARY, thumb=TVSHOW_THUMB))
 		else:
-			oc.add(DirectoryObject(key=Callback(MoviePageAdd, title=TVSHOW_TITLE, page=TVSHOW_PAGE, genre=Genre_Type, type=type), title=TVSHOW_TITLE, summary=TVSHOW_SUMMARY, thumb=TVSHOW_THUMB))
+			oc.add(DirectoryObject(key=Callback(MoviePageAdd, title=TVSHOW_TITLE, page=TVSHOW_PAGE, genre=Genre_Type, type=type, MOVIE2K_URL=MOVIE2K_URL), title=TVSHOW_TITLE, summary=TVSHOW_SUMMARY, thumb=TVSHOW_THUMB))
 
 	return oc
 
 
 ####################################################################################################
 @route(PREFIX + '/AlphabiticalTVShowsPageAdd')
-def AlphabiticalTVShowsPageAdd(title, page, type):
+def AlphabiticalTVShowsPageAdd(title, page, type, MOVIE2K_URL):
 
 	oc = ObjectContainer(title2=title)
 
@@ -746,7 +792,7 @@ def AlphabiticalTVShowsPageAdd(title, page, type):
 	
 	MOVIES_PAGE = "http://" + MOVIE2K_URL + MOVIES_PAGE_PART
 
-	oc.add(DirectoryObject(key=Callback(TVShowsList, title=MOVIES_TITLE, page=MOVIES_PAGE, genre=Alpha_Type, type=type), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=MOVIES_THUMB))
+	oc.add(DirectoryObject(key=Callback(TVShowsList, title=MOVIES_TITLE, page=MOVIES_PAGE, genre=Alpha_Type, type=type, MOVIE2K_URL=MOVIE2K_URL), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=MOVIES_THUMB))
 
 	for AlphNumeric in HTML.ElementFromString(req.content).xpath('//div[@id="content"]/div[@id="boxgrey"]'):
 		Alpha_Type = AlphNumeric.xpath('./a')[0].text
@@ -765,7 +811,7 @@ def AlphabiticalTVShowsPageAdd(title, page, type):
 
 ####################################################################################################
 @route(PREFIX + '/GenreTVShowsPageAdd')
-def GenreTVShowsPageAdd(title, page, type):
+def GenreTVShowsPageAdd(title, page, type, MOVIE2K_URL):
 
 	oc = ObjectContainer(title2=title)
 
@@ -795,9 +841,9 @@ def GenreTVShowsPageAdd(title, page, type):
 
 		if NotSkip:
 			if MOVIE2K_URL == "www.movie2k.sx":
-				oc.add(DirectoryObject(key=Callback(MovieGenres, title=MOVIES_TITLE, page=MOVIES_PAGE, genre=Genre_Type, thumb=MOVIES_THUMB, type=type), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=MOVIES_THUMB))
+				oc.add(DirectoryObject(key=Callback(MovieGenres, title=MOVIES_TITLE, page=MOVIES_PAGE, genre=Genre_Type, thumb=MOVIES_THUMB, type=type, MOVIE2K_URL=MOVIE2K_URL), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=MOVIES_THUMB))
 			else:
-				oc.add(DirectoryObject(key=Callback(TVShowsList, title=MOVIES_TITLE, page=MOVIES_PAGE, genre=Genre_Type, type=type), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=MOVIES_THUMB))
+				oc.add(DirectoryObject(key=Callback(TVShowsList, title=MOVIES_TITLE, page=MOVIES_PAGE, genre=Genre_Type, type=type, MOVIE2K_URL=MOVIE2K_URL), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=MOVIES_THUMB))
 		else:
 			NotSkip = True
 
@@ -806,7 +852,7 @@ def GenreTVShowsPageAdd(title, page, type):
 
 ####################################################################################################
 @route(PREFIX + '/TVShowsList')
-def TVShowsList(title, page, genre, type):
+def TVShowsList(title, page, genre, type, MOVIE2K_URL):
 	
 	oc = ObjectContainer(title2=title)
 
@@ -843,7 +889,7 @@ def TVShowsList(title, page, genre, type):
 
 ####################################################################################################
 @route(PREFIX + '/FeaturedTVShowsPage')
-def FeaturedTVShowsPageAdd(title, page, type):
+def FeaturedTVShowsPageAdd(title, page, type, MOVIE2K_URL):
 	
 	oc = ObjectContainer(title2=title)
 	
@@ -882,14 +928,14 @@ def FeaturedTVShowsPageAdd(title, page, type):
 			TVSHOW_LANG = GetLang(lang=LANGUAGE_URL.split('/')[1].split('.')[0])
 		TVSHOW_SUMMARY = "Year: "+TVSHOW_YEAR+" | Lang: "+TVSHOW_LANG+" | Part of the Featured TV Show line up on Movie2k."
 		i += 2
-		oc.add(DirectoryObject(key=Callback(SubGroupMoviePageAdd, title=TVSHOW_TITLE, page=TVSHOW_PAGE, date=TVSHOW_YEAR, dateadd=dateadd, thumbck=TVSHOW_THUMB, type=type, summary=TVSHOW_SUMMARY), title=TVSHOW_TITLE, summary=TVSHOW_SUMMARY, thumb=Callback(GetThumb, url=TVSHOW_THUMB)))
+		oc.add(DirectoryObject(key=Callback(SubGroupMoviePageAdd, title=TVSHOW_TITLE, page=TVSHOW_PAGE, date=TVSHOW_YEAR, dateadd=dateadd, thumbck=TVSHOW_THUMB, type=type, summary=TVSHOW_SUMMARY, MOVIE2K_URL=MOVIE2K_URL), title=TVSHOW_TITLE, summary=TVSHOW_SUMMARY, thumb=Callback(GetThumb, url=TVSHOW_THUMB)))
 
 	return oc
 
 
 ####################################################################################################
 @route(PREFIX + '/TVShowSeasons')
-def TVShowSeasons(title, page, genre, type):
+def TVShowSeasons(title, page, genre, type, MOVIE2K_URL):
 	
 	oc = ObjectContainer(title2=title)
 
@@ -925,7 +971,7 @@ def TVShowSeasons(title, page, genre, type):
 
 ####################################################################################################
 @route(PREFIX + '/TVShowEpisodes')
-def TVShowEpisodes(title, page, genre, type):
+def TVShowEpisodes(title, page, genre, type, MOVIE2K_URL):
 	
 	oc = ObjectContainer(title2=title)
 
@@ -962,14 +1008,14 @@ def TVShowEpisodes(title, page, genre, type):
 			MOVIES_THUMB = GET_THUMB.xpath('./a/img')[0].get('src')
 			THUMB = 1
 
-		oc.add(DirectoryObject(key=Callback(SubGroupMoviePageAdd, title=MOVIES_TITLE, page=MOVIES_PAGE, date=DATE_ADDED, dateadd=DATE_ADDED, thumbck=MOVIES_THUMB, type=type, summary=MOVIES_SUMMARY), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=Callback(GetThumb, url=MOVIES_THUMB)))
+		oc.add(DirectoryObject(key=Callback(SubGroupMoviePageAdd, title=MOVIES_TITLE, page=MOVIES_PAGE, date=DATE_ADDED, dateadd=DATE_ADDED, thumbck=MOVIES_THUMB, type=type, summary=MOVIES_SUMMARY, MOVIE2K_URL=MOVIE2K_URL), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=Callback(GetThumb, url=MOVIES_THUMB)))
 
 	return oc
 
 
 ####################################################################################################
 @route(PREFIX + '/Movie')
-def Movies(title, type):
+def Movies(title, type, MOVIE2K_URL):
 	
 	oc = ObjectContainer(title2=title)
 
@@ -990,7 +1036,7 @@ def Movies(title, type):
 			MOVIES_PAGE = "http://" + MOVIE2K_URL + "/index.php?lang=de"
 		else:
 			MOVIES_PAGE = "http://" + MOVIE2K_URL + "/index.php?lang=us"
-		oc.add(DirectoryObject(key=Callback(CinemaMoviePageAdd, title=MOVIES_TITLE, page=MOVIES_PAGE, type=type), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=MOVIES_THUMB))
+		oc.add(DirectoryObject(key=Callback(CinemaMoviePageAdd, title=MOVIES_TITLE, page=MOVIES_PAGE, type=type, MOVIE2K_URL=MOVIE2K_URL), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=MOVIES_THUMB))
 
 		#Add Latest Updates Movie Page
 		MOVIES_TITLE = "Newly Added Movies"
@@ -998,9 +1044,9 @@ def Movies(title, type):
 		MOVIES_THUMB = R(ICON_UPDATES)
 		MOVIES_PAGE = "http://" + MOVIE2K_URL + "/movies-updates.html"
 		if MOVIE2K_URL == "www.movie2k.tl":
-			oc.add(DirectoryObject(key=Callback(MovieGenres, title=MOVIES_TITLE, page=MOVIES_PAGE, genre=Genre_Type, thumb=MOVIES_THUMB, type=type), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=MOVIES_THUMB))
+			oc.add(DirectoryObject(key=Callback(MovieGenres, title=MOVIES_TITLE, page=MOVIES_PAGE, genre=Genre_Type, thumb=MOVIES_THUMB, type=type, MOVIE2K_URL=MOVIE2K_URL), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=MOVIES_THUMB))
 		else:
-			oc.add(DirectoryObject(key=Callback(MoviePageAdd, title=MOVIES_TITLE, page=MOVIES_PAGE, genre=Genre_Type, type=type), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=MOVIES_THUMB))
+			oc.add(DirectoryObject(key=Callback(MoviePageAdd, title=MOVIES_TITLE, page=MOVIES_PAGE, genre=Genre_Type, type=type, MOVIE2K_URL=MOVIE2K_URL), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=MOVIES_THUMB))
 
 		#Add By Alphabitical listing Movie Page
 		ICON_ALPHA = "icon-alphabetical.png"
@@ -1008,7 +1054,7 @@ def Movies(title, type):
 		MOVIES_SUMMARY = "Listings sorted by Alphabitical order of the Movies database!"
 		MOVIES_THUMB = R(ICON_ALPHA)
 		MOVIES_PAGE = "http://" + MOVIE2K_URL + "/movies-all.html"
-		oc.add(DirectoryObject(key=Callback(AlphabiticalPageAdd, title=MOVIES_TITLE, page=MOVIES_PAGE, type=type), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=MOVIES_THUMB))
+		oc.add(DirectoryObject(key=Callback(AlphabiticalPageAdd, title=MOVIES_TITLE, page=MOVIES_PAGE, type=type, MOVIE2K_URL=MOVIE2K_URL), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=MOVIES_THUMB))
 
 		#Add By Genre listing Movie Page
 		ICON_GENRE = "icon-genre.png"
@@ -1016,7 +1062,7 @@ def Movies(title, type):
 		MOVIES_SUMMARY = "Listings sorted by Genre of the Movies database!"
 		MOVIES_THUMB = R(ICON_GENRE)
 		MOVIES_PAGE = "http://" + MOVIE2K_URL + "/genres-movies.html"
-		oc.add(DirectoryObject(key=Callback(GenrePageAdd, title=MOVIES_TITLE, page=MOVIES_PAGE, type=type), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=MOVIES_THUMB))
+		oc.add(DirectoryObject(key=Callback(GenrePageAdd, title=MOVIES_TITLE, page=MOVIES_PAGE, type=type, MOVIE2K_URL=MOVIE2K_URL), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=MOVIES_THUMB))
 
 		if MOVIE2K_URL == "www.movie2k.tl" or TOP_PAGES == "Enabled":
 			#Add Top Movies
@@ -1025,14 +1071,11 @@ def Movies(title, type):
 			MOVIES_TITLE = "Top Movies"
 			MOVIES_SUMMARY = "Your Top Movies in the Movie2k database!"
 			MOVIES_THUMB = R(ICON_TOP)
-			if MOVIE2K_URL == "www.movie2k.tl":
-				MOVIES_PAGE = "http://" + MOVIE2K_URL + "/movies-top.html"
-			else:
-				MOVIES_PAGE = "http://" + MOVIE2K_URL + "/movies-top"
+			MOVIES_PAGE = "http://" + MOVIE2K_URL + "/movies-top.html"
 			if MOVIE2K_URL == "www.movie2k.sx":
-				oc.add(DirectoryObject(key=Callback(DisabledScreen, title=MOVIES_TITLE), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=MOVIES_THUMB))
+				oc.add(DirectoryObject(key=Callback(DisabledScreen, title=MOVIES_TITLE, MOVIE2K_URL=MOVIE2K_URL), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=MOVIES_THUMB))
 			else:
-				oc.add(DirectoryObject(key=Callback(MoviePageAdd, title=MOVIES_TITLE, page=MOVIES_PAGE, genre=Genre_Type, type=type), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=MOVIES_THUMB))
+				oc.add(DirectoryObject(key=Callback(MoviePageAdd, title=MOVIES_TITLE, page=MOVIES_PAGE, genre=Genre_Type, type=type, MOVIE2K_URL=MOVIE2K_URL), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=MOVIES_THUMB))
 
 	elif type == 'XXX Movies':
 		if MOVIE2K_URL == "www.movie2k.tl" or MOVIE2K_URL == "www.movie2k.sx":
@@ -1062,7 +1105,7 @@ def Movies(title, type):
 
 			#Add Password Check XXX Movie Page
 			oc.add(DirectoryObject(key=Callback(RokuUsersPasswordInput, title="Special Instructions for Roku Users"), title="Special Instructions for Roku Users", thumb=INSTRUCTIONS_THUMB, summary="Click here to see special instructions necessary for Roku Users for password input."))
-			oc.add(InputDirectoryObject(key=Callback(InputParentalPassword, title=title, type=type), title=title, summary=summary, thumb=PARENTAL_THUMB, prompt=prompt))
+			oc.add(InputDirectoryObject(key=Callback(InputParentalPassword, title=title, type=type, MOVIE2K_URL=MOVIE2K_URL), title=title, summary=summary, thumb=PARENTAL_THUMB, prompt=prompt))
 		else:
 
 			#Add Featured XXX Movie Page
@@ -1071,14 +1114,14 @@ def Movies(title, type):
 			PORN_SUMMARY = "Your Featured Movies in the XXX Movies database!"
 			PORN_THUMB = R(ICON_FEATURED)
 			PORN_PAGE = "http://" + MOVIE2K_URL + "/xxx-updates.html"
-			oc.add(DirectoryObject(key=Callback(FeaturedMoviePageAdd, title=PORN_TITLE, page=PORN_PAGE, type=type), title=PORN_TITLE, summary=PORN_SUMMARY, thumb=PORN_THUMB))
+			oc.add(DirectoryObject(key=Callback(FeaturedMoviePageAdd, title=PORN_TITLE, page=PORN_PAGE, type=type, MOVIE2K_URL=MOVIE2K_URL), title=PORN_TITLE, summary=PORN_SUMMARY, thumb=PORN_THUMB))
 
 			#Add Latest Updates XXX Movie Page
 			PORN_TITLE = "Newly Added XXX Movies"
 			PORN_SUMMARY = "Your Latest Updates to the XXX Movies database!"
 			PORN_THUMB = R(ICON_UPDATES)
-			PORN_PAGE = "http://" + MOVIE2K_URL + "/xxx-updates"
-			oc.add(DirectoryObject(key=Callback(MoviePageAdd, title=PORN_TITLE, page=PORN_PAGE, genre=Genre_Type, type=type), title=PORN_TITLE, summary=PORN_SUMMARY, thumb=PORN_THUMB))
+			PORN_PAGE = "http://" + MOVIE2K_URL + "/xxx-updates.html"
+			oc.add(DirectoryObject(key=Callback(MoviePageAdd, title=PORN_TITLE, page=PORN_PAGE, genre=Genre_Type, type=type, MOVIE2K_URL=MOVIE2K_URL), title=PORN_TITLE, summary=PORN_SUMMARY, thumb=PORN_THUMB))
 
 			#Add By Alphabitical listing XXX Movie Page
 			ICON_ALPHA = "icon-alphabetical.png"
@@ -1086,7 +1129,7 @@ def Movies(title, type):
 			PORN_SUMMARY = "Listings sorted by Alphabitical order of the XXX Movies database!"
 			PORN_THUMB = R(ICON_ALPHA)
 			PORN_PAGE = "http://" + MOVIE2K_URL + "/xxx-all.html"
-			oc.add(DirectoryObject(key=Callback(AlphabiticalPageAdd, title=PORN_TITLE, page=PORN_PAGE, type=type), title=PORN_TITLE, summary=PORN_SUMMARY, thumb=PORN_THUMB))
+			oc.add(DirectoryObject(key=Callback(AlphabiticalPageAdd, title=PORN_TITLE, page=PORN_PAGE, type=type, MOVIE2K_URL=MOVIE2K_URL), title=PORN_TITLE, summary=PORN_SUMMARY, thumb=PORN_THUMB))
 
 			#Add By Genre listing XXX Movie Page
 			ICON_GENRE = "icon-genre.png"
@@ -1094,7 +1137,7 @@ def Movies(title, type):
 			PORN_SUMMARY = "Listings sorted by Genre of the XXX Movies database!"
 			PORN_THUMB = R(ICON_GENRE)
 			PORN_PAGE = "http://" + MOVIE2K_URL + "/genres-xxx.html"
-			oc.add(DirectoryObject(key=Callback(GenrePageAdd, title=PORN_TITLE, page=PORN_PAGE, type=type), title=PORN_TITLE, summary=PORN_SUMMARY, thumb=PORN_THUMB))
+			oc.add(DirectoryObject(key=Callback(GenrePageAdd, title=PORN_TITLE, page=PORN_PAGE, type=type, MOVIE2K_URL=MOVIE2K_URL), title=PORN_TITLE, summary=PORN_SUMMARY, thumb=PORN_THUMB))
 
 			if TOP_PAGES == "Enabled":
 				#Add Top XXX Movies
@@ -1103,15 +1146,15 @@ def Movies(title, type):
 				MOVIES_TITLE = "Top Movies"
 				MOVIES_SUMMARY = "Your Top XXX Movies in the Movie2k database!"
 				MOVIES_THUMB = R(ICON_TOP)
-				MOVIES_PAGE = "http://" + MOVIE2K_URL + "/xxx-top"
-				oc.add(DirectoryObject(key=Callback(MoviePageAdd, title=MOVIES_TITLE, page=MOVIES_PAGE, genre=Genre_Type, type=type), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=MOVIES_THUMB))
+				MOVIES_PAGE = "http://" + MOVIE2K_URL + "/xxx-top.html"
+				oc.add(DirectoryObject(key=Callback(MoviePageAdd, title=MOVIES_TITLE, page=MOVIES_PAGE, genre=Genre_Type, type=type, MOVIE2K_URL=MOVIE2K_URL), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=MOVIES_THUMB))
 
 	return oc
 
 
 ####################################################################################################
 @route(PREFIX + '/InputParentalPassword')
-def InputParentalPassword(title, type, query):
+def InputParentalPassword(title, type, MOVIE2K_URL, query):
 
 	oc = ObjectContainer(title2=title)
 
@@ -1142,7 +1185,7 @@ def InputParentalPassword(title, type, query):
 			PORN_SUMMARY = "Your Featured Movies in the XXX Movies database!"
 			PORN_THUMB = R(ICON_FEATURED)
 			PORN_PAGE = "http://" + MOVIE2K_URL + "/xxx-updates.html"
-			oc.add(DirectoryObject(key=Callback(FeaturedMoviePageAdd, title=PORN_TITLE, page=PORN_PAGE, type=type), title=PORN_TITLE, summary=PORN_SUMMARY, thumb=PORN_THUMB))
+			oc.add(DirectoryObject(key=Callback(FeaturedMoviePageAdd, title=PORN_TITLE, page=PORN_PAGE, type=type, MOVIE2K_URL=MOVIE2K_URL), title=PORN_TITLE, summary=PORN_SUMMARY, thumb=PORN_THUMB))
 
 			#Add Latest Updates XXX Movie Page
 			Genre_Type = "Latest Updates"
@@ -1150,8 +1193,8 @@ def InputParentalPassword(title, type, query):
 			PORN_TITLE = "Newly Added XXX Movies"
 			PORN_SUMMARY = "Your Latest Updates to the XXX Movies database!"
 			PORN_THUMB = R(ICON_UPDATES)
-			PORN_PAGE = "http://" + MOVIE2K_URL + "/xxx-updates"
-			oc.add(DirectoryObject(key=Callback(MoviePageAdd, title=PORN_TITLE, page=PORN_PAGE, genre=Genre_Type, type=type), title=PORN_TITLE, summary=PORN_SUMMARY, thumb=PORN_THUMB))
+			PORN_PAGE = "http://" + MOVIE2K_URL + "/xxx-updates.html"
+			oc.add(DirectoryObject(key=Callback(MoviePageAdd, title=PORN_TITLE, page=PORN_PAGE, genre=Genre_Type, type=type, MOVIE2K_URL=MOVIE2K_URL), title=PORN_TITLE, summary=PORN_SUMMARY, thumb=PORN_THUMB))
 
 			#Add By Alphabitical listing XXX Movie Page
 			ICON_ALPHA = "icon-alphabetical.png"
@@ -1159,7 +1202,7 @@ def InputParentalPassword(title, type, query):
 			PORN_SUMMARY = "Listings sorted by Alphabitical order of the XXX Movies database!"
 			PORN_THUMB = R(ICON_ALPHA)
 			PORN_PAGE = "http://" + MOVIE2K_URL + "/xxx-all.html"
-			oc.add(DirectoryObject(key=Callback(AlphabiticalPageAdd, title=PORN_TITLE, page=PORN_PAGE, type=type), title=PORN_TITLE, summary=PORN_SUMMARY, thumb=PORN_THUMB))
+			oc.add(DirectoryObject(key=Callback(AlphabiticalPageAdd, title=PORN_TITLE, page=PORN_PAGE, type=type, MOVIE2K_URL=MOVIE2K_URL), title=PORN_TITLE, summary=PORN_SUMMARY, thumb=PORN_THUMB))
 
 			#Add By Genre listing XXX Movie Page
 			ICON_GENRE = "icon-genre.png"
@@ -1167,7 +1210,7 @@ def InputParentalPassword(title, type, query):
 			PORN_SUMMARY = "Listings sorted by Genre of the XXX Movies database!"
 			PORN_THUMB = R(ICON_GENRE)
 			PORN_PAGE = "http://" + MOVIE2K_URL + "/genres-xxx.html"
-			oc.add(DirectoryObject(key=Callback(GenrePageAdd, title=PORN_TITLE, page=PORN_PAGE, type=type), title=PORN_TITLE, summary=PORN_SUMMARY, thumb=PORN_THUMB))
+			oc.add(DirectoryObject(key=Callback(GenrePageAdd, title=PORN_TITLE, page=PORN_PAGE, type=type, MOVIE2K_URL=MOVIE2K_URL), title=PORN_TITLE, summary=PORN_SUMMARY, thumb=PORN_THUMB))
 
 			if TOP_PAGES == "Enabled":
 				#Add Top XXX Movies
@@ -1176,15 +1219,15 @@ def InputParentalPassword(title, type, query):
 				MOVIES_TITLE = "Top Movies"
 				MOVIES_SUMMARY = "Your Top XXX Movies in the Movie2k database!"
 				MOVIES_THUMB = R(ICON_TOP)
-				MOVIES_PAGE = "http://" + MOVIE2K_URL + "/xxx-top"
-				oc.add(DirectoryObject(key=Callback(MoviePageAdd, title=MOVIES_TITLE, page=MOVIES_PAGE, genre=Genre_Type, type=type), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=MOVIES_THUMB))
+				MOVIES_PAGE = "http://" + MOVIE2K_URL + "/xxx-top.html"
+				oc.add(DirectoryObject(key=Callback(MoviePageAdd, title=MOVIES_TITLE, page=MOVIES_PAGE, genre=Genre_Type, type=type, MOVIE2K_URL=MOVIE2K_URL), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=MOVIES_THUMB))
 
 	return oc
 
 
 #####################################################################################################
 @route(PREFIX + '/DisabledScreen')
-def DisabledScreen(title):
+def DisabledScreen(title, MOVIE2K_URL):
 
 	return ObjectContainer(header="We Apologize", message="This section has been disabled do to "+ MOVIE2K_URL +" disabling it on their site.")
 
@@ -1199,7 +1242,7 @@ def RokuUsersPasswordInput(title):
 
 ####################################################################################################
 @route(PREFIX + '/AlphabiticalPageAdd')
-def AlphabiticalPageAdd(title, page, type):
+def AlphabiticalPageAdd(title, page, type, MOVIE2K_URL):
 
 	oc = ObjectContainer(title2=title)
 
@@ -1213,7 +1256,7 @@ def AlphabiticalPageAdd(title, page, type):
 	MOVIES_SUMMARY = "Your Numerical list of the "+type+" database!"
 	MOVIES_THUMB = R(ICON_MOVIES)
 
-	oc.add(DirectoryObject(key=Callback(MovieGenres, title=MOVIES_TITLE, page=page, genre=Alpha_Type, thumb=MOVIES_THUMB, type=type), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=MOVIES_THUMB))
+	oc.add(DirectoryObject(key=Callback(MovieGenres, title=MOVIES_TITLE, page=page, genre=Alpha_Type, thumb=MOVIES_THUMB, type=type, MOVIE2K_URL=MOVIE2K_URL), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=MOVIES_THUMB))
 	if MOVIE2K_URL == "www.movie2k.tl":
 		Page = HTML.ElementFromString(req.content).xpath('//div[@id="content"]/div')[0]
 	elif MOVIE2K_URL == "www.movie2k.sx":
@@ -1233,14 +1276,14 @@ def AlphabiticalPageAdd(title, page, type):
 		else:
 			MOVIES_PAGE = "http://" + MOVIE2K_URL + MOVIES_PAGE_LINK
 
-		oc.add(DirectoryObject(key=Callback(MovieGenres, title=MOVIES_TITLE, page=MOVIES_PAGE, genre=Alpha_Type, thumb=MOVIES_THUMB, type=type), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=MOVIES_THUMB))
+		oc.add(DirectoryObject(key=Callback(MovieGenres, title=MOVIES_TITLE, page=MOVIES_PAGE, genre=Alpha_Type, thumb=MOVIES_THUMB, type=type, MOVIE2K_URL=MOVIE2K_URL), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=MOVIES_THUMB))
 
 	return oc
 
 
 ####################################################################################################
 @route(PREFIX + '/GenrePageAdd')
-def GenrePageAdd(title, page, type):
+def GenrePageAdd(title, page, type, MOVIE2K_URL):
 
 	oc = ObjectContainer(title2=title)
 
@@ -1269,7 +1312,7 @@ def GenrePageAdd(title, page, type):
 			NotSkip = False
 
 		if NotSkip:
-			oc.add(DirectoryObject(key=Callback(MovieGenres, title=MOVIES_TITLE, page=MOVIES_PAGE, genre=Genre_Type, thumb=MOVIES_THUMB, type=type), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=MOVIES_THUMB))
+			oc.add(DirectoryObject(key=Callback(MovieGenres, title=MOVIES_TITLE, page=MOVIES_PAGE, genre=Genre_Type, thumb=MOVIES_THUMB, type=type, MOVIE2K_URL=MOVIE2K_URL), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=MOVIES_THUMB))
 		else:
 			NotSkip = True
 
@@ -1278,7 +1321,7 @@ def GenrePageAdd(title, page, type):
 
 ####################################################################################################
 @route(PREFIX + '/MovieGenres')
-def MovieGenres(title, page, genre, thumb, type):
+def MovieGenres(title, page, genre, thumb, type, MOVIE2K_URL):
 	
 	oc = ObjectContainer(title2=title)
 
@@ -1312,14 +1355,14 @@ def MovieGenres(title, page, genre, thumb, type):
 				next_page = SiteURL + GenrePages[i-1].xpath('./a')[0].get('href')
 			i += 1
 			do.title = "Page "+str(i)+" - List of "+genre+" "+type
-			do.key = Callback(MoviePageAdd, title=do.title, page=next_page, genre=genre, type=type)
+			do.key = Callback(MoviePageAdd, title=do.title, page=next_page, genre=genre, type=type, MOVIE2K_URL=MOVIE2K_URL)
 			do.summary = "Page "+str(i)+" of the line up of "+genre+" "+type+" from Movie2k."
 			do.thumb = thumb
 			oc.add(do)
 	else:
 		do = DirectoryObject()
 		do.title = "Page 1 - List of "+genre+" "+type
-		do.key = Callback(MoviePageAdd, title=do.title, page=page, genre=genre, type=type)
+		do.key = Callback(MoviePageAdd, title=do.title, page=page, genre=genre, type=type, MOVIE2K_URL=MOVIE2K_URL)
 		do.summary = "Page 1 of the line up of "+genre+" "+type+" from Movie2k."
 		do.thumb = thumb
 		oc.add(do)
@@ -1329,7 +1372,7 @@ def MovieGenres(title, page, genre, thumb, type):
 
 ####################################################################################################
 @route(PREFIX + '/CinemaMoviePage')
-def CinemaMoviePageAdd(title, page, type):
+def CinemaMoviePageAdd(title, page, type, MOVIE2K_URL):
 	
 	oc = ObjectContainer(title2=title)
 	cookies = Dict['_movie2k_uid']
@@ -1359,7 +1402,7 @@ def CinemaMoviePageAdd(title, page, type):
 			MOVIES_THUMB = SiteURL + MOVIES_TD.xpath("."+elm+"/a/img")[0].get('src')
 			MOVIES_SUMMARY = "Year: "+MOVIES_YEAR+" | Lang: "+MOVIES_LANG+" | Part of the Cinema Movies line up on Movie2k."
 
-			oc.add(DirectoryObject(key=Callback(SubGroupMoviePageAdd, title=MOVIES_TITLE, page=MOVIES_PAGE, date=MOVIES_YEAR, dateadd=dateadd, thumbck=MOVIES_THUMB, type=type, summary=MOVIES_SUMMARY), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=Callback(GetThumb, url=MOVIES_THUMB)))			
+			oc.add(DirectoryObject(key=Callback(SubGroupMoviePageAdd, title=MOVIES_TITLE, page=MOVIES_PAGE, date=MOVIES_YEAR, dateadd=dateadd, thumbck=MOVIES_THUMB, type=type, summary=MOVIES_SUMMARY, MOVIE2K_URL=MOVIE2K_URL), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=Callback(GetThumb, url=MOVIES_THUMB)))			
 		except:
 			pass
 
@@ -1372,7 +1415,7 @@ def CinemaMoviePageAdd(title, page, type):
 			MOVIES_THUMB = SiteURL + MOVIES_TD.xpath("."+elm+"/a/img")[0].get('src')
 			MOVIES_SUMMARY = "Year: "+MOVIES_YEAR+" | Lang: "+MOVIES_LANG+" | Part of the Older Cinema Movies line up on Movie2k."
 
-			oc.add(DirectoryObject(key=Callback(SubGroupMoviePageAdd, title=MOVIES_TITLE, page=MOVIES_PAGE, date=MOVIES_YEAR, dateadd=dateadd, thumbck=MOVIES_THUMB, type=type, summary=MOVIES_SUMMARY), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=Callback(GetThumb, url=MOVIES_THUMB)))
+			oc.add(DirectoryObject(key=Callback(SubGroupMoviePageAdd, title=MOVIES_TITLE, page=MOVIES_PAGE, date=MOVIES_YEAR, dateadd=dateadd, thumbck=MOVIES_THUMB, type=type, summary=MOVIES_SUMMARY, MOVIE2K_URL=MOVIE2K_URL), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=Callback(GetThumb, url=MOVIES_THUMB)))
 		except:
 			pass
 
@@ -1381,7 +1424,7 @@ def CinemaMoviePageAdd(title, page, type):
 
 ####################################################################################################
 @route(PREFIX + '/FeaturedMoviePageAdd')
-def FeaturedMoviePageAdd(title, page, type):
+def FeaturedMoviePageAdd(title, page, type, MOVIE2K_URL):
 
 	oc = ObjectContainer(title2=title)
 	
@@ -1402,7 +1445,7 @@ def FeaturedMoviePageAdd(title, page, type):
 			MOVIES_LANG = "English"
 			MOVIES_SUMMARY = "Year: "+MOVIES_YEAR+" | Lang: "+MOVIES_LANG+" | Part of the Featured XXX Movies line up on Movie2k."
 
-			oc.add(DirectoryObject(key=Callback(SubGroupMoviePageAdd, title=MOVIES_TITLE, page=MOVIES_PAGE, date=MOVIES_YEAR, dateadd=dateadd, thumbck=MOVIES_THUMB, type=type, summary=MOVIES_SUMMARY), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=Callback(GetThumb, url=MOVIES_THUMB)))
+			oc.add(DirectoryObject(key=Callback(SubGroupMoviePageAdd, title=MOVIES_TITLE, page=MOVIES_PAGE, date=MOVIES_YEAR, dateadd=dateadd, thumbck=MOVIES_THUMB, type=type, summary=MOVIES_SUMMARY, MOVIE2K_URL=MOVIE2K_URL), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=Callback(GetThumb, url=MOVIES_THUMB)))
 		i += 1
 
 	return oc
@@ -1410,7 +1453,7 @@ def FeaturedMoviePageAdd(title, page, type):
 
 ####################################################################################################
 @route(PREFIX + '/MovieGenrePage')
-def MoviePageAdd(title, page, genre, type):
+def MoviePageAdd(title, page, genre, type, MOVIE2K_URL):
 	
 	oc = ObjectContainer(title2=title)
 
@@ -1495,7 +1538,7 @@ def MoviePageAdd(title, page, genre, type):
 			MOVIES_THUMB = None
 
 		if MOVIES_LANG == GetLanguage() or MOVIES_LANG == 'N/A' or GetLanguage() == 'All':
-			oc.add(DirectoryObject(key=Callback(SubGroupMoviePageAdd, title=MOVIES_TITLE, page=MOVIES_PAGE, date=MOVIES_YEAR, dateadd=dateadd, thumbck=MOVIES_THUMB, type=type, summary=MOVIES_SUMMARY), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=Callback(GetThumb, url=MOVIES_THUMB)))
+			oc.add(DirectoryObject(key=Callback(SubGroupMoviePageAdd, title=MOVIES_TITLE, page=MOVIES_PAGE, date=MOVIES_YEAR, dateadd=dateadd, thumbck=MOVIES_THUMB, type=type, summary=MOVIES_SUMMARY, MOVIE2K_URL=MOVIE2K_URL), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=Callback(GetThumb, url=MOVIES_THUMB)))
 		i += 1
 
 	if len(oc) < 1:
@@ -1507,13 +1550,13 @@ def MoviePageAdd(title, page, genre, type):
 
 ####################################################################################################
 @route(PREFIX + '/TVandMovieGroupPage')
-def SubGroupMoviePageAdd(title, page, date, dateadd, thumbck, type, summary):
+def SubGroupMoviePageAdd(title, page, date, dateadd, thumbck, type, summary, MOVIE2K_URL):
 
 	oc = ObjectContainer(title2=title)
 
 	# List Host Sites for Playback
 	summary = summary.split(" | ")[0] + " | " + summary.split(" | ")[1] + " | List the Host Sites from Movie2k."
-	oc.add(DirectoryObject(key=Callback(SubMoviePageAdd, title=title, page=page, date=date, dateadd=dateadd, thumbck=thumbck, type=type), title=title, summary=summary, thumb=Callback(GetThumb, url=thumbck)))
+	oc.add(DirectoryObject(key=Callback(SubMoviePageAdd, title=title, page=page, date=date, dateadd=dateadd, thumbck=thumbck, type=type, MOVIE2K_URL=MOVIE2K_URL), title=title, summary=summary, thumb=Callback(GetThumb, url=thumbck)))
 
 	# Add Favorite Movie4k.to link
 	ICON_ADDFAVORITE = "icon-add-favorite.png"
@@ -1523,13 +1566,13 @@ def SubGroupMoviePageAdd(title, page, date, dateadd, thumbck, type, summary):
 	prompt = "Add a favorite link from Movie2k!"
 	if page.split('/')[0] != "http:":
 		page = "http://"+MOVIE2K_URL+"/"+page
-	oc.add(DirectoryObject(key=Callback(InputFavoriteURL, title=title, query=page), title=title, summary=summary, thumb=ADDFAVORITE_THUMB))
+	oc.add(DirectoryObject(key=Callback(InputFavoriteURL, title=title, MOVIE2K_URL=MOVIE2K_URL, query=page), title=title, summary=summary, thumb=ADDFAVORITE_THUMB))
 	return oc
 
 
 ####################################################################################################
 @route(PREFIX + '/TVandMovieHostPage')
-def SubMoviePageAdd(title, page, date, dateadd, thumbck, type):
+def SubMoviePageAdd(title, page, date, dateadd, thumbck, type, MOVIE2K_URL):
 	
 	if HOST_COUNT != "1":
 		pl = "s"
@@ -1585,9 +1628,7 @@ def SubMoviePageAdd(title, page, date, dateadd, thumbck, type):
 
 	if jj == 0:
 		try:
-			Host =  MOVIE_PAGE_HTML.xpath('//div[@id="maincontent5"]/div/a')[0].get('href').split('/')[2].split('.')[0].capitalize()
-			if Host == 'Www' or Host == 'Embed':
-				Host = MOVIE_PAGE_HTML.xpath('//div[@id="maincontent5"]/div/a')[0].get('href').split('http://')[1].split('.')[1].capitalize()
+			Host = FindRealHost(page=MOVIE_PAGE_HTML)
 			MOVIES_SUMMARY = "Page - " + str(i) + " | Host: " + Host
 			MOVIES_TITLE = title
 			if SWAP_TITLE == "Enabled":
@@ -1596,7 +1637,7 @@ def SubMoviePageAdd(title, page, date, dateadd, thumbck, type):
 			if Host == "Urmediazone":
 				oc = ObjectContainer(header="We Apologize", message=title + " does not have any Host sites listed for video playback.  Try again later to see if Movie2k site adds any Hosts.")
 			else:
-				oc.add(DirectoryObject(key=Callback(TheMovieListings, title=title, page=page, date=date, dateadd=dateadd, thumb=thumb, type=type, PageOfHosts=0, Host=Host), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=Callback(GetThumb, url=thumb)))
+				oc.add(DirectoryObject(key=Callback(TheMovieListings, title=title, page=page, date=date, dateadd=dateadd, thumb=thumb, type=type, PageOfHosts=0, MOVIE2K_URL=MOVIE2K_URL, Host=Host), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=Callback(GetThumb, url=thumb)))
 		except:
 			pass
 	else:
@@ -1609,8 +1650,13 @@ def SubMoviePageAdd(title, page, date, dateadd, thumbck, type):
 						except:
 							Host = Listing[Num1].xpath("./td/a/img")[0].get('title').split(' ')[0].capitalize()
 					except:
-						#This is for www.movie2k.sx
-						Host = Listing[Num1].xpath("./td/a")[2].text.capitalize()
+						if MOVIE2K_URL == "www.movie2k.sx":
+							try:
+								Host = Listing[Num1].xpath("./td/a")[2].text.split('.')[0].capitalize()
+							except:
+								Host = Listing[Num1].xpath("./td/a")[2].text.capitalize()
+					if Host == None or Host == "":
+						Host = FindRealHost(page=MOVIE_PAGE_HTML)
 					Num1 += 1
 					Hosts = Hosts + Host + ", "
 				elif Num2 < NumHostListing2:
@@ -1636,7 +1682,7 @@ def SubMoviePageAdd(title, page, date, dateadd, thumbck, type):
 			if SWAP_TITLE == "Enabled":
 				MOVIES_SUMMARY = title
 				MOVIES_TITLE = str(i) + ": " + Hosts[:-2]
-			oc.add(DirectoryObject(key=Callback(TheMovieListings, title=title, page=page, date=date, dateadd=dateadd, thumb=thumb, type=type, PageOfHosts=i), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=Callback(GetThumb, url=thumb)))
+			oc.add(DirectoryObject(key=Callback(TheMovieListings, title=title, page=page, date=date, dateadd=dateadd, thumb=thumb, type=type, PageOfHosts=i, MOVIE2K_URL=MOVIE2K_URL), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=Callback(GetThumb, url=thumb)))
 			HostCount = 1
 			Hosts = ""
 			i += 1
@@ -1649,7 +1695,7 @@ def SubMoviePageAdd(title, page, date, dateadd, thumbck, type):
 
 ####################################################################################################
 @route(PREFIX + '/TVandTheMovieListings')
-def TheMovieListings(title, page, date, dateadd, thumb, type, PageOfHosts, Host=None):
+def TheMovieListings(title, page, date, dateadd, thumb, type, PageOfHosts, MOVIE2K_URL, Host=None):
 
 	oc = ObjectContainer(title2=title+" - [HOST VIDEO INFO]")
 
@@ -1809,8 +1855,13 @@ def TheMovieListings(title, page, date, dateadd, thumb, type, PageOfHosts, Host=
 						except:
 							Host = Listing[num].xpath("./td/a/img")[0].get('title').split(' ')[0].capitalize()
 					except:
-						#This is for www.movie2k.sx
-						Host = Listing[num].xpath("./td/a")[2].text.capitalize()
+						if MOVIE2K_URL == "www.movie2k.sx":
+							try:
+								Host = Listing[num].xpath("./td/a")[2].text.split('.')[0].capitalize()
+							except:
+								Host = Listing[num].xpath("./td/a")[2].text.capitalize()
+					if Host == None or Host == "":
+						Host = FindRealHost(page=MOVIE_PAGE_HTML)
 					MOVIE_PAGE = Listing[num].xpath("./td/a")[0].get('href')
 					if MOVIE_PAGE.split('/')[0] != "http:":
 						MOVIE_PAGE = "http://" + CURRENT_MOVIE2K_URL + "/" + MOVIE_PAGE
@@ -1918,6 +1969,23 @@ def TheMovieListings(title, page, date, dateadd, thumb, type, PageOfHosts, Host=
 		oc = ObjectContainer(header="We Apologize", message="An error has occured processing Host site information.  Please try again.")
 
 	return oc
+
+
+####################################################################################################
+def FindRealHost(page):
+	HostPageElm = page.xpath('//div[@id="maincontent5"]/div')[0]
+	try:
+		try:
+			HostPage =  HostPageElm.xpath('./a')[0].get('href')
+		except:
+			HostPage = HostPageElm.xpath('./iframe')[0].get('src')
+	except:
+		HostPage = HostPageElm.xpath('./object/param')[0].get('value')
+	Host = HostPage.split('/')[2].split('.')[0].capitalize()
+	if Host == 'Www' or Host == 'Embed':
+		Host = HostPage.split('http://')[1].split('.')[1].capitalize()
+
+	return Host
 
 
 ####################################################################################################

@@ -3,8 +3,8 @@
 		"id": "version",
 		"type": "enum",
 		"label": "Version",
-		"values": ["1.7.8"],
-		"default": "1.7.8"
+		"values": ["1.7.9"],
+		"default": "1.7.9"
 	},
 	{
 		"id": "video_resolution",
@@ -22,7 +22,7 @@
 		"type": "enum",
 		"label": "Site URL",
 		"values": [
-			"www.movie4k.to",
+			"Disabled",
 			"91.202.63.145",
 			"www.movie.to",
 			"movie4k.co.in",
@@ -30,12 +30,9 @@
 			"www.movie4kunblocked.co",
 			"www.movie2kproxy.org",
 			"www.movie2kproxy.com",
-			"www.movie2k.tv",
-			"91.202.62.123",
-			"www.movie2k.sx",
-			"www.movie2k.tl"
+			"91.202.62.123"
 		],
-		"default": "www.movie4k.to"
+		"default": "Disabled"
 	},
 	{
 		"id": "host_count",
@@ -196,7 +193,8 @@
 			"1",
 			"2",
 			"3",
-			"4"
+			"4",
+			"5"
 		],
 		"default": "" 
 	},

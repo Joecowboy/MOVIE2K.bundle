@@ -1,6 +1,6 @@
 #Movie2k Plugin Introduction:
 
-This is a Plex channel plugin that pulls in Movie and TV Episodes from the website Movie2k.to now moved to Movie4k.to.
+This is a Plex channel plugin that pulls in Movie and TV Episodes from the website Movie2k.to now moved to Movie4k.to, Movie2k.tv, Movie2k.sx and Movie2k.tl.  All the sites have a little bit different content with different Host line ups for the movies and tv shows.
 
 ![dashboard-thumbnail]
 
@@ -22,19 +22,15 @@ Video Resolution has three choices:  480, 720 and 1080.  This will allow you set
 
 ###Site URL:
 
-Site URL allows you to choose the URL you want to pull your Movie and TV Shows from.  All the Main sites have a little bit different content with different Host line ups for the movies and tv shows.  If you change from the default Site URL may require Plex Media Server to be restarted. Proxy servers can be used if the www.movie4k.to site URL is being blocked.  This has no effect on Host site URLs only MOVIE4k.  Only proxy effects on Host sites will be using the Tor setup.
+Site URL allows you to choose the Proxy URL or IP address you want to pull your Movie and TV Shows from.  If you change the Site URL may require Plex Media Server to be restarted. Proxy servers can be used if the www.movie4k.to site URL is being blocked.  This has no effect on Host site URLs only MOVIE4k.  Only proxy effects on Host sites will be using the Tor setup.
 
 Currently there are eleven URLs in the list:
 
--**Main Site for Movie4k:** www.movie4k.to and it's IP address
+-**Main Site for Movie4k:** IP address
 
 -**Proxy sites for Movie4k:** www.movie.to, movie4k.co.in, movie4k.to.come.in, www.movie4kunblocked.co, www.movie2kproxy.org and www.movie2kproxy.com
 
--**Main Site for Movie2k.tv:** www.movie2k.tv and it's IP address
-
--**Main Site for Movie2k.sx:** www.movie2k.sx
-
--**Main Site for Movie2k.tl (German Content Only):** www.movie2k.tl
+-**Main Site for Movie2k.tv:** IP address
 
 ###Number of Hosts Per Page:
 

@@ -742,7 +742,8 @@ def ErrorVideo(ErrorType):
 
 	if VideoError == "Enabled":
 		if ErrorType == "":
-			VideoMessage = "http://d3macfshcnzosd.cloudfront.net/010871413_main_l.mp4"
+			VideoMessage = R("Host_Down.mp4")
+			#VideoMessage = "http://d3macfshcnzosd.cloudfront.net/010871413_main_l.mp4"
 		elif ErrorType == "HostDown":
 			VideoMessage = R("Host_Down.mp4")
 		elif ErrorType == "VideoRemoved":

@@ -1303,7 +1303,7 @@ def GetMovie(Host, HostPage, url, LinkType):
 		try:
 			if LinkType == 4:
 				VideoID = HostPage.split('=')[1]
-			elif LinkType == 2:
+			elif LinkType == 2 or LinkType == 5:
 				VideoID = HostPage.split('/')[4]
 
 			url = "http://www.userporn.com/player_control/settings.php?v="+VideoID+"&em=TRUE&fv=v1.1.55"
@@ -1312,17 +1312,22 @@ def GetMovie(Host, HostPage, url, LinkType):
 			headers = {'User-Agent': UserAgent, 'Host': 'www.userporn.com', 'Referer': url2}
 			cookies = {'UP_disclaim': '1'}
 			session = requests.session()
-			OpenUrl = session.get(url, headers=headers, cookies=cookies)
+			requests.utils.add_dict_to_cookiejar(session.cookies, cookies)
+			OpenUrl = session.get(url, headers=headers)
 			VideoPage = OpenUrl.content.split('"token1":"')[1].split('"')[0].decode('base64', 'strict')
-			KeyString = OpenUrl.content.split('"time":"')[1].split('"')[0]
-			KeyOne = int(OpenUrl.content.split('"rkts":')[1].split(',')[0])
-			KeyTwo = int(HOSTER_KEY1.decode('base64', 'strict'))
-			VideoKey = zDecrypt(KeyString, KeyOne, KeyTwo, 82, 84669, 48779, 32, 65598, 115498)
-			VideoURL = VideoPage+"&c="+VideoKey+"&start=0"
-			cookies.update(CookieDict(cookies=session.cookies))
-			VideoStream = VideoURL + "?cookies="+String.Quote(str(cookies), usePlus=True)+"&headers="+String.Quote(str(headers), usePlus=True)
+			if VideoPage == None or VideoPage == "":
+				InputError = OpenUrl.content.split('"text":"')[1].split('"')[0]
+				VideoStream = ErrorMessage(Host=Host, InputError=InputError, ErrorType="VideoRemoved")
+			else:
+				KeyString = OpenUrl.content.split('"time":"')[1].split('"')[0]
+				KeyOne = int(OpenUrl.content.split('"rkts":')[1].split(',')[0])
+				KeyTwo = int(HOSTER_KEY1.decode('base64', 'strict'))
+				VideoKey = zDecrypt(KeyString, KeyOne, KeyTwo, 82, 84669, 48779, 32, 65598, 115498)
+				VideoURL = VideoPage+"&c="+VideoKey+"&start=0"
+				cookies.update(CookieDict(cookies=session.cookies))
+				VideoStream = VideoURL + "?cookies="+String.Quote(str(cookies), usePlus=True)+"&headers="+String.Quote(str(headers), usePlus=True)
 		except:
-			VideoStream = ErrorMessage(Host=Host, LogError=1)
+			VideoStream = ErrorMessage(Host=Host, LogError=1, ErrorType="HostDown")
 	elif Host == "V-vids":
 		try:
 			if LinkType == 4:
