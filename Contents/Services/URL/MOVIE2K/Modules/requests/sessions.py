@@ -13,7 +13,8 @@ from collections import Mapping
 from datetime import datetime
 
 from .compat import cookielib, OrderedDict, urljoin, urlparse, builtin_str
-from .cookies import cookiejar_from_dict, extract_cookies_to_jar, RequestsCookieJar
+from .cookies import (
+    cookiejar_from_dict, extract_cookies_to_jar, RequestsCookieJar, merge_cookies)
 from .models import Request, PreparedRequest
 from .hooks import default_hooks, dispatch_hook
 from .utils import to_key_val_list, default_headers
@@ -63,6 +64,22 @@ def merge_setting(request_setting, session_setting, dict_class=OrderedDict):
             del merged_setting[k]
 
     return merged_setting
+
+
+def merge_hooks(request_hooks, session_hooks, dict_class=OrderedDict):
+    """
+    Properly merges both requests and session hooks.
+
+    This is necessary because when request_hooks == {'response': []}, the
+    merge breaks Session hooks entirely.
+    """
+    if session_hooks is None or session_hooks.get('response') == []:
+        return request_hooks
+
+    if request_hooks is None or request_hooks.get('response') == []:
+        return session_hooks
+
+    return merge_setting(request_hooks, session_hooks, dict_class)
 
 
 class SessionRedirectMixin(object):
@@ -136,7 +153,9 @@ class SessionRedirectMixin(object):
             except KeyError:
                 pass
 
-            prepared_request.prepare_cookies(self.cookies)
+            extract_cookies_to_jar(prepared_request._cookies,
+                                   prepared_request, resp.raw)
+            prepared_request.prepare_cookies(prepared_request._cookies)
 
             resp = self.send(
                 prepared_request,
@@ -245,9 +264,8 @@ class Session(SessionRedirectMixin):
             cookies = cookiejar_from_dict(cookies)
 
         # Merge with session cookies
-        merged_cookies = RequestsCookieJar()
-        merged_cookies.update(self.cookies)
-        merged_cookies.update(cookies)
+        merged_cookies = merge_cookies(
+            merge_cookies(RequestsCookieJar(), self.cookies), cookies)
 
 
         # Set environment's basic authentication if not explicitly set.
@@ -265,7 +283,7 @@ class Session(SessionRedirectMixin):
             params=merge_setting(request.params, self.params),
             auth=merge_setting(auth, self.auth),
             cookies=merged_cookies,
-            hooks=merge_setting(request.hooks, self.hooks),
+            hooks=merge_hooks(request.hooks, self.hooks),
         )
         return p
 
@@ -328,9 +346,6 @@ class Session(SessionRedirectMixin):
             hooks = hooks,
         )
         prep = self.prepare_request(req)
-
-        # Add param cookies to session cookies
-        self.cookies = cookiejar_from_dict(cookies, cookiejar=self.cookies, overwrite=False)
 
         proxies = proxies or {}
 

@@ -1,3 +1,5 @@
+[B]Version 1.7.10[/B]
+- Added Plex/Web Search Site URL in plugin preferences added search back for Plex/web.  Updated few more hosts and fixed wait issue because of didn't call import time in HostServices.py
 [B]Version 1.7.9[/B]
 - Added Selection now for Movie4k.to, Movie2k.tv, Movie2k.sx, Movie2k.tl to the main page and all the others to sub page except plugin Preferences.
 [B]Version 1.7.8[/B]

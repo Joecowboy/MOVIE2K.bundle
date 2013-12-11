@@ -16,6 +16,7 @@ import logging
 from base64 import b64encode
 
 from .compat import urlparse, str
+from .cookies import extract_cookies_to_jar
 from .utils import parse_dict_header
 
 log = logging.getLogger(__name__)
@@ -105,7 +106,7 @@ class HTTPDigestAuth(AuthBase):
 
         A1 = '%s:%s:%s' % (self.username, realm, self.password)
         A2 = '%s:%s' % (method, path)
-        
+
         HA1 = hash_utf8(A1)
         HA2 = hash_utf8(A2)
 
@@ -144,7 +145,7 @@ class HTTPDigestAuth(AuthBase):
         if entdig:
             base += ', digest="%s"' % entdig
         if qop:
-            base += ', qop=auth, nc=%s, cnonce="%s"' % (ncvalue, cnonce)
+            base += ', qop="auth", nc=%s, cnonce="%s"' % (ncvalue, cnonce)
 
         return 'Digest %s' % (base)
 
@@ -169,7 +170,8 @@ class HTTPDigestAuth(AuthBase):
             r.content
             r.raw.release_conn()
             prep = r.request.copy()
-            prep.prepare_cookies(r.cookies)
+            extract_cookies_to_jar(prep._cookies, r.request, r.raw)
+            prep.prepare_cookies(prep._cookies)
 
             prep.headers['Authorization'] = self.build_digest_header(
                 prep.method, prep.url)

@@ -48,10 +48,6 @@ PREFIX            = "/video/movie2k"
 NAME              = "Movie2k"
 ART               = "art-default.jpg"
 ICON              = "icon-default.png"
-MOVIE2K_PROXY_URL = Prefs['movie2k_url']
-TOP_PAGES         = Prefs['toppages']
-HOST_COUNT        = Prefs['host_count']
-SWAP_TITLE        = Prefs['swaptitle']
 CAPTCHA_DATA      = "captcha.data.json"
 FAVORITES_DATA    = "favorites.data.json"
 PROXIFIER_PROCESS = None
@@ -111,9 +107,9 @@ def MainMenu():
 	MOVIES_TITLE = "Movie4k.to"
 	MOVIES_SUMMARY = "Your Movies, Blockbuster and TV Shows database!"
 	MOVIES_THUMB = R(ICON_MOVIES4k_TO)
-	if MOVIE2K_PROXY_URL != "Disabled":
-		if MOVIE2K_PROXY_URL != "91.202.62.123":
-			MOVIE2K_URL = MOVIE2K_PROXY_URL
+	if Prefs['proxy_movie2k_url'] != "Disabled":
+		if Prefs['proxy_movie2k_url'] != "91.202.62.123":
+			MOVIE2K_URL = Prefs['proxy_movie2k_url']
 	else:
 		MOVIE2K_URL = "www.movie4k.to"
 	oc.add(DirectoryObject(key=Callback(SubMainMenu, title=MOVIES_TITLE, MOVIE2K_URL=MOVIE2K_URL), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=MOVIES_THUMB))
@@ -123,9 +119,9 @@ def MainMenu():
 	MOVIES_TITLE = "Movie2k.tv"
 	MOVIES_SUMMARY = "Your Movies, Blockbuster and TV Shows database!"
 	MOVIES_THUMB = R(ICON_MOVIES2k_TV)
-	if MOVIE2K_PROXY_URL != "Disabled":
-		if MOVIE2K_PROXY_URL == "91.202.62.123":
-			MOVIE2K_URL = MOVIE2K_PROXY_URL
+	if Prefs['proxy_movie2k_url'] != "Disabled":
+		if Prefs['proxy_movie2k_url'] == "91.202.62.123":
+			Prefs['proxy_movie2k_url'] = MOVIE2K_PROXY_URL
 	else:
 		MOVIE2K_URL = "www.movie2k.tv"
 	oc.add(DirectoryObject(key=Callback(SubMainMenu, title=MOVIES_TITLE, MOVIE2K_URL=MOVIE2K_URL), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=MOVIES_THUMB))
@@ -145,6 +141,16 @@ def MainMenu():
 	MOVIES_THUMB = R(ICON_MOVIES2k_TL)
 	MOVIE2K_URL = "www.movie2k.tl"
 	oc.add(DirectoryObject(key=Callback(SubMainMenu, title=MOVIES_TITLE, MOVIE2K_URL=MOVIE2K_URL), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=MOVIES_THUMB))
+
+	#Add Search only for Plex/Web
+	if Client.Product == "Web Client":
+		ICON_SEARCH = "icon-search.png"
+		title = "Movie4k.to"
+		SEARCH_TITLE = "Search the "+title+" Database"
+		SEARCH_SUMMARY ="Find a TV Show or Movie from the "+title+" database!"
+		SEARCH_THUMB = R(ICON_SEARCH)
+		MOVIE2K_URL = Prefs['movie2k_url']
+		oc.add(InputDirectoryObject(key=Callback(Search, title=title, MOVIE2K_URL=MOVIE2K_URL), title=SEARCH_TITLE, summary=SEARCH_SUMMARY, prompt="Search for", thumb=SEARCH_THUMB))
 
 	#Add Movie2k Plugin Setup
 	ICON_PREFS = "icon-preferences.png"
@@ -197,7 +203,7 @@ def SubMainMenu(title, MOVIE2K_URL):
 
 	#Add Search Links
 	ICON_SEARCH = "icon-search.png"
-	SEARCH_TITLE = "Search the Database"
+	SEARCH_TITLE = "Search the "+title+" Database"
 	SEARCH_SUMMARY ="Find a TV Show or Movie from the "+title+" database!"
 	SEARCH_THUMB = R(ICON_SEARCH)
 	oc.add(InputDirectoryObject(key=Callback(Search, title=title, MOVIE2K_URL=MOVIE2K_URL), title=SEARCH_TITLE, summary=SEARCH_SUMMARY, prompt="Search for", thumb=SEARCH_THUMB))
@@ -757,7 +763,7 @@ def TVShows(title, type, MOVIE2K_URL):
 	TVSHOW_PAGE = "http://" + MOVIE2K_URL + "/genres-tvshows.html"
 	oc.add(DirectoryObject(key=Callback(GenreTVShowsPageAdd, title=TVSHOW_TITLE, page=TVSHOW_PAGE, type=type, MOVIE2K_URL=MOVIE2K_URL), title=TVSHOW_TITLE, summary=TVSHOW_SUMMARY, thumb=TVSHOW_THUMB))
 
-	if MOVIE2K_URL == "www.movie2k.tl" or TOP_PAGES == "Enabled":
+	if MOVIE2K_URL == "www.movie2k.tl" or Prefs['toppages'] == "Enabled":
 		#Add Top TV Shows
 		Genre_Type = "Top TV Shows"
 		ICON_UPDATES = "icon-top.png"
@@ -1064,7 +1070,7 @@ def Movies(title, type, MOVIE2K_URL):
 		MOVIES_PAGE = "http://" + MOVIE2K_URL + "/genres-movies.html"
 		oc.add(DirectoryObject(key=Callback(GenrePageAdd, title=MOVIES_TITLE, page=MOVIES_PAGE, type=type, MOVIE2K_URL=MOVIE2K_URL), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=MOVIES_THUMB))
 
-		if MOVIE2K_URL == "www.movie2k.tl" or TOP_PAGES == "Enabled":
+		if MOVIE2K_URL == "www.movie2k.tl" or Prefs['toppages'] == "Enabled":
 			#Add Top Movies
 			Genre_Type = "Top Movies"
 			ICON_TOP = "icon-top.png"
@@ -1139,7 +1145,7 @@ def Movies(title, type, MOVIE2K_URL):
 			PORN_PAGE = "http://" + MOVIE2K_URL + "/genres-xxx.html"
 			oc.add(DirectoryObject(key=Callback(GenrePageAdd, title=PORN_TITLE, page=PORN_PAGE, type=type, MOVIE2K_URL=MOVIE2K_URL), title=PORN_TITLE, summary=PORN_SUMMARY, thumb=PORN_THUMB))
 
-			if TOP_PAGES == "Enabled":
+			if Prefs['toppages'] == "Enabled":
 				#Add Top XXX Movies
 				Genre_Type = "Top XXX Movies"
 				ICON_TOP = "icon-top.png"
@@ -1212,7 +1218,7 @@ def InputParentalPassword(title, type, MOVIE2K_URL, query):
 			PORN_PAGE = "http://" + MOVIE2K_URL + "/genres-xxx.html"
 			oc.add(DirectoryObject(key=Callback(GenrePageAdd, title=PORN_TITLE, page=PORN_PAGE, type=type, MOVIE2K_URL=MOVIE2K_URL), title=PORN_TITLE, summary=PORN_SUMMARY, thumb=PORN_THUMB))
 
-			if TOP_PAGES == "Enabled":
+			if Prefs['toppages'] == "Enabled":
 				#Add Top XXX Movies
 				Genre_Type = "Top XXX Movies"
 				ICON_TOP = "icon-top.png"
@@ -1574,12 +1580,12 @@ def SubGroupMoviePageAdd(title, page, date, dateadd, thumbck, type, summary, MOV
 @route(PREFIX + '/TVandMovieHostPage')
 def SubMoviePageAdd(title, page, date, dateadd, thumbck, type, MOVIE2K_URL):
 	
-	if HOST_COUNT != "1":
+	if Prefs['host_count'] != "1":
 		pl = "s"
 	else:
 		pl = ""
 
-	oc = ObjectContainer(title2=title+" - ["+HOST_COUNT+" HOST"+pl+" per Page]")
+	oc = ObjectContainer(title2=title+" - ["+Prefs['host_count']+" HOST"+pl+" per Page]")
 
 	if page.split('/')[0] != "http:":
 		CURRENT_MOVIE2K_URL = MOVIE2K_URL
@@ -1621,8 +1627,8 @@ def SubMoviePageAdd(title, page, date, dateadd, thumbck, type, MOVIE2K_URL):
 		NumHostListing2 = NumHostListing2 + NumHosts
 		nsl += 1
 
-	p = (float(NumHostListing1)+float(NumHostListing2))/float(HOST_COUNT) - (NumHostListing1+NumHostListing2)/int(HOST_COUNT)
-	jj = (NumHostListing1+NumHostListing2)/int(HOST_COUNT)
+	p = (float(NumHostListing1)+float(NumHostListing2))/float(Prefs['host_count']) - (NumHostListing1+NumHostListing2)/int(Prefs['host_count'])
+	jj = (NumHostListing1+NumHostListing2)/int(Prefs['host_count'])
 	if p > 0:
 		jj += 1
 
@@ -1631,7 +1637,7 @@ def SubMoviePageAdd(title, page, date, dateadd, thumbck, type, MOVIE2K_URL):
 			Host = FindRealHost(page=MOVIE_PAGE_HTML)
 			MOVIES_SUMMARY = "Page - " + str(i) + " | Host: " + Host
 			MOVIES_TITLE = title
-			if SWAP_TITLE == "Enabled":
+			if Prefs['swaptitle'] == "Enabled":
 				MOVIES_SUMMARY = title
 				MOVIES_TITLE = str(i) + ": " + Host
 			if Host == "Urmediazone":
@@ -1642,7 +1648,7 @@ def SubMoviePageAdd(title, page, date, dateadd, thumbck, type, MOVIE2K_URL):
 			pass
 	else:
 		while i <= jj:
-			while HostCount <= int(HOST_COUNT):
+			while HostCount <= int(Prefs['host_count']):
 				if Num1 < NumHostListing1:
 					try:
 						try:
@@ -1674,12 +1680,12 @@ def SubMoviePageAdd(title, page, date, dateadd, thumbck, type, MOVIE2K_URL):
 					Num2 += 1
 					Hosts = Hosts + Host + ", "
 				else:
-					HostCount = int(HOST_COUNT)
+					HostCount = int(Prefs['host_count'])
 				HostCount += 1
 
 			MOVIES_SUMMARY = "Page - " + str(i) + " | Hosts: " + Hosts[:-2]
 			MOVIES_TITLE = title
-			if SWAP_TITLE == "Enabled":
+			if Prefs['swaptitle'] == "Enabled":
 				MOVIES_SUMMARY = title
 				MOVIES_TITLE = str(i) + ": " + Hosts[:-2]
 			oc.add(DirectoryObject(key=Callback(TheMovieListings, title=title, page=page, date=date, dateadd=dateadd, thumb=thumb, type=type, PageOfHosts=i, MOVIE2K_URL=MOVIE2K_URL), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=Callback(GetThumb, url=thumb)))
@@ -1830,8 +1836,8 @@ def TheMovieListings(title, page, date, dateadd, thumb, type, PageOfHosts, MOVIE
 			NumHostListing2 = NumHostListing2 + NumHosts
 			nsl += 1
 
-		p = (float(NumHostListing1)+float(NumHostListing2))/float(HOST_COUNT) - (NumHostListing1+NumHostListing2)/int(HOST_COUNT)
-		NumPages = (NumHostListing1+NumHostListing2)/int(HOST_COUNT)
+		p = (float(NumHostListing1)+float(NumHostListing2))/float(Prefs['host_count']) - (NumHostListing1+NumHostListing2)/int(Prefs['host_count'])
+		NumPages = (NumHostListing1+NumHostListing2)/int(Prefs['host_count'])
 		if p > 0:
 			NumPages += 1
 
@@ -1912,7 +1918,7 @@ def TheMovieListings(title, page, date, dateadd, thumb, type, PageOfHosts, MOVIE
 
 						show = "ADDED: "+ DateAdded + " | HOST: " + Host + " | QUALITY: " + Quality
 						show_title = title
-						if SWAP_TITLE == "Enabled":
+						if Prefs['swaptitle'] == "Enabled":
 							show = title
 							show_title = "QUALITY: " + Quality +" | HOST: " + Host + " | ADDED: " + DateAdded
 
@@ -1954,7 +1960,7 @@ def TheMovieListings(title, page, date, dateadd, thumb, type, PageOfHosts, MOVIE
 										originally_available_at = date,
 										thumb = Callback(GetThumb, url=thumb)))
 
-			if (num+1)%int(HOST_COUNT) == 0:
+			if (num+1)%int(Prefs['host_count']) == 0:
 				if out['CurrentPage'] == int(PageOfHosts):
 					out['CreatePage'] = False
 				else:

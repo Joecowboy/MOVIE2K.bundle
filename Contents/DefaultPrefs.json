@@ -3,8 +3,8 @@
 		"id": "version",
 		"type": "enum",
 		"label": "Version",
-		"values": ["1.7.9"],
-		"default": "1.7.9"
+		"values": ["1.7.10"],
+		"default": "1.7.10"
 	},
 	{
 		"id": "video_resolution",
@@ -18,7 +18,7 @@
 		"default": "480"
 	},
 	{
-		"id": "movie2k_url",
+		"id": "proxy_movie2k_url",
 		"type": "enum",
 		"label": "Site URL",
 		"values": [
@@ -33,6 +33,26 @@
 			"91.202.62.123"
 		],
 		"default": "Disabled"
+	},
+	{
+		"id": "movie2k_url",
+		"type": "enum",
+		"label": "Plex/Web Search Site URL",
+		"values": [
+			"www.movie4k.to",
+			"91.202.63.145",
+			"www.movie.to",
+			"movie4k.co.in",
+			"movie4k.to.come.in",
+			"www.movie4kunblocked.co",
+			"www.movie2kproxy.org",
+			"www.movie2kproxy.com",
+			"www.movie2k.tv",
+			"91.202.62.123",
+			"www.movie2k.sx",
+			"www.movie2k.tl"
+		],
+		"default": "www.movie4k.to"
 	},
 	{
 		"id": "host_count",

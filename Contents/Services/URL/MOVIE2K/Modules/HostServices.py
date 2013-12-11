@@ -17,6 +17,7 @@ import simplejson
 import demjson
 import urllib
 import urllib2
+import time
 import re
 
 from OCR import GetImgValue
@@ -452,7 +453,8 @@ def SecondButtonPress(url, HostPage, page=None, elm="", elm2="", wform=0, addkey
 		headers['User-Agent'] = GetUserAgent
 
 	session = requests.session()
-	requests.utils.add_dict_to_cookiejar(session.cookies, cookies)
+	
+
 
 	if page != None:
 		s = page
@@ -520,7 +522,7 @@ def SecondButtonPress(url, HostPage, page=None, elm="", elm2="", wform=0, addkey
 			elif len(formaction.split('/')) == 1:
 				HostPage = HostPage.rpartition('/')[0] + '/' + formaction
 
-		r = session.post(HostPage, data=payload, headers=headers, allow_redirects=True)
+		r = session.post(HostPage, data=payload, headers=headers, files={}, allow_redirects=True)
 		r.raise_for_status()
 		r.cookies = session.cookies
 		return r
