@@ -1,3 +1,5 @@
+[B]Version 1.7.11[/B]
+- Fixed issue few issues and updated rest of the hosts.
 [B]Version 1.7.10[/B]
 - Added Plex/Web Search Site URL in plugin preferences added search back for Plex/web.  Updated few more hosts and fixed wait issue because of didn't call import time in HostServices.py
 [B]Version 1.7.9[/B]

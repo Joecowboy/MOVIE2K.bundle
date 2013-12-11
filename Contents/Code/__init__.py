@@ -1634,7 +1634,7 @@ def SubMoviePageAdd(title, page, date, dateadd, thumbck, type, MOVIE2K_URL):
 
 	if jj == 0:
 		try:
-			Host = FindRealHost(page=MOVIE_PAGE_HTML)
+			Host = GetHost(HostPageInfo=MOVIE_PAGE_HTML)
 			MOVIES_SUMMARY = "Page - " + str(i) + " | Host: " + Host
 			MOVIES_TITLE = title
 			if Prefs['swaptitle'] == "Enabled":
@@ -1662,7 +1662,7 @@ def SubMoviePageAdd(title, page, date, dateadd, thumbck, type, MOVIE2K_URL):
 							except:
 								Host = Listing[Num1].xpath("./td/a")[2].text.capitalize()
 					if Host == None or Host == "":
-						Host = FindRealHost(page=MOVIE_PAGE_HTML)
+						Host = GetHost(HostPageInfo=MOVIE_PAGE_HTML)
 					Num1 += 1
 					Hosts = Hosts + Host + ", "
 				elif Num2 < NumHostListing2:
@@ -1867,7 +1867,7 @@ def TheMovieListings(title, page, date, dateadd, thumb, type, PageOfHosts, MOVIE
 							except:
 								Host = Listing[num].xpath("./td/a")[2].text.capitalize()
 					if Host == None or Host == "":
-						Host = FindRealHost(page=MOVIE_PAGE_HTML)
+						Host = GetHost(HostPageInfo=MOVIE_PAGE_HTML)
 					MOVIE_PAGE = Listing[num].xpath("./td/a")[0].get('href')
 					if MOVIE_PAGE.split('/')[0] != "http:":
 						MOVIE_PAGE = "http://" + CURRENT_MOVIE2K_URL + "/" + MOVIE_PAGE
@@ -1975,23 +1975,6 @@ def TheMovieListings(title, page, date, dateadd, thumb, type, PageOfHosts, MOVIE
 		oc = ObjectContainer(header="We Apologize", message="An error has occured processing Host site information.  Please try again.")
 
 	return oc
-
-
-####################################################################################################
-def FindRealHost(page):
-	HostPageElm = page.xpath('//div[@id="maincontent5"]/div')[0]
-	try:
-		try:
-			HostPage =  HostPageElm.xpath('./a')[0].get('href')
-		except:
-			HostPage = HostPageElm.xpath('./iframe')[0].get('src')
-	except:
-		HostPage = HostPageElm.xpath('./object/param')[0].get('value')
-	Host = HostPage.split('/')[2].split('.')[0].capitalize()
-	if Host == 'Www' or Host == 'Embed':
-		Host = HostPage.split('http://')[1].split('.')[1].capitalize()
-
-	return Host
 
 
 ####################################################################################################
@@ -2169,25 +2152,31 @@ def strip_one_space(s):
 
 
 ####################################################################################################
-def GetHost(Host, url):
+def GetHost(Host=None, url=None, HostPageInfo=None):
 
 	#
 	#Check for Real Video Hoster if set to N/A or DivX Hoster or Flash Hoster is set
 	#
-	cookies = Dict['_movie2k_uid']
-	CURRENT_MOVIE2K_URL = url.split('/')[2]
-	headers = {"Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8", "Accept-Charset": "ISO-8859-1,utf-8;q=0.7,*;q=0.3", "Accept-Encoding": "gzip,deflate,sdch", "Accept-Language": "en-US,en;q=0.8", "Connection": "keep-alive", "Host": CURRENT_MOVIE2K_URL, "Referer": "http://"+CURRENT_MOVIE2K_URL, "User-Agent": UserAgent[UserAgentNum]}
-	req = requests.get(url, headers=headers, cookies=cookies)
+	if Host != None:
+		cookies = Dict['_movie2k_uid']
+		CURRENT_MOVIE2K_URL = url.split('/')[2]
+		headers = {"Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8", "Accept-Charset": "ISO-8859-1,utf-8;q=0.7,*;q=0.3", "Accept-Encoding": "gzip,deflate,sdch", "Accept-Language": "en-US,en;q=0.8", "Connection": "keep-alive", "Host": CURRENT_MOVIE2K_URL, "Referer": "http://"+CURRENT_MOVIE2K_URL, "User-Agent": UserAgent[UserAgentNum]}
+		req = requests.get(url, headers=headers, cookies=cookies)
 
-	HostPageInfo = HTML.ElementFromString(req.content)
+		HostPageInfo = HTML.ElementFromString(req.content)
 
+	HostPageElm = HostPageInfo.xpath('//div[@id="maincontent5"]/div')[0]
 	try:
-		HostPage = HostPageInfo.xpath('//div[@id="maincontent5"]/div/iframe')[0].get('src')
+		try:
+			HostPage =  HostPageElm.xpath('./a')[0].get('href')
+		except:
+			HostPage = HostPageElm.xpath('./iframe')[0].get('src')
 	except:
-		HostPage = HostPageInfo.xpath('//div[@id="maincontent5"]/div/a[@target="_blank"]')[0].get('href')
+		HostPage = HostPageElm.xpath('./object/param')[0].get('value')
 	Host = HostPage.split('http://')[1].split('.')[0].capitalize()
-	if Host == 'Www' or Host == 'Embed':
+	if Host == 'Www' or Host == 'Embed' or Host == 'Beta' or Host == 'Movie':
 		Host = HostPage.split('http://')[1].split('.')[1].capitalize()
+
 	return Host
 
 

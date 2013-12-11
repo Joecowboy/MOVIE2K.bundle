@@ -359,6 +359,11 @@ def GetHostPage(Host, url):
 				HostPage = None
 				LinkType = 0
 
+	#Check For Real Host
+	Host = HostPage.split('http://')[1].split('.')[0].capitalize()
+	if Host == 'Www' or Host == 'Embed' or Host == 'Beta' or Host == 'Movie':
+		Host = HostPage.split('http://')[1].split('.')[1].capitalize()
+
 	if EnableHostTesting():
 		if CkHost != None and CkHostURL != None:
 			Host = CkHost.capitalize()
@@ -411,7 +416,8 @@ def GetMovieDebugger(Host, HostPage, url, LinkType):
 	import time
 	import random
 	import urllib
+	import base64
 
-
+	
 
 	return VideoStream

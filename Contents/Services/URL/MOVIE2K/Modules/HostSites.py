@@ -143,12 +143,17 @@ def GetMovie(Host, HostPage, url, LinkType):
 		except:
 			VideoStream = ErrorMessage(Host=Host, LogError=5)
 	elif Host == "Bestreams":
+		#Get to it via hidemyass.com
 		try:
 			VideoPage = SecondButtonPress(url=url, HostPage=HostPage, addkey={'referer': url})
-			VideoInfo = HTML.ElementFromString(VideoPage.content).xpath('//div[@id="player_code"]/script')[1].text
-			VideoStream = VideoInfo.split('file: "')[1].split('"')[0]
+			try:
+				VideoInfo = HTML.ElementFromString(VideoPage.content).xpath('//div[@id="player_code"]/script')[1].text
+				VideoStream = VideoInfo.split('file: "')[1].split('"')[0]
+			except:
+				InputError = HTML.ElementFromString(VideoPage.content).xpath('//div[@id="header"]//h3')[0].text.strip()
+				VideoStream = ErrorMessage(Host=Host, InputError=InputError, ErrorType="VideoRemoved")
 		except:
-			VideoStream = ErrorMessage(Host=Host, LogError=3, ErrorType="HostDown")
+			VideoStream = ErrorMessage(Host=Host, LogError=1, ErrorType="HostDown")
 	elif Host == "Billionuploads":
 		try:
 			if LinkType == 1:
@@ -216,6 +221,16 @@ def GetMovie(Host, HostPage, url, LinkType):
 				VideoStream = VideoInfo.split('clip: {')[1].split("url: '")[1].split("'")[0]
 			except:
 				InputError = VideoPage.xpath('//div[@id="content"]/h1')[0].text
+				VideoStream = ErrorMessage(Host=Host, InputError=InputError, ErrorType="VideoRemoved")
+		except:
+			VideoStream = ErrorMessage(Host=Host, LogError=1, ErrorType="HostDown")
+	elif Host == "Bluvid":
+		try:
+			VideoPage = SecondButtonPress(url=url, HostPage=HostPage, addkey={"referer": url})
+			try:
+				VideoStream = HTML.ElementFromString(VideoPage.content).xpath('//video/source')[0].get('src')
+			except:
+				InputError = HTML.ElementFromString(VideoPage.content).xpath('//div[@id="content"]/p')[1].text.strip()
 				VideoStream = ErrorMessage(Host=Host, InputError=InputError, ErrorType="VideoRemoved")
 		except:
 			VideoStream = ErrorMessage(Host=Host, LogError=1, ErrorType="HostDown")
@@ -288,6 +303,7 @@ def GetMovie(Host, HostPage, url, LinkType):
 		except:
 			VideoStream = ErrorMessage(Host=Host, LogError=1, ErrorType="HostDown")
 	elif Host == "Cubtv":
+		#Shows parked but hidemyass.com you can get to it.
 		try:
 			VideoStream = HTML.ElementFromURL(HostPage).xpath('//head/script')[3].text.split("'file':'")[1].split("'")[0]
 		except:
@@ -1072,7 +1088,7 @@ def GetMovie(Host, HostPage, url, LinkType):
 		try:
 			VideoPage = SecondButtonPress(url=url, HostPage=HostPage, addkey={'referer': HostPage})
 			try:
-				VideoPage.content.split('file: "')[1].split('"')[0]
+				VideoStream = VideoPage.content.split('file: "')[1].split('"')[0]
 			except:
 				InputError = HTML.ElementFromString(VideoPage.content).xpath('//font[@class="err"]')[0].text.strip()
 				VideoStream = ErrorMessage(Host=Host, InputError=InputError, ErrorType="VideoRemoved")
@@ -1147,6 +1163,7 @@ def GetMovie(Host, HostPage, url, LinkType):
 		except:
 			VideoStream = ErrorMessage(Host=Host, LogError=1, ErrorType="HostDown")
 	elif Host == "Putme":
+		#Forwards you to Youtub.com
 		try:
 			VideoPage = SecondButtonPress(url=url, HostPage=HostPage, addkey={"referer": url})
 			VideoInfo = SecondButtonPress(url=HostPage, HostPage=HostPage, page=VideoPage, addkey={"referer": url})
@@ -1156,7 +1173,7 @@ def GetMovie(Host, HostPage, url, LinkType):
 			headers = {'User-Agent': UserAgent, 'Host': VideoURL.split('/')[2], 'Referer': 'http://putme.org/player6/StrobeMediaPlayback.swf'}
 			VideoStream = VideoURL + "?cookies="+String.Quote(str(cookies), usePlus=True)+"&headers="+String.Quote(str(headers), usePlus=True)
 		except:
-			VideoStream = ErrorMessage(Host=Host, LogError=1)
+			VideoStream = ErrorMessage(Host=Host, LogError=3, ErrorType="HostDown")
 	elif Host == "Rocketfiles":
 		try:
 			VideoID = HostPage.split('/')[4]
@@ -1174,10 +1191,15 @@ def GetMovie(Host, HostPage, url, LinkType):
 	elif Host == "Royalvids":
 		try:
 			HostPage = "http://royalvids.eu/embed-" + HostPage.split('/')[4] + ".html"
-			VideoPage = HTML.ElementFromURL(HostPage).xpath('//div[@id="player_code"]/script')[0].text
-			VideoStream = ScriptConvert(script=VideoPage)
+			VideoPage = HTML.ElementFromURL(HostPage)
+			try:
+				VideoInfo = VideoPage.xpath('//div[@id="player_code"]/script')[0].text
+				VideoStream = ScriptConvert(script=VideoInfo)
+			except:
+				InputError = VideoPage.text
+				VideoStream = ErrorMessage(Host=Host, InputError=InputError, ErrorType="VideoRemoved")
 		except:
-			VideoStream = ErrorMessage(Host=Host, LogError=1)
+			VideoStream = ErrorMessage(Host=Host, LogError=1, ErrorType="HostDown")
 	elif Host == "Safecloud":
 		try:
 			headers = {'User-Agent': UserAgent, 'Referer': url}
@@ -1193,23 +1215,31 @@ def GetMovie(Host, HostPage, url, LinkType):
 	elif Host == "Sharerepo":
 		try:
 			VideoPage = SecondButtonPress(url=url, HostPage=HostPage)
-			VideoInfo = VideoPage.content.split('<div id="player_code">')[1].split("<script type='text/javascript'>")[1].split("</script>")[0]
-			VideoStream = ScriptConvert(script=VideoInfo)
+			try:
+				VideoInfo = HTML.ElementFromString(VideoPage.content).xpath('//div[@id="player_code"]/script')[1].text
+				VideoStream = ScriptConvert(script=VideoInfo)
+			except:
+				InputError = HTML.ElementFromString(VideoPage.content).xpath('//div[@id="content"]/b')[0].text.strip()
+				VideoStream = ErrorMessage(Host=Host, InputError=InputError, ErrorType="VideoRemoved")
 		except:
-			VideoStream = ErrorMessage(Host=Host, LogError=1)
+			VideoStream = ErrorMessage(Host=Host, LogError=1, ErrorType="HostDown")
 	elif Host == "Sharesix":
 		try:
 			VideoPage = SecondButtonPress(url=url, HostPage=HostPage, addkey={'method_free': 'Free'})
-			VideoInfo = HTML.ElementFromString(VideoPage.content).xpath('//div[@id="player_code"]/script')[1].text
-			VideoStream = ScriptConvert(script=VideoInfo)
+			try:
+				VideoInfo = HTML.ElementFromString(VideoPage.content).xpath('//div[@id="player_code"]/script')[1].text
+				VideoStream = ScriptConvert(script=VideoInfo)
+			except:
+				InputError = HTML.ElementFromString(VideoPage.content).xpath('//div[@id="progress_div"]/b')[0].text.strip()
+				VideoStream = ErrorMessage(Host=Host, InputError=InputError, ErrorType="VideoRemoved")
 		except:
-			VideoStream = ErrorMessage(Host=Host, LogError=1)
+			VideoStream = ErrorMessage(Host=Host, LogError=1, ErrorType="HostDown")
 	elif Host == "Sharevid":
 		try:
 			VideoPage = HTML.ElementFromURL(HostPage).xpath('//div[@id="player_code"]/script')[0].text
 			VideoStream = ScriptConvert(script=VideoPage)
 		except:
-			VideoStream = ErrorMessage(Host=Host, LogError=1)
+			VideoStream = ErrorMessage(Host=Host, LogError=3, ErrorType="HostDown")
 	elif Host == "Skylo":
 		try:
 			VideoPage = "http://skylo.me/videos.php?Id="+HostPage.split('=')[1]
@@ -1220,7 +1250,7 @@ def GetMovie(Host, HostPage, url, LinkType):
 			rtmpurl = ["", "rtmp://213.163.74.241/vod", "rtmp://213.163.74.225/vod", "rtmp://213.163.74.229/vod", "rtmp://213.163.74.233/vod", "rtmp://213.163.74.237/vod"]
 			VideoStream = [vidstr, swfurl, rtmpurl[url_MO], 'rtmp', VideoPage, 'vod']
 		except:
-			VideoStream = ErrorMessage(Host=Host, LogError=1)
+			VideoStream = ErrorMessage(Host=Host, LogError=3, ErrorType="HostDown")
 	elif Host == "Sockshare":
 		try:
 			NS = {'media':'http://search.yahoo.com/mrss/'}
@@ -1249,9 +1279,13 @@ def GetMovie(Host, HostPage, url, LinkType):
 	elif Host == "Stageflv":
 		try:
 			VideoPage = SecondButtonPress(url=url, HostPage=HostPage, wform=1, addkey={"imhuman": "Proceed to video"})
-			VideoStream = VideoPage.content.split("file: ")[1].split('"')[1]
+			try:
+				VideoStream = HTML.ElementFromString(VideoPage.content).xpath('//div[@id="player_code"]/script')[1].text.split('file: "')[1].split('"')[0]
+			except:
+				InputError = HTML.ElementFromString(VideoPage.content).xpath('//div[@class="cntcnt"]/b')[0].text.strip
+				VideoStream = ErrorMessage(Host=Host, InputError=InputError, ErrorType="VideoRemoved")
 		except:
-			VideoStream = ErrorMessage(Host=Host, LogError=1)
+			VideoStream = ErrorMessage(Host=Host, LogError=1, ErrorType="HostDown")
 	elif Host == "Stream2k":
 		try:
 			headers = {'User-Agent': UserAgent, 'Referer': url}
@@ -1282,7 +1316,7 @@ def GetMovie(Host, HostPage, url, LinkType):
 			rtmpurl = ["", "rtmp://213.163.74.241/vod", "rtmp://213.163.74.225/vod", "rtmp://213.163.74.229/vod", "rtmp://213.163.74.233/vod", "rtmp://213.163.74.237/vod"]
 			VideoStream = [vidstr, swfurl, rtmpurl[url_MO], 'rtmp', VideoPage, 'vod']
 		except:
-			VideoStream = ErrorMessage(Host=Host, LogError=1)
+			VideoStream = ErrorMessage(Host=Host, LogError=3, ErrorType="HostDown")
 	elif Host == "Streamcloud":
 		try:
 			cookies = {'age_ver': '1'}
@@ -1301,6 +1335,7 @@ def GetMovie(Host, HostPage, url, LinkType):
 		except:
 			VideoStream = ErrorMessage(Host=Host, LogError=1, ErrorType="HostDown")
 	elif Host == "Streamvids":
+		#StreamVids forwards you to stream2k.eu
 		try:
 			session = requests.session()
 			headers = {'User-Agent': UserAgent, 'Referer': url}
@@ -1312,7 +1347,7 @@ def GetMovie(Host, HostPage, url, LinkType):
 			VideoURL = urllib.unquote(VideoInfo.content.split('file=')[1].split('&')[0])
 			VideoStream = VideoURL + "?cookies="+String.Quote(str(cookies), usePlus=True)+"&headers="+String.Quote(str(headers), usePlus=True)
 		except:
-			VideoStream = ErrorMessage(Host=Host, LogError=1)
+			VideoStream = ErrorMessage(Host=Host, LogError=3, ErrorType="HostDown")
 	elif Host == "Thefile":
 		try:
 			VideoPage = SecondButtonPress(url=url, HostPage=HostPage, addkey={'method_free': 'Free Download', 'referer': url})
@@ -1353,10 +1388,14 @@ def GetMovie(Host, HostPage, url, LinkType):
 	elif Host == "Uncapped-downloads":
 		try:
 			VideoPage = SecondButtonPress(url=url, HostPage=HostPage, addkey={'referer': url})
-			VideoInfo = HTML.ElementFromString(VideoPage.content).xpath('//div[@id="player_code"]/script')[0].text
-			VideoStream = ScriptConvert(script=VideoInfo)
+			try:
+				VideoInfo = HTML.ElementFromString(VideoPage.content).xpath('//div[@id="player_code"]/script')[0].text
+				VideoStream = ScriptConvert(script=VideoInfo)
+			except:
+				InputError = HTML.ElementFromString(VideoPage.content).xpath('//div[@class="inner"]/b')[0].text.strip()
+				VideoStream = ErrorMessage(Host=Host, InputError=InputError, ErrorType="VideoRemoved")
 		except:
-			VideoStream = ErrorMessage(Host=Host, LogError=1)
+			VideoStream = ErrorMessage(Host=Host, LogError=1, ErrorType="HostDown")
 	elif Host == "Undergroundflix":
 		try:
 			VideoPage = HTML.ElementFromURL(HostPage).xpath("//div[@class='postTabs_divs postTabs_curr_div']/center/iframe")[0].get('src')
@@ -1365,7 +1404,7 @@ def GetMovie(Host, HostPage, url, LinkType):
 				Host = VideoPage.split('/')[2].split('.')[1].capitalize()
 			VideoStream = GetMovie(Host=Host, HostPage=VideoPage, url=url, LinkType=1)
 		except:
-			VideoStream = ErrorMessage(Host=Host, LogError=1)	
+			VideoStream = ErrorMessage(Host=Host, LogError=1, ErrorType="HostDown")	
 	elif Host == "Uploadc":
 		try:
 			VideoPage = SecondButtonPress(url=url, HostPage=HostPage, addkey={"method_free": "Slow access", "referer": url})
@@ -1414,10 +1453,15 @@ def GetMovie(Host, HostPage, url, LinkType):
 		try:
 			if LinkType == 4:
 				HostPage = "http://v-vids.com/embed-" + HostPage.split('/')[3] + "-640x360.html"
-			VideoPage = HTML.ElementFromURL(HostPage).xpath('//div[@id="player_code"]/script')[1].text
-			VideoStream = VideoPage.split("file: '")[1].split("'")[0]
+			VideoPage = HTML.ElementFromURL(HostPage)
+			try:
+				VideoInfo = VideoPage.xpath('//div[@id="player_code"]/script')[1].text
+				VideoStream = VideoInfo.split("file: '")[1].split("'")[0]
+			except:
+				InputError = VideoPage.text.strip()
+				VideoStream = ErrorMessage(Host=Host, InputError=InputError, ErrorType="VideoRemoved")
 		except:
-			VideoStream = ErrorMessage(Host=Host, LogError=1)
+			VideoStream = ErrorMessage(Host=Host, LogError=1, ErrorType="HostDown")
 	elif Host == "Veehd":
 		try:
 			headers = {'User-Agent': UserAgent, 'Host': 'veehd.com'}
@@ -1450,11 +1494,12 @@ def GetMovie(Host, HostPage, url, LinkType):
 		except:
 			VideoStream = ErrorMessage(Host=Host, LogError=8, ErrorType="HostDown")
 	elif Host == "Veervid":
+		#can get to domain via hidmyass.com
 		try:
 			VideoPage = HostPage.split('file')[0]+"file1"+HostPage.split('file')[1]
 			VideoStream = HTML.ElementFromURL(VideoPage).xpath('//form')[0].get('action')
 		except:
-			VideoStream = ErrorMessage(Host=Host, LogError=1)
+			VideoStream = ErrorMessage(Host=Host, LogError=3, ErrorType="HostDown")
 	elif Host == "Vidbull":
 		try:
 			if LinkType == 4:
@@ -1479,7 +1524,10 @@ def GetMovie(Host, HostPage, url, LinkType):
 			try:
 				try:
 					#Vidbox.eu
-					VideoInfo = VideoPage.xpath('//div[@id="player_code"]/script')[0].text
+					try:
+						VideoInfo = VideoPage.xpath('//div[@id="player_code"]/script')[1].text
+					except:
+						VideoInfo = VideoPage.xpath('//div[@id="player_code"]/script')[0].text
 					VideoStream = ScriptConvert(script=VideoInfo)
 				except:
 					#Vidbox.yt
@@ -1515,16 +1563,34 @@ def GetMovie(Host, HostPage, url, LinkType):
 				VOID = SolveMediaCaptcha(url=url, HostPage=HostPage, Host=Host, RecaptchaResponse=1)
 		except:
 			VideoStream = ErrorMessage(Host=Host, LogError=1, ErrorType="HostDown")
+	elif Host == "Video":
+		try:
+			headers = {'User-Agent': UserAgent, 'Referer': HostPage}
+			Hostpage = "http://video.tt/player_control/settings.php?v="+HostPage.split('=')[1]
+			session = requests.session()
+			VideoPage = session.get(Hostpage, headers=headers)
+			try:
+				VideoStream = VideoPage.content.split('u":"')[2].split('"')[0].replace("\\", "").decode('base64', 'strict')
+			except:
+				InputError = VideoPage.content.split('messages":["')[1].split('"')[0]
+				VideoStream = ErrorMessage(Host=Host, InputError=InputError, ErrorType="VideoRemoved")
+		except:
+			VideoStream = ErrorMessage(Host=Host, LogError=1, ErrorType="HostDown")
 	elif Host == "Videohub":
 		try:
 			if LinkType == 4:
 				HostPage = "http://videohub.ws/videos.php?Id="+HostPage.split('=')[1]
-			VideoInfo = HTML.ElementFromURL(HostPage).xpath('//div[@class="containerDiv"]/script')[1].text
-			vidstr = VideoInfo.split("file','")[1].split("'")[0]
-			swfurl = "mp4:" + VideoInfo.split("SWFObject('")[1].split("'")[0]
-			rtmpurl = "rtmp://93.115.92.168:1"
-			app = ""
-			VideoStream = [vidstr, swfurl, rtmpurl, 'rtmp', HostPage, app]
+			VideoPage = HTML.ElementFromURL(HostPage)
+			try:
+				VideoInfo = VideoPage.xpath('//div[@class="containerDiv"]/script')[1].text
+				vidstr = VideoInfo.split("file','")[1].split("'")[0]
+				swfurl = "mp4:" + VideoInfo.split("SWFObject('")[1].split("'")[0]
+				rtmpurl = "rtmp://93.115.92.168:1"
+				app = ""
+				VideoStream = [vidstr, swfurl, rtmpurl, 'rtmp', HostPage, app]
+			except:
+				InputError = VideoPage.xpath('//body')[0].text
+				VideoStream = ErrorMessage(Host=Host, InputError=InputError, ErrorType="VideoRemoved")
 		except:
 			VideoStream = ErrorMessage(Host=Host, LogError=1, ErrorType="HostDown")
 	elif Host == "Videoize":
@@ -1540,17 +1606,33 @@ def GetMovie(Host, HostPage, url, LinkType):
 			VideoStream = ErrorMessage(Host=Host, LogError=1, ErrorType="HostDown")
 	elif Host == "Videomega":
 		try:
-			VideoPage = HTML.ElementFromURL(HostPage).xpath('//div[@class="embed"]')[1]
-			VideoID = VideoPage.xpath('./div')[0].text.split('src="')[1].split('"')[0]
-			VideoInfo = HTML.ElementFromURL(VideoID).xpath('//body/script[@type="text/javascript"]')[0].text.split('unescape("')[1].split('"')[0]
-			VideoStream = urllib.unquote(VideoInfo).split('file: "')[1].split('"')[0]
+			if LinkType == 4:
+				HostPage = "http://videomega.tv/iframe.php?ref="+HostPage.split('=')[1]+"&width=870&height=430"
+
+			VideoPage = HTML.ElementFromURL(HostPage)
+			try:
+				VideoInfo = VideoPage.xpath('//body/script[@type="text/javascript"]')[2].text.split('unescape("')[1].split('"')[0]
+				VideoStream = urllib.unquote(VideoInfo).split('file: "')[1].split('"')[0]
+			except:
+				InputError = "Generates Video file regardless"
+				VideoStream = ErrorMessage(Host=Host, InputError=InputError, ErrorType="VideoRemoved")
 		except:
-			VideoStream = ErrorMessage(Host=Host, LogError=1)
+			VideoStream = ErrorMessage(Host=Host, LogError=1, ErrorType="HostDown")
 	elif Host == "Videopluz":
 		try:
-			VideoStream = HTML.ElementFromURL(HostPage).xpath('//div[@id="player_code"]/script')[1].text.split('file: "')[1].split('"')[0]
+			VideoPage = SecondButtonPress(url=url, HostPage=HostPage, wform=1, addkey={"referer": url}, wait=5)
+
+			try:
+				VideoStream = HTML.ElementFromString(VideoPage.content).xpath('//div[@id="player_code"]/script')[1].text.split('file: "')[1].split('"')[0]
+			except:
+				try:
+					InputError = HTML.ElementFromString(VideoPage.content).xpath('//b[@class="err"]')[0].text
+					VideoStream = ErrorMessage(Host=Host, InputError=InputError, ErrorType="WrongIP")
+				except:
+					InputError = HTML.ElementFromString(VideoPage.content).xpath('//div[@id="main"]//b')[0].text
+					VideoStream = ErrorMessage(Host=Host, InputError=InputError, ErrorType="VideoRemoved")
 		except:
-			VideoStream = ErrorMessage(Host=Host, LogError=1)
+			VideoStream = ErrorMessage(Host=Host, LogError=1, ErrorType="HostDown")
 	elif Host == "Videopremium":
 		try:
 			try:
@@ -1821,8 +1903,11 @@ def GetMovie(Host, HostPage, url, LinkType):
 			headers = {'User-Agent': UserAgent, 'Content-Type': 'text/xml', 'Host': 'www.vureel.com', 'Origin': 'http://www.vureel.com', 'Referer': HostPage}
 			VideoInfo =  requests.get(url, headers=headers)
 			VideoStream = VideoInfo.content.split('<src>')[1].split('</src>')[0]
+			if VideoStream.split('/')[6].split('.')[0] == None or VideoStream.split('/')[6].split('.')[0] == "":
+				InputError = "Video has been removed"
+				VideoStream = ErrorMessage(Host=Host, InputError=InputError, ErrorType="VideoRemoved")
 		except:
-			VideoStream = ErrorMessage(Host=Host, LogError=1)
+			VideoStream = ErrorMessage(Host=Host, LogError=1, ErrorType="HostDown")
 	elif Host == "Watchfreeinhd":
 		try:
 			VideoPage = SecondButtonPress(url=url, HostPage=HostPage)
@@ -1907,25 +1992,35 @@ def GetMovie(Host, HostPage, url, LinkType):
 			VideoStream = ErrorMessage(Host=Host, LogError=1, ErrorType="HostDown")
 	elif Host == "Zinwa":
 		try:
-			VideoInfo = HTML.ElementFromURL(HostPage).xpath('//div[@id="player_code"]/script')[1].text
-			ScriptEncode = VideoInfo.split("eval(decodejs('")[1].split("'")[0].split(",")
-			VideoDecode = ''.join(map(unichr, map(int, ScriptEncode)))
-			VideoPage = VideoDecode.split('"link": "')[1].split('"')[0]
-			vidstr = VideoDecode.split("'hq' : '")[1].split("'")[0]
-			swfurl = "http://www.zinwa.com/zinwa/player.swf"
-			rtmpurl = VideoDecode.split('streamer: "')[1].split('"')[0]
-			app = VideoDecode.split('streamer: "')[1].split('"')[0].split('/')[3]
-			VideoStream = [vidstr, swfurl, rtmpurl, 'rtmp', VideoPage, app]
+			VideoInfo = HTML.ElementFromURL(HostPage)
+			try:
+				VideoScript = VideoInfo.xpath('//div[@id="player_code"]/script')[1].text
+				ScriptEncode = VideoScript.split("eval(decodejs('")[1].split("'")[0].split(",")
+				VideoDecode = ''.join(map(unichr, map(int, ScriptEncode)))
+				VideoPage = VideoDecode.split('"link": "')[1].split('"')[0]
+				vidstr = VideoDecode.split("'hq' : '")[1].split("'")[0]
+				swfurl = "http://www.zinwa.com/zinwa/player.swf"
+				rtmpurl = VideoDecode.split('streamer: "')[1].split('"')[0]
+				app = VideoDecode.split('streamer: "')[1].split('"')[0].split('/')[3]
+				VideoStream = [vidstr, swfurl, rtmpurl, 'rtmp', VideoPage, app]
+			except:
+				InputError = VideoInfo.xpath('//label/b')[0].text.strip()
+				VideoStream = ErrorMessage(Host=Host, InputError=InputError, ErrorType="VideoRemoved")
 		except:
 			VideoStream = ErrorMessage(Host=Host, LogError=1)
 	elif Host == "Zooupload":
 		VideoStream = ErrorMessage(Host=Host, LogError=3, ErrorType="HostDown")
 	elif Host == "Zuzvideo":
 		try:
-			VideoURL = HTML.ElementFromURL(HostPage).xpath('//div[@id="player_code"]/script')[1].text.split('file: "')[1].split('"')[0]
-			cookies = {'lang': 'english'}
-			headers = {'User-Agent': UserAgent, 'Host': VideoURL.split('/')[2], 'Referer': 'http://zuzvideo.com/player/player.swf'}
-			VideoStream = VideoURL + "?cookies="+String.Quote(str(cookies), usePlus=True)+"&headers="+String.Quote(str(headers), usePlus=True)
+			VideoPage = HTML.ElementFromURL(HostPage)
+			try:
+				VideoURL = VideoPage.xpath('//div[@id="player_code"]/script')[1].text.split('file: "')[1].split('"')[0]
+				cookies = {'lang': 'english'}
+				headers = {'User-Agent': UserAgent, 'Host': VideoURL.split('/')[2], 'Referer': 'http://zuzvideo.com/player/player.swf'}
+				VideoStream = VideoURL + "?cookies="+String.Quote(str(cookies), usePlus=True)+"&headers="+String.Quote(str(headers), usePlus=True)
+			except:
+				InputError = VideoPage.xpath('//div[@class="wrap cf"]/b')[0].text.strip()
+				VideoStream = ErrorMessage(Host=Host, InputError=InputError, ErrorType="VideoRemoved")
 		except:
 			VideoStream = ErrorMessage(Host=Host, LogError=1)
 	else:
