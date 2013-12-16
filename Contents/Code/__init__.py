@@ -19,8 +19,9 @@ import time
 import socket
 import httplib
 import random
-import HostServices
 import subprocess
+import HostServices
+#import HostVideoDownload
 
 # Import SocksiPy
 import sockschain as socks
@@ -30,6 +31,7 @@ from HostServices import StripArray
 from HostServices import LoadData
 from HostServices import JsonWrite
 from HostServices import CookieDict
+#from HostVideoDownload import MyDownload
 
 # Random User Agent
 UserAgent = ['Mozilla/4.0 (compatible; MSIE 5.5; Windows NT)', 'Opera/9.25 (Windows NT 6.0; U; ja)', 'Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 6.0)', 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.31 (KHTML, like Gecko) Chrome/26.0.1410.64 Safari/537.31', 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:20.0) Gecko/20100101 Firefox/20.0', 'Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.1; WOW64; Trident/6.0)', 'Mozilla/4.0 (compatible; MSIE 5.0; Windows 2000) Opera 6.01 [ja]', 'Mozilla/5.0 (Windows; U; Windows NT 5.0; ja-JP; m18) Gecko/20010131 Netscape6/6.01', 'Mozilla/5.0 (Macintosh; U; PPC Mac OS X; ja-jp) AppleWebKit/85.7 (KHTML, like Gecko) Safari/85.7']
@@ -141,7 +143,15 @@ def MainMenu():
 	MOVIES_THUMB = R(ICON_MOVIES2k_TL)
 	MOVIE2K_URL = "www.movie2k.tl"
 	oc.add(DirectoryObject(key=Callback(SubMainMenu, title=MOVIES_TITLE, MOVIE2K_URL=MOVIE2K_URL), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=MOVIES_THUMB))
-
+	"""
+	#Add Testin Local Playback
+	ICON_MOVIES2k_PB  = "icon-movies.png"
+	MOVIES_TITLE = "Playback Local Test"
+	MOVIES_SUMMARY = "Playback Local Downloads from Movie2k Blockbuster and TV Shows database!"
+	MOVIES_THUMB = R(ICON_MOVIES2k_PB)
+	title = "Playback Local Test"
+	oc.add(DirectoryObject(key=Callback(PlaybackDownloads, title=title), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=MOVIES_THUMB))
+	"""
 	#Add Search only for Plex/Web
 	if Client.Product == "Web Client":
 		ICON_SEARCH = "icon-search.png"
@@ -161,8 +171,91 @@ def MainMenu():
 
 	return oc
 
+####################################################################################################
+@route(PREFIX + '/PlaybackDownloads')
+def PlaybackDownloads(title):
+
+	oc = ObjectContainer(title2=L(title), no_cache = True)
+
+	title = "Prisoners"
+	summary = "When Keller Dover's daughter and her friend go missing, he takes matters into his own hands as the police pursue multiple leads and the pressure mounts. But just how far will this desperate father go to protect his family?"
+	thumb = "http://img.movie4k.to//thumbs/cover-4098976-Prisoners-movie4k-film.jpg"
+	path = "Videos\Prisoners_1384394037.51.flv"
+
+	oc.add(MovieObject(
+			title = title,
+			summary = summary,
+			thumb = Callback(GetThumb, url=thumb),
+			rating_key = path,
+			key = Callback(PlaybackDownloadDetails, path=path, thumb=thumb, title=title, summary=summary),
+			items = MediaObjectsForURL(path)
+			))
+
+	return oc
+
 
 ####################################################################################################
+@route(PREFIX + '/PlaybackDownloadDetails')
+def PlaybackDownloadDetails(path, title, thumb, summary, maxVideoBitrate=None, videoQuality=None, directPlay=None, audioBoost=None, partIndex=None, waitForSegments=None, session=None, offset=None, videoResolution=None, subtitleSize=None, directStream=None):
+
+	oc = ObjectContainer(title2=title)
+
+	oc.add(MovieObject(
+			title = title,
+			summary = summary,
+			thumb = Callback(GetThumb, url=thumb),
+			rating_key = path,
+			key = Callback(PlaybackDownloadDetails, path=path, thumb=thumb, title=title, summary=summary),
+			items = MediaObjectsForURL(path)
+			))
+
+	return oc
+
+
+
+####################################################################################################
+@route(PREFIX + '/MediaObjectsForURL')
+def MediaObjectsForURL(path):
+
+	obj = [MediaObject(
+			video_frame_rate = "30",
+			video_resolution = "1080",
+			protocols = None,
+			container = Container.FLV,
+			video_codec = VideoCodec.VP6,
+			audio_codec = AudioCodec.MP3,
+			bitrate = None,
+			audio_channels = 2,
+			optimized_for_streaming = True,
+			parts = [PartObject(key=Callback(PlayVideo, path=path))]
+		)]
+
+	return obj
+
+
+###################################################################################################
+@indirect
+def PlayVideo(path):
+
+	oc = ObjectContainer()
+
+	oc.add(VideoClipObject(
+		items = [
+				MediaObject(
+					parts = [PartObject(key=Callback(CreateLocalURL, path=path))]
+				)
+        		]
+	))
+
+	return oc
+
+
+###################################################################################################
+@route(PREFIX + '/CreateLocalURL')
+def CreateLocalURL(path):
+	return Redirect(Stream.LocalFile(path))
+
+###################################################################################################
 @route(PREFIX + '/SubMainMenu')
 def SubMainMenu(title, MOVIE2K_URL):
 
@@ -420,7 +513,7 @@ def MyMovie2k(title, MOVIE2K_URL):
 	MYFAVORITES_THUMB = R(ICON_MYFAVORITES)
 	title = "My Favorite Links"
 	summary = "Show my favorite links from Movie4k.to, Movie2k.tv, Movie2k.sx and Movie2k.tl!"
-	oc.add(DirectoryObject(key = Callback(MyFavoriteURL, title=title), title=title, summary=summary, thumb=MYFAVORITES_THUMB))
+	oc.add(DirectoryObject(key = Callback(MyFavoriteURL, title=title, MOVIE2K_URL=MOVIE2K_URL), title=title, summary=summary, thumb=MYFAVORITES_THUMB))
 
 	# Add Favorite Movie4k.to link
 	ICON_ADDFAVORITE = "icon-add-favorite.png"
@@ -449,11 +542,11 @@ def RokuUsersMyFavorites(title):
 
 ####################################################################################################
 @route(PREFIX + '/MyFavoriteURL')
-def MyFavoriteURL(title):
+def MyFavoriteURL(title, MOVIE2K_URL):
 
 	oc = ObjectContainer(title2=title)
 
-	hosts = LoadData(fp=FAVORITES_DATA, GetJson=False)
+	hosts = LoadData(fp=FAVORITES_DATA, GetJson=2)
 	i = 1
 	for gethost in hosts:
 		MOVIES_PAGE = gethost[i]['SiteURL']
@@ -466,7 +559,7 @@ def MyFavoriteURL(title):
 		i += 1
 
 		if MOVIES_PAGE != "":
-			oc.add(DirectoryObject(key=Callback(SubMoviePageAdd, title=MOVIES_TITLE, page=MOVIES_PAGE, date=MOVIES_YEAR, dateadd=dateadd, thumbck=MOVIES_THUMB, type=type), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=Callback(GetThumb, url=MOVIES_THUMB)))
+			oc.add(DirectoryObject(key=Callback(SubMoviePageAdd, title=MOVIES_TITLE, page=MOVIES_PAGE, date=MOVIES_YEAR, dateadd=dateadd, thumbck=MOVIES_THUMB, type=type, MOVIE2K_URL=MOVIE2K_URL), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=Callback(GetThumb, url=MOVIES_THUMB)))
 	
 	if len(oc) < 1:
 		oc = ObjectContainer(header="We Apologize", message="This section does not contain any My Favorite videos.  Please add a video to view.")
@@ -529,7 +622,7 @@ def InputFavoriteURL(title, MOVIE2K_URL, query):
 
 	MOVIES_SUMMARY = "Year: "+date+" | Lang: "+MOVIES_LANG+" | Quality: "+MOVIES_QUALITY
 
-	hosts = LoadData(fp=FAVORITES_DATA, GetJson=False)
+	hosts = LoadData(fp=FAVORITES_DATA, GetJson=2)
 	numHosts = len(hosts)
 	i = 1
 	jj = 0
@@ -559,7 +652,7 @@ def DeleteFavoriteURL(title):
 
 	oc = ObjectContainer(title2=title)
 
-	hosts = LoadData(fp=FAVORITES_DATA, GetJson=False)
+	hosts = LoadData(fp=FAVORITES_DATA, GetJson=2)
 	i = 1
 	for gethost in hosts:
 		MOVIES_PAGE = gethost[i]['SiteURL']
@@ -584,7 +677,7 @@ def DeleteURL(title, page):
 
 	oc = ObjectContainer(title2=title)
 
-	hosts = LoadData(fp=FAVORITES_DATA, GetJson=False)
+	hosts = LoadData(fp=FAVORITES_DATA, GetJson=2)
 	i = 1
 	for gethost in hosts:
 		if gethost[i]['SiteURL'] == page:
@@ -1558,8 +1651,10 @@ def MoviePageAdd(title, page, genre, type, MOVIE2K_URL):
 @route(PREFIX + '/TVandMovieGroupPage')
 def SubGroupMoviePageAdd(title, page, date, dateadd, thumbck, type, summary, MOVIE2K_URL):
 
+	title = unicode(title, errors='replace')
 	oc = ObjectContainer(title2=title)
-
+	
+	Log("THE TITLE IS: "+title)
 	# List Host Sites for Playback
 	summary = summary.split(" | ")[0] + " | " + summary.split(" | ")[1] + " | List the Host Sites from Movie2k."
 	oc.add(DirectoryObject(key=Callback(SubMoviePageAdd, title=title, page=page, date=date, dateadd=dateadd, thumbck=thumbck, type=type, MOVIE2K_URL=MOVIE2K_URL), title=title, summary=summary, thumb=Callback(GetThumb, url=thumbck)))

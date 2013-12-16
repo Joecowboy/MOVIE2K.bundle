@@ -1,3 +1,5 @@
+[B]Version 1.7.12[/B]
+- Fixed unicode UTF-8 issue in Title and Summary
 [B]Version 1.7.11[/B]
 - Fixed issue few issues and updated rest of the hosts.
 [B]Version 1.7.10[/B]
