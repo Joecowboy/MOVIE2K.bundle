@@ -96,6 +96,31 @@ def JsonFavoriteStruct(fp):
 
 
 ####################################################################################################
+#The JSON file is read/saved in the data cache for this plugin setup by Plex
+def JsonWatchLaterOpen(fp):
+	if os.path.exists(fp) == False:
+		FavoritesData = JsonWatchLaterStruct(fp=fp)
+	else:
+		f = open(fp, "rb")
+		FavoritesData = f.read()
+		f.close()
+
+	return FavoritesData
+
+
+####################################################################################################
+#The JSON file is saved in the data cache for this plugin setup by Plex
+def JsonWatchLaterStruct(fp):
+	jsondata = '[\n'
+	jsondata = jsondata + '{1 : {Type: "", Path: "", ThumbURL: "", Title: "", Summary:"", Directors: "", GuestStars: "", Duration: "", Rating: "", Show: "", Index: "", Season: "", ContentRating: "", SourceTitle: "", Date: ""}},\n'
+	jsondata = jsondata + ']'
+	
+	JsonWrite(fp=fp, jsondata=jsondata)
+
+	return jsondata
+
+
+####################################################################################################
 #The JSON file is saved in the data cache for this plugin setup by Plex
 def JsonWrite(fp, jsondata):
 	f = open(fp, "w+")
@@ -107,12 +132,14 @@ def JsonWrite(fp, jsondata):
 
 ####################################################################################################
 # This function loads the json data file
-def LoadData(fp, Data=None, LoadFile=True, GetJson=True):
+def LoadData(fp, Data=None, LoadFile=True, GetJson=1):
 	if LoadFile:
-		if GetJson:
+		if GetJson == 1:
 			Data = JsonOpen(fp=fp)
-		else:
+		elif GetJson == 2:
 			Data = JsonFavoriteOpen(fp=fp)
+		elif GetJson == 3:
+			Data = JsonWatchLaterOpen(fp=fp)
 
 	try:
 		obj = simplejson.loads(Data)
