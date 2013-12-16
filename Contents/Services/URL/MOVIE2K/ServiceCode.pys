@@ -65,7 +65,6 @@ def GetItemInfo(url, itemInfo):
 	Movie2k_url = url.split("?")[0]
 	title = String.Unquote(url.split("title=")[1].split("&")[0], usePlus=True)
 	summary = String.Unquote(url.split("summary=")[1].split("&")[0], usePlus=True)
-	summary = unicode(summary, errors='replace')
 	show = String.Unquote(url.split("show=")[1].split("&")[0], usePlus=True)
 	getdate = String.Unquote(url.split("date=")[1].split("&")[0], usePlus=True)
 	date = Datetime.ParseDate(getdate, "%Y")
@@ -92,6 +91,8 @@ def GetItemInfo(url, itemInfo):
 		duration = None
 
 	if itemInfo == "Metadata":
+		title = unicode(title, errors='replace')
+		summary = unicode(summary, errors='replace')
 		if type == "TV Shows":
 			obj = EpisodeObject(
 					url = url,

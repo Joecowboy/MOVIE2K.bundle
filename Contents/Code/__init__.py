@@ -1679,7 +1679,7 @@ def SubMoviePageAdd(title, page, date, dateadd, thumbck, type, MOVIE2K_URL):
 		pl = "s"
 	else:
 		pl = ""
-
+	title = unicode(title, errors='replace')
 	oc = ObjectContainer(title2=title+" - ["+Prefs['host_count']+" HOST"+pl+" per Page]")
 
 	if page.split('/')[0] != "http:":
