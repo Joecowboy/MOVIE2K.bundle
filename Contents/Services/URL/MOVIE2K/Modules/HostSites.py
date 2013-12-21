@@ -195,7 +195,7 @@ def GetMovie(Host, HostPage, url, LinkType):
 				VideoInfo = HTML.ElementFromString(VideoPage.content).xpath('//div [@id=\'inf\']/input[@id="dl"]')[0].get('value').split('GvaZu')[1]
 				VideoStream = VideoInfo.decode('base64', 'strict').decode('base64', 'strict')
 			except:
-				InputError = HTML.ElementFromString(VideoPage.content).xpath('//div[@class="container"]/div[@class="centered"]/div/div')[0].text_content.strip()
+				InputError = HTML.ElementFromString(VideoPage.content).xpath('//div[@class="container"]/div[@class="centered"]/div/div')[0].text.strip()
 				VideoStream = ErrorMessage(Host=Host, InputError=InputError, ErrorType="VideoRemoved")
 		except:
 			VideoStream = ErrorMessage(Host=Host, LogError=1, ErrorType="HostDown")
@@ -294,9 +294,14 @@ def GetMovie(Host, HostPage, url, LinkType):
 		try:
 			VideoPage = SecondButtonPress(url=url, HostPage=HostPage)
 			try:
-				VideoInfo = SecondButtonPress(url=url, HostPage=HostPage, page=VideoPage, addkey={"down_script": "1"})
-				VideoScript = HTML.ElementFromString(VideoInfo.content).xpath('//div[@id="player_code"]/script')[0].text
-				VideoStream = ScriptConvert(script=VideoScript)
+				VideoInfo = SecondButtonPress(url=url, HostPage=HostPage, page=VideoPage, addkey={"method_premium": "", "down_script": "1"})
+				VideoID = HTML.ElementFromString(VideoInfo.content)
+				try:
+					VideoScript = VideoID.xpath('//div[@id="player_code"]/script')[0].text
+					VideoStream = ScriptConvert(script=VideoScript)
+				except:
+					InputError = VideoID.xpath('//div[@class="alert alert-danger"]')[0].text
+					VideoStream = ErrorMessage(Host=Host, InputError=InputError, ErrorType="WrongIP")
 			except:
 				InputError = HTML.ElementFromString(VideoPage.content).xpath('//div[@class="col-lg-10 col-lg-offset-1"]/center/h3')[0].text.strip()
 				VideoStream = ErrorMessage(Host=Host, InputError=InputError, ErrorType="VideoRemoved")
@@ -2022,7 +2027,7 @@ def GetMovie(Host, HostPage, url, LinkType):
 				InputError = VideoPage.xpath('//div[@class="wrap cf"]/b')[0].text.strip()
 				VideoStream = ErrorMessage(Host=Host, InputError=InputError, ErrorType="VideoRemoved")
 		except:
-			VideoStream = ErrorMessage(Host=Host, LogError=1)
+			VideoStream = ErrorMessage(Host=Host, LogError=1, ErrorType="HostDown")
 	else:
 		VideoStream = ErrorMessage(Host=Host, LogError=7, ErrorType="HostDown")
 

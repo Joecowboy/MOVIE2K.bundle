@@ -112,7 +112,7 @@ def JsonWatchLaterOpen(fp):
 #The JSON file is saved in the data cache for this plugin setup by Plex
 def JsonWatchLaterStruct(fp):
 	jsondata = '[\n'
-	jsondata = jsondata + '{1 : {Type: "", Path: "", ThumbURL: "", Title: "", Summary:"", Directors: "", GuestStars: "", Duration: "", Rating: "", Show: "", Index: "", Season: "", ContentRating: "", SourceTitle: "", Date: ""}},\n'
+	jsondata = jsondata + '{1 : {Type: "", Path: "", Host: "", DateAdded: "", Quality: "", ThumbURL: "", Title: "", Summary:"", Genres: "", Directors: "", GuestStars: "", Duration: "None", Rating: "0.0", Index: "0", Season: "0", ContentRating: "", SourceTitle: "", Date: "", VideoType: "", VideoStreamLink: "", ContentLength: ""}},\n'
 	jsondata = jsondata + ']'
 	
 	JsonWrite(fp=fp, jsondata=jsondata)
@@ -789,3 +789,52 @@ def ErrorVideo(ErrorType):
 		VideoMessage = "Error: Problem with getting Video File to play!"
 
 	return VideoMessage
+
+
+####################################################################################################
+def GetHostPageURL(Host=None, url=None, HostPageInfo=None):
+
+	if Host != None:
+		session = requests.session()
+		headers = {'User-Agent': UserAgent}
+		req = session.get(url, headers=headers)
+		HostPageInfo = HTML.ElementFromString(req.content)
+
+	CURRENT_MOVIE2K_URL = url.split('/')[2]
+
+	HostPageElm = HostPageInfo.xpath('//div[@id="maincontent5"]/div')[0]
+	try:
+		try:
+			if CURRENT_MOVIE2K_URL == "www.movie2k.sx":
+				GetDiv = HostPageElm.xpath('./div')[3]
+				HostPage = GetDiv.xpath('./iframe')[0].get('src')
+			else:
+				HostPage = HostPageElm.xpath('./iframe')[0].get('src')
+			LinkType = 1
+		except:
+			HostPage = HostPageElm.xpath('./embed')[0].get('src')
+			LinkType = 2
+	except:
+		try:
+			try:
+				HostPage = HostPageInfo.xpath('//div[@id="emptydiv"]//script')[0].get('src')
+				LinkType = 3	
+			except:
+				if CURRENT_MOVIE2K_URL == "www.movie2k.sx":
+					GetDiv = HostPageElm.xpath('./div')[3]
+					HostPage = GetDiv.xpath('./a')[0].get('href')
+				else:
+					try:
+						HostPage = HostPageElm.xpath('./a')[0].get('href')
+					except:
+						HostPage = HostPageElm.xpath('./div[@id="emptydiv"]/a')[0].get('href')
+				LinkType = 4
+		except:
+			try:
+				HostPage = HostPageElm.xpath('./object/param')[0].get('value')
+				LinkType = 5
+			except:
+				HostPage = None
+				LinkType = 0
+
+	return (HostPage, LinkType)

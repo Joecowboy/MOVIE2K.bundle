@@ -1,3 +1,5 @@
+[B]Version 1.7.13[/B]
+- Fixed Alphabetical Listing of TV Shows error and added "FOR TESTING ONLY" - Not fully working My Watchit Later
 [B]Version 1.7.12[/B]
 - Fixed unicode UTF-8 issue in Title and Summary
 [B]Version 1.7.11[/B]

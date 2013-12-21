@@ -21,7 +21,8 @@ import httplib
 import random
 import subprocess
 import HostServices
-#import HostVideoDownload
+import HostSites
+import HostVideoDownload
 
 # Import SocksiPy
 import sockschain as socks
@@ -31,7 +32,8 @@ from HostServices import StripArray
 from HostServices import LoadData
 from HostServices import JsonWrite
 from HostServices import CookieDict
-#from HostVideoDownload import MyDownload
+from HostServices import GetHostPageURL
+from HostVideoDownload import GetHostVideo
 
 # Random User Agent
 UserAgent = ['Mozilla/4.0 (compatible; MSIE 5.5; Windows NT)', 'Opera/9.25 (Windows NT 6.0; U; ja)', 'Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 6.0)', 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.31 (KHTML, like Gecko) Chrome/26.0.1410.64 Safari/537.31', 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:20.0) Gecko/20100101 Firefox/20.0', 'Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.1; WOW64; Trident/6.0)', 'Mozilla/4.0 (compatible; MSIE 5.0; Windows 2000) Opera 6.01 [ja]', 'Mozilla/5.0 (Windows; U; Windows NT 5.0; ja-JP; m18) Gecko/20010131 Netscape6/6.01', 'Mozilla/5.0 (Macintosh; U; PPC Mac OS X; ja-jp) AppleWebKit/85.7 (KHTML, like Gecko) Safari/85.7']
@@ -40,11 +42,25 @@ UserAgentNum = random.randrange(0, len(UserAgent)-1, 1)
 # Movie2k Plugin Version
 Version = Prefs['version']
 
+# If Video Error Enabled or Disabled
+VideoError = Prefs["videoerror"]
+
 # Set up Host Services
-HostServices.Version = Version
+HostServices.R = R
 HostServices.Log = Log
-HostServices.UserAgent = UserAgent[UserAgentNum]
 HostServices.HTML = HTML
+HostServices.String = String
+HostServices.Version = Version
+HostServices.VideoError = VideoError
+HostServices.UserAgent = UserAgent[UserAgentNum]
+HostSites.Log = Log
+HostSites.XML = XML
+HostSites.HTML = HTML
+HostSites.String = String
+HostSites.Version = Version
+HostSites.UserAgent = UserAgent[UserAgentNum]
+HostVideoDownload.Log = Log
+HostVideoDownload.UserAgent = UserAgent[UserAgentNum]
 
 PREFIX            = "/video/movie2k"
 NAME              = "Movie2k"
@@ -52,7 +68,9 @@ ART               = "art-default.jpg"
 ICON              = "icon-default.png"
 CAPTCHA_DATA      = "captcha.data.json"
 FAVORITES_DATA    = "favorites.data.json"
+WATCHIT_DATA      = "watchit.data.json"
 PROXIFIER_PROCESS = None
+GoodLink          = None
 
 
 ####################################################################################################
@@ -143,15 +161,7 @@ def MainMenu():
 	MOVIES_THUMB = R(ICON_MOVIES2k_TL)
 	MOVIE2K_URL = "www.movie2k.tl"
 	oc.add(DirectoryObject(key=Callback(SubMainMenu, title=MOVIES_TITLE, MOVIE2K_URL=MOVIE2K_URL), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=MOVIES_THUMB))
-	"""
-	#Add Testin Local Playback
-	ICON_MOVIES2k_PB  = "icon-movies.png"
-	MOVIES_TITLE = "Playback Local Test"
-	MOVIES_SUMMARY = "Playback Local Downloads from Movie2k Blockbuster and TV Shows database!"
-	MOVIES_THUMB = R(ICON_MOVIES2k_PB)
-	title = "Playback Local Test"
-	oc.add(DirectoryObject(key=Callback(PlaybackDownloads, title=title), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=MOVIES_THUMB))
-	"""
+
 	#Add Search only for Plex/Web
 	if Client.Product == "Web Client":
 		ICON_SEARCH = "icon-search.png"
@@ -171,89 +181,6 @@ def MainMenu():
 
 	return oc
 
-####################################################################################################
-@route(PREFIX + '/PlaybackDownloads')
-def PlaybackDownloads(title):
-
-	oc = ObjectContainer(title2=L(title), no_cache = True)
-
-	title = "Prisoners"
-	summary = "When Keller Dover's daughter and her friend go missing, he takes matters into his own hands as the police pursue multiple leads and the pressure mounts. But just how far will this desperate father go to protect his family?"
-	thumb = "http://img.movie4k.to//thumbs/cover-4098976-Prisoners-movie4k-film.jpg"
-	path = "Videos\Prisoners_1384394037.51.flv"
-
-	oc.add(MovieObject(
-			title = title,
-			summary = summary,
-			thumb = Callback(GetThumb, url=thumb),
-			rating_key = path,
-			key = Callback(PlaybackDownloadDetails, path=path, thumb=thumb, title=title, summary=summary),
-			items = MediaObjectsForURL(path)
-			))
-
-	return oc
-
-
-####################################################################################################
-@route(PREFIX + '/PlaybackDownloadDetails')
-def PlaybackDownloadDetails(path, title, thumb, summary, maxVideoBitrate=None, videoQuality=None, directPlay=None, audioBoost=None, partIndex=None, waitForSegments=None, session=None, offset=None, videoResolution=None, subtitleSize=None, directStream=None):
-
-	oc = ObjectContainer(title2=title)
-
-	oc.add(MovieObject(
-			title = title,
-			summary = summary,
-			thumb = Callback(GetThumb, url=thumb),
-			rating_key = path,
-			key = Callback(PlaybackDownloadDetails, path=path, thumb=thumb, title=title, summary=summary),
-			items = MediaObjectsForURL(path)
-			))
-
-	return oc
-
-
-
-####################################################################################################
-@route(PREFIX + '/MediaObjectsForURL')
-def MediaObjectsForURL(path):
-
-	obj = [MediaObject(
-			video_frame_rate = "30",
-			video_resolution = "1080",
-			protocols = None,
-			container = Container.FLV,
-			video_codec = VideoCodec.VP6,
-			audio_codec = AudioCodec.MP3,
-			bitrate = None,
-			audio_channels = 2,
-			optimized_for_streaming = True,
-			parts = [PartObject(key=Callback(PlayVideo, path=path))]
-		)]
-
-	return obj
-
-
-###################################################################################################
-@indirect
-def PlayVideo(path):
-
-	oc = ObjectContainer()
-
-	oc.add(VideoClipObject(
-		items = [
-				MediaObject(
-					parts = [PartObject(key=Callback(CreateLocalURL, path=path))]
-				)
-        		]
-	))
-
-	return oc
-
-
-###################################################################################################
-@route(PREFIX + '/CreateLocalURL')
-def CreateLocalURL(path):
-	return Redirect(Stream.LocalFile(path))
 
 ###################################################################################################
 @route(PREFIX + '/SubMainMenu')
@@ -290,7 +217,7 @@ def SubMainMenu(title, MOVIE2K_URL):
 	#Add Movie4k Added Links and Inbox
 	ICON_MYMOVIE2k = "icon-mymovie2k.png"
 	MYMOVIE2K_TITLE = "My Movie2k"
-	MYMOVIE2K_SUMMARY = "List My Uploads and Inbox on "+title+" and My Favorites Links!"
+	MYMOVIE2K_SUMMARY = "My Uploads and Inbox on "+title+", My Favorites and My Watchit Later!"
 	MYMOVIE2K_THUMB = R(ICON_MYMOVIE2k)
 	oc.add(DirectoryObject(key = Callback(MyMovie2k, title=MYMOVIE2K_TITLE, MOVIE2K_URL=MOVIE2K_URL), title=MYMOVIE2K_TITLE, summary=MYMOVIE2K_SUMMARY, thumb=MYMOVIE2K_THUMB))
 
@@ -483,52 +410,101 @@ def MyMovie2k(title, MOVIE2K_URL):
 
 	oc = ObjectContainer(title2=title)
 
-	# Attempt to login
-	loginResult = Movie2kLogin(MOVIE2K_URL=MOVIE2K_URL)
-	Log("My Movie2k Login success: " + str(loginResult))
-
-	# User input instructions
-	ICON_INSTRUCTIONS = "icon-instructions.png"
-	INSTRUCTIONS_THUMB = R(ICON_INSTRUCTIONS)
-	title = "Special Instructions for Roku Users"
-	summary = "Click here to see special instructions necessary for Roku Users for Add Favorite."
-	oc.add(DirectoryObject(key=Callback(RokuUsersMyFavorites, title=title), title=title, summary=summary, thumb=INSTRUCTIONS_THUMB))
-
-	# My Uploads on Movie4k.to
-	ICON_MYUPLOADS = "icon-myuploads.png"
-	MYUPLOADS_THUMB = R(ICON_MYUPLOADS)
-	title = "My Uploads"
-	summary = "Show all online, offline, waiting and queued links on "+MOVIE2K_URL.split('www.')[1].capitalize()+"!"
-	oc.add(DirectoryObject(key = Callback(Queue, title=title, loginResult=loginResult, MOVIE2K_URL=MOVIE2K_URL), title=title, summary=summary, thumb=MYUPLOADS_THUMB))
-
-	# My Messages on Movie4k.to
-	ICON_MYMESSAGES = "icon-mymessages.png"
-	MYMESSAGES_THUMB = R(ICON_MYMESSAGES)
-	title = "My Messages"
-	summary = "Show messages from your Inbox on "+MOVIE2K_URL.split('www.')[1].capitalize()+"!"
-	oc.add(DirectoryObject(key = Callback(Messages, title=title, loginResult=loginResult, MOVIE2K_URL=MOVIE2K_URL), title=title, summary=summary, thumb=MYMESSAGES_THUMB))
+	# My Movie2k
+	ICON_MYMOVIE2k = "icon-mymovie2k.png"
+	MYMOVIE2K_THUMB = R(ICON_MYMOVIE2k)
+	title = "My Movie2k"
+	WhichSection = "MyMovie2k"
+	summary = "List My Uploads and Inbox on "+MOVIE2K_URL.split('www.')[1].capitalize()+"!"
+	oc.add(DirectoryObject(key = Callback(SubMyMovie2k, title=title, MOVIE2K_URL=MOVIE2K_URL, WhichSection=WhichSection), title=title, summary=summary, thumb=MYMOVIE2K_THUMB))
 
 	# My Favorite Movie4k.to links
 	ICON_MYFAVORITES = "icon-my-favorites.png"
 	MYFAVORITES_THUMB = R(ICON_MYFAVORITES)
 	title = "My Favorite Links"
 	summary = "Show my favorite links from Movie4k.to, Movie2k.tv, Movie2k.sx and Movie2k.tl!"
-	oc.add(DirectoryObject(key = Callback(MyFavoriteURL, title=title, MOVIE2K_URL=MOVIE2K_URL), title=title, summary=summary, thumb=MYFAVORITES_THUMB))
+	WhichSection = "MyFavorites"
+	oc.add(DirectoryObject(key = Callback(SubMyMovie2k, title=title, MOVIE2K_URL=MOVIE2K_URL, WhichSection=WhichSection), title=title, summary=summary, thumb=MYFAVORITES_THUMB))
 
-	# Add Favorite Movie4k.to link
-	ICON_ADDFAVORITE = "icon-add-favorite.png"
-	ADDFAVORITE_THUMB = R(ICON_ADDFAVORITE)
-	title = "Add Favorite Link"
-	summary = "Add a favorite link from Movie4k.to, Movie2k.tv, Movie2k.sx and Movie2k.tl!"
-	prompt = "Add a favorite link from Movie2k!"
-	oc.add(InputDirectoryObject(key=Callback(InputFavoriteURL, title=title, MOVIE2K_URL=MOVIE2K_URL), title=title, summary=summary, thumb=ADDFAVORITE_THUMB, prompt=prompt))
+	#Add My Watchit Later Videos
+	ICON_MYWATCHITLATER  = "icon-my-watchit-later.png"
+	MYWATCHITLATER_THUMB = R(ICON_MYWATCHITLATER)
+	title = "My Watchit Later Videos"
+	summary = "Playback Local Downloads from Movie2k Blockbuster and TV Shows database!"
+	WhichSection = "MyWatchitLater"
+	oc.add(DirectoryObject(key = Callback(SubMyMovie2k, title=title, MOVIE2K_URL=MOVIE2K_URL, WhichSection=WhichSection), title=title, summary=summary, thumb=MYWATCHITLATER_THUMB))
 
-	# Delete Favorite Movie4k.to link
-	ICON_DELETEFAVORITE = "icon-delete-favorite.png"
-	DELETEFAVORITE_THUMB = R(ICON_DELETEFAVORITE)
-	title = "Delete Favorite Links"
-	summary = "Delete my favorite links from Movie2k!"
-	oc.add(DirectoryObject(key = Callback(DeleteFavoriteURL, title=title), title=title, summary=summary, thumb=DELETEFAVORITE_THUMB))
+	return oc
+
+####################################################################################################
+@route(PREFIX + '/SubMyMovie2k')
+def SubMyMovie2k(title, MOVIE2K_URL, WhichSection):
+
+	oc = ObjectContainer(title2=title)
+	
+	if WhichSection == "MyMovie2k":
+		# Attempt to login
+		loginResult = Movie2kLogin(MOVIE2K_URL=MOVIE2K_URL)
+		Log("My Movie2k Login success: " + str(loginResult))
+
+		# My Uploads on Movie4k.to
+		ICON_MYUPLOADS = "icon-myuploads.png"
+		MYUPLOADS_THUMB = R(ICON_MYUPLOADS)
+		title = "My Uploads"
+		summary = "Show all online, offline, waiting and queued links on "+MOVIE2K_URL.split('www.')[1].capitalize()+"!"
+		oc.add(DirectoryObject(key = Callback(Queue, title=title, loginResult=loginResult, MOVIE2K_URL=MOVIE2K_URL), title=title, summary=summary, thumb=MYUPLOADS_THUMB))
+
+		# My Messages on Movie4k.to
+		ICON_MYMESSAGES = "icon-mymessages.png"
+		MYMESSAGES_THUMB = R(ICON_MYMESSAGES)
+		title = "My Messages"
+		summary = "Show messages from your Inbox on "+MOVIE2K_URL.split('www.')[1].capitalize()+"!"
+		oc.add(DirectoryObject(key = Callback(Messages, title=title, loginResult=loginResult, MOVIE2K_URL=MOVIE2K_URL), title=title, summary=summary, thumb=MYMESSAGES_THUMB))
+
+	elif WhichSection == "MyFavorites":
+		# User input instructions
+		ICON_INSTRUCTIONS = "icon-instructions.png"
+		INSTRUCTIONS_THUMB = R(ICON_INSTRUCTIONS)
+		title = "Special Instructions for Roku Users"
+		summary = "Click here to see special instructions necessary for Roku Users for Add Favorite."
+		oc.add(DirectoryObject(key=Callback(RokuUsersMyFavorites, title=title), title=title, summary=summary, thumb=INSTRUCTIONS_THUMB))
+
+		# My Favorite Movie4k.to links
+		ICON_MYFAVORITES = "icon-my-favorites.png"
+		MYFAVORITES_THUMB = R(ICON_MYFAVORITES)
+		title = "My Favorite Links"
+		summary = "Show my favorite links from Movie4k.to, Movie2k.tv, Movie2k.sx and Movie2k.tl!"
+		oc.add(DirectoryObject(key = Callback(MyFavoriteURL, title=title, MOVIE2K_URL=MOVIE2K_URL), title=title, summary=summary, thumb=MYFAVORITES_THUMB))
+
+		# Add Favorite Movie4k.to link
+		ICON_ADDFAVORITE = "icon-add-favorite.png"
+		ADDFAVORITE_THUMB = R(ICON_ADDFAVORITE)
+		title = "Add Favorite Link"
+		summary = "Add a favorite link from Movie4k.to, Movie2k.tv, Movie2k.sx and Movie2k.tl!"
+		prompt = "Add a favorite link from Movie2k!"
+		oc.add(InputDirectoryObject(key=Callback(InputFavoriteURL, title=title, MOVIE2K_URL=MOVIE2K_URL), title=title, summary=summary, thumb=ADDFAVORITE_THUMB, prompt=prompt))
+
+		# Delete Favorite Movie4k.to link
+		ICON_DELETEFAVORITE = "icon-delete-favorite.png"
+		DELETEFAVORITE_THUMB = R(ICON_DELETEFAVORITE)
+		title = "Delete Favorite Links"
+		summary = "Delete my favorite links from Movie2k!"
+		oc.add(DirectoryObject(key = Callback(DeleteFavoriteURL, title=title), title=title, summary=summary, thumb=DELETEFAVORITE_THUMB))
+
+	elif WhichSection == "MyWatchitLater":
+		#Add My Watchit Later Videos
+		ICON_MYWATCHITLATER  = "icon-my-watchit-later.png"
+		MYWATCHITLATER_THUMB = R(ICON_MYWATCHITLATER)
+		title = "My Watchit Later Videos"
+		summary = "Playback Local Downloads from Movie2k Blockbuster and TV Shows database!"
+		oc.add(DirectoryObject(key=Callback(PlaybackDownloads, title=title), title=title, summary=summary, thumb=MYWATCHITLATER_THUMB))
+
+		# Delete Watchit Later Videos
+		ICON_DELETEWATCHITLATER = "icon-delete-videos.png"
+		DELETEWATCHITLATER_THUMB = R(ICON_DELETEWATCHITLATER)
+		title = "Delete Watchit Later Videos"
+		summary = "Delete my wathit later videos from Movie2k Hosts!"
+		oc.add(DirectoryObject(key = Callback(DeleteWatchitLaterVideo, title=title), title=title, summary=summary, thumb=DELETEWATCHITLATER_THUMB))
 
 	return oc
 
@@ -691,7 +667,285 @@ def DeleteURL(title, page):
 			i += 1
 
 	JsonWrite(fp=FAVORITES_DATA, jsondata=hosts)
-	return ObjectContainer(header="Deleted Movie4k URL", message="The Movie4k URL has been removed from My Favorites.  Please click Ok to exit this screen.")
+	return ObjectContainer(header="Deleted Movie2k URL", message="The Movie2k URL has been removed from My Favorites.  Please click Ok to exit this screen.")
+
+
+####################################################################################################
+@route(PREFIX + '/PlaybackDownloads')
+def PlaybackDownloads(title):
+
+	oc = ObjectContainer(title2=L(title), no_cache = True)
+
+	hosts = LoadData(fp=WATCHIT_DATA, GetJson=3)
+	i = 1
+	for gethost in hosts:
+		type = String.Unquote(gethost[i]['Type'], usePlus=True)
+		dateadded = String.Unquote(gethost[i]['DateAdded'], usePlus=True)
+		quality = gethost[i]['Quality']
+		path = gethost[i]['Path']
+		host = gethost[i]['Host']
+		title = gethost[i]['Title']
+		summary = String.Unquote(gethost[i]['Summary'], usePlus=True)
+		genres = StripArray(String.Unquote(gethost[i]['Genres'], usePlus=True).split(','))
+		directors = StripArray(String.Unquote(gethost[i]['Directors'], usePlus=True).split(','))
+		guest_stars = StripArray(String.Unquote(gethost[i]['GuestStars'], usePlus=True).split(','))
+		duration = gethost[i]['Duration']
+		rating = float(gethost[i]['Rating'])
+		index = int(gethost[i]['Index'])
+		season = int(gethost[i]['Season'])
+		content_rating = gethost[i]['ContentRating']
+		source_title = gethost[i]['SourceTitle']
+		originally_available_at = Datetime.ParseDate(String.Unquote(gethost[i]['Date'], usePlus=True), "%Y")
+		thumb = String.Unquote(gethost[i]['ThumbURL'], usePlus=True)
+		videotype = gethost[i]['VideoType']
+		videostreamlink = gethost[i]['VideoStreamLink']
+		contentlength = gethost[i]['ContentLength']
+		show = "ADDED: "+ dateadded + " | HOST: " + host + " | QUALITY: " + quality
+
+		if duration != "None":
+			duration = int(duration)
+		else:
+			duration = None
+
+		if path != "":
+			part = os.stat(path).st_size
+			percent = 100 * float(part)/float(contentlength)
+
+			if percent != 100:
+				if type == "TV Shows":
+					oc.add(EpisodeObject(
+							rating_key = path,
+							key = Callback(PlaybackDownloadDetails, type=type, path=path, title=title, summary=summary, genres=genres, directors=directors, guest_stars=guest_stars, duration=duration, rating=rating, index=index, season=season, content_rating=content_rating, source_title=source_title, originally_available_at=originally_available_at, show=show, thumb=thumb),
+							title = title,
+							summary = summary,
+							directors = directors,
+							guest_stars = guest_stars,
+							duration = duration,
+							rating = rating,
+							show = show,
+							index = index,
+							season = season,
+							content_rating = content_rating,
+							source_title = source_title,
+							originally_available_at = originally_available_at,
+							thumb = Callback(GetThumb, url=thumb),
+							items = MediaObjectsForURL(path, videotype)))
+				else:
+					oc.add(MovieObject(
+							rating_key = path,
+							key = Callback(PlaybackDownloadDetails, type=type, path=path, title=title, summary=summary, genres=genres, directors=directors, guest_stars=guest_stars, duration=duration, rating=rating, index=index, season=season, content_rating=content_rating, source_title=source_title, originally_available_at=originally_available_at, show=show, thumb=thumb),
+							title = title,
+							summary = summary,
+							directors = directors,
+							genres = genres,
+							duration = duration,
+							rating = rating,
+							content_rating = content_rating,
+							source_title = show,
+							originally_available_at = originally_available_at,
+							thumb = Callback(GetThumb, url=thumb),
+							items = MediaObjectsForURL(path, videotype)))
+			else:
+				oc.add(DirectoryObject(key=Callback(WatchitDownloadInfo, title=title, percent=percent), title=title, summary=show, thumb=Callback(GetThumb, url=thumb)))
+
+		i += 1
+
+	if len(oc) < 1:
+		oc = ObjectContainer(header="We Apologize", message="This section does not contain any Watchit Later videos.  Please add a video to view.")
+
+	return oc
+
+
+####################################################################################################
+@route(PREFIX + '/PlaybackDownloadDetails')
+def PlaybackDownloadDetails(type, path, title, summary, genres, directors, guest_stars, duration, rating, index, season, content_rating, source_title, originally_available_at, show, thumb, maxVideoBitrate=None, videoQuality=None, directPlay=None, audioBoost=None, partIndex=None, waitForSegments=None, session=None, offset=None, videoResolution=None, subtitleSize=None, directStream=None):
+	title = unicode(title, errors='replace')
+	summary = unicode(summary, errors='replace')
+	oc = ObjectContainer(title2=title)
+
+	if type == "TV Shows":
+		oc.add(EpisodeObject(
+				rating_key = path,
+				key = Callback(PlaybackDownloadDetails, type=type, path=path, title=title, summary=summary, genres=genres, directors=directors, guest_stars=guest_stars, duration=duration, rating=rating, index=index, season=season, content_rating=content_rating, source_title=source_title, originally_available_at=originally_available_at, show=show, thumb=thumb),
+				title = title,
+				summary = summary,
+				directors = directors,
+				guest_stars = guest_stars,
+				duration = duration,
+				rating = rating,
+				show = show,
+				index = index,
+				season = season,
+				content_rating = content_rating,
+				source_title = source_title,
+				originally_available_at = date,
+				thumb = Callback(GetThumb, url=thumb),
+				items = MediaObjectsForURL(path, videotype)))
+	else:
+		oc.add(MovieObject(
+				rating_key = path,
+				key = Callback(PlaybackDownloadDetails, type=type, path=path, title=title, summary=summary, genres=genres, directors=directors, guest_stars=guest_stars, duration=duration, rating=rating, index=index, season=season, content_rating=content_rating, source_title=source_title, originally_available_at=originally_available_at, show=show, thumb=thumb),
+				title = title,
+				summary = summary,
+				directors = directors,
+				genres = genres,
+				duration = duration,
+				rating = rating,
+				content_rating = content_rating,
+				source_title = show,
+				originally_available_at = date,
+				thumb = Callback(GetThumb, url=thumb),
+				items = MediaObjectsForURL(path, videotype)))
+
+	return oc
+
+
+
+####################################################################################################
+@route(PREFIX + '/MediaObjectsForURL')
+def MediaObjectsForURL(path, videotype):
+
+	if videotype == 'mp4':
+		video_frame_rate = "30"
+		video_resolution = Prefs['video_resolution']
+		container = Container.MP4
+		video_codec = VideoCodec.H264
+		audio_codec = AudioCodec.AAC
+		audio_channels = 2
+		bitrate = None
+		optimized_for_streaming = True
+	elif videotype == 'flv':
+		video_frame_rate = "30"
+		video_resolution = Prefs['video_resolution']
+		container = Container.FLV
+		video_codec = VideoCodec.VP6
+		audio_codec = AudioCodec.MP3
+		bitrate = None
+		audio_channels = 2
+		optimized_for_streaming = True
+	else:
+		video_frame_rate = "30"
+		video_resolution = Prefs['video_resolution']
+		container = None
+		video_codec = None
+		audio_codec = None
+		bitrate = None
+		audio_channels = 2
+		optimized_for_streaming = True
+
+	obj = [MediaObject(
+			video_frame_rate = ideo_frame_rate,
+			video_resolution = video_resolution,
+			container = container,
+			video_codec = video_codec,
+			audio_codec = video_codec,
+			bitrate = bitrate,
+			audio_channels = audio_channels,
+			optimized_for_streaming = optimized_for_streaming,
+			parts = [PartObject(key=Callback(PlayVideo, path=path))]
+		)]
+
+	return obj
+
+
+###################################################################################################
+@indirect
+def PlayVideo(path):
+
+	oc = ObjectContainer()
+
+	oc.add(VideoClipObject(
+		items = [
+				MediaObject(
+					parts = [PartObject(key=Callback(CreateLocalURL, path=path))]
+				)
+        		]
+	))
+
+	return oc
+
+
+###################################################################################################
+@route(PREFIX + '/CreateLocalURL')
+def CreateLocalURL(path):
+	return Redirect(Stream.LocalFile(path))
+
+
+####################################################################################################
+@route(PREFIX + '/WatchitDownloadInfo')
+def WatchitDownloadInfo(title, percent):
+	return ObjectContainer(header=title+" Still Downloading", message="Your video download is still in progress.  Please check back later.  DOWNLOAD PERCENTAGE: "+str(percent)+"%")
+
+
+####################################################################################################
+@route(PREFIX + '/DeleteWatchitLaterVideo')
+def DeleteWatchitLaterVideo(title):
+
+	oc = ObjectContainer(title2=title)
+
+	hosts = LoadData(fp=WATCHIT_DATA, GetJson=3)
+	i = 1
+	for gethost in hosts:
+		dateadded = gethost[i]['DateAdded']
+		quality = gethost[i]['Quality']
+		path = gethost[i]['Path']
+		host = gethost[i]['Host']
+		title = gethost[i]['Title']
+		thumb = gethost[i]['ThumbURL']
+		summary = "ADDED: "+ dateadded + " | HOST: " + host + " | QUALITY: " + quality
+		i += 1
+
+		if path != "":
+			oc.add(DirectoryObject(key=Callback(DeleteVideo, title=title, path=path), title=title, summary=summary, thumb=Callback(GetThumb, url=thumb)))
+
+	if len(oc) < 1:
+		oc = ObjectContainer(header="We Apologize", message="This section does not contain any My Watchit Later videos to delete.")
+
+	return oc
+
+
+####################################################################################################
+@route(PREFIX + '/DeleteVideo')
+def DeleteVideo(title, path):
+
+	oc = ObjectContainer(title2=title)
+
+	if os.path.isfile(path):
+		os.remove(path)
+	else:
+		Log("Error: %s file not found" % path)
+
+	hosts = LoadData(fp=WATCHIT_DATA, GetJson=3)
+	i = 1
+	for gethost in hosts:
+		if gethost[i]['Path'] == path:
+			gethost[i]['Type'] = ""
+			gethost[i]['DateAdded'] = ""
+			gethost[i]['Quality'] = ""
+			gethost[i]['Path'] = ""
+			gethost[i]['Host'] = ""
+			gethost[i]['Title'] = ""
+			gethost[i]['Summary'] = ""
+			gethost[i]['Genres'] = ""
+			gethost[i]['Directors'] = ""
+			gethost[i]['GuestStars'] = ""
+			gethost[i]['Duration'] = ""
+			gethost[i]['Rating'] = "0.0"
+			gethost[i]['Index'] = "0"
+			gethost[i]['Season'] = "0"
+			gethost[i]['ContentRating'] = ""
+			gethost[i]['SourceTitle'] = ""
+			gethost[i]['Date'] = ""
+			gethost[i]['ThumbURL'] = ""
+			gethost[i]['VideoType'] = ""
+			gethost[i]['VideoStreamLink'] = ""
+			gethost[i]['ContentLength'] = ""
+			break
+		else:
+			i += 1
+
+	JsonWrite(fp=FAVORITES_DATA, jsondata=hosts)
+	return ObjectContainer(header="Deleted Movie2k Host Video", message="The Movie2k Video has been removed from My Watchit Later.  Please click Ok to exit this screen.")
 
 
 ####################################################################################################
@@ -981,7 +1235,7 @@ def TVShowsList(title, page, genre, type, MOVIE2K_URL):
 		MOVIES_PAGE = "http://" + MOVIE2K_URL + "/"+MOVIES_TD[0].xpath('./a')[0].get('href')
 
 		if MOVIES_LANG == GetLanguage() or MOVIES_LANG == 'N/A' or GetLanguage() == 'All':
-			oc.add(DirectoryObject(key=Callback(TVShowSeasons, title=MOVIES_TITLE, page=MOVIES_PAGE, genre=genre, type=type), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=MOVIES_THUMB))
+			oc.add(DirectoryObject(key=Callback(TVShowSeasons, title=MOVIES_TITLE, page=MOVIES_PAGE, genre=genre, type=type, MOVIE2K_URL=MOVIE2K_URL), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=MOVIES_THUMB))
 
 	return oc
 
@@ -1063,7 +1317,7 @@ def TVShowSeasons(title, page, genre, type, MOVIE2K_URL):
 		MOVIES_THUMB = R(ICON_MOVIES)
 		MOVIES_PAGE = "http://" + MOVIE2K_URL + "/"+MOVIES_TD[0].xpath('./a')[0].get('href')
 
-		oc.add(DirectoryObject(key=Callback(TVShowEpisodes, title=MOVIES_TITLE, page=MOVIES_PAGE, genre=genre, type=type), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=MOVIES_THUMB))
+		oc.add(DirectoryObject(key=Callback(TVShowEpisodes, title=MOVIES_TITLE, page=MOVIES_PAGE, genre=genre, type=type, MOVIE2K_URL=MOVIE2K_URL), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=MOVIES_THUMB))
 
 	return oc
 
@@ -1646,7 +1900,6 @@ def MoviePageAdd(title, page, genre, type, MOVIE2K_URL):
 	return oc
 
 
-
 ####################################################################################################
 @route(PREFIX + '/TVandMovieGroupPage')
 def SubGroupMoviePageAdd(title, page, date, dateadd, thumbck, type, summary, MOVIE2K_URL):
@@ -1654,7 +1907,6 @@ def SubGroupMoviePageAdd(title, page, date, dateadd, thumbck, type, summary, MOV
 	title = unicode(title, errors='replace')
 	oc = ObjectContainer(title2=title)
 	
-	Log("THE TITLE IS: "+title)
 	# List Host Sites for Playback
 	summary = summary.split(" | ")[0] + " | " + summary.split(" | ")[1] + " | List the Host Sites from Movie2k."
 	oc.add(DirectoryObject(key=Callback(SubMoviePageAdd, title=title, page=page, date=date, dateadd=dateadd, thumbck=thumbck, type=type, MOVIE2K_URL=MOVIE2K_URL), title=title, summary=summary, thumb=Callback(GetThumb, url=thumbck)))
@@ -1663,22 +1915,35 @@ def SubGroupMoviePageAdd(title, page, date, dateadd, thumbck, type, summary, MOV
 	ICON_ADDFAVORITE = "icon-add-favorite.png"
 	ADDFAVORITE_THUMB = R(ICON_ADDFAVORITE)
 	summary = "Add \""+title+"\" as a favorite link from Movie2k!"
-	title = "Add to My Favorite Links"
-	prompt = "Add a favorite link from Movie2k!"
+	ADDFAVORITE_TITLE = "Add to My Favorite Links"
 	if page.split('/')[0] != "http:":
 		page = "http://"+MOVIE2K_URL+"/"+page
-	oc.add(DirectoryObject(key=Callback(InputFavoriteURL, title=title, MOVIE2K_URL=MOVIE2K_URL, query=page), title=title, summary=summary, thumb=ADDFAVORITE_THUMB))
+	oc.add(DirectoryObject(key=Callback(InputFavoriteURL, title=ADDFAVORITE_TITLE, MOVIE2K_URL=MOVIE2K_URL, query=page), title=ADDFAVORITE_TITLE, summary=summary, thumb=ADDFAVORITE_THUMB))
+
+	# Add Watchit Later Video Movie4k.to link
+	ICON_ADDWATCHITLATER = "icon-add-watchit-later.png"
+	WATCHIT_THUMB = R(ICON_ADDWATCHITLATER)
+	summary = "Add \""+title+"\" as a watchit later video download from a Movie2k Host!"
+	WATCHIT_TITLE = "Add to My Watchit Later Videos"
+	oc.add(DirectoryObject(key=Callback(SubMoviePageAdd, title=title, page=page, date=date, dateadd=dateadd, thumbck=thumbck, type=type, MOVIE2K_URL=MOVIE2K_URL, watchitlater=True), title=WATCHIT_TITLE, summary=summary, thumb=WATCHIT_THUMB))
+
 	return oc
 
 
 ####################################################################################################
 @route(PREFIX + '/TVandMovieHostPage')
-def SubMoviePageAdd(title, page, date, dateadd, thumbck, type, MOVIE2K_URL):
-	
-	if Prefs['host_count'] != "1":
+def SubMoviePageAdd(title, page, date, dateadd, thumbck, type, MOVIE2K_URL, watchitlater=False):
+
+	if watchitlater == "True":
+		host_count = 1
+	else:
+		host_count = int(Prefs['host_count'])
+
+	if host_count != 1:
 		pl = "s"
 	else:
 		pl = ""
+
 	title = unicode(title, errors='replace')
 	oc = ObjectContainer(title2=title+" - ["+Prefs['host_count']+" HOST"+pl+" per Page]")
 
@@ -1722,14 +1987,14 @@ def SubMoviePageAdd(title, page, date, dateadd, thumbck, type, MOVIE2K_URL):
 		NumHostListing2 = NumHostListing2 + NumHosts
 		nsl += 1
 
-	p = (float(NumHostListing1)+float(NumHostListing2))/float(Prefs['host_count']) - (NumHostListing1+NumHostListing2)/int(Prefs['host_count'])
-	jj = (NumHostListing1+NumHostListing2)/int(Prefs['host_count'])
+	p = (float(NumHostListing1)+float(NumHostListing2))/float(host_count) - (NumHostListing1+NumHostListing2)/host_count
+	jj = (NumHostListing1+NumHostListing2)/host_count
 	if p > 0:
 		jj += 1
 
 	if jj == 0:
 		try:
-			Host = GetHost(HostPageInfo=MOVIE_PAGE_HTML)
+			Host = GetHost(url=page, HostPageInfo=MOVIE_PAGE_HTML)
 			MOVIES_SUMMARY = "Page - " + str(i) + " | Host: " + Host
 			MOVIES_TITLE = title
 			if Prefs['swaptitle'] == "Enabled":
@@ -1738,52 +2003,51 @@ def SubMoviePageAdd(title, page, date, dateadd, thumbck, type, MOVIE2K_URL):
 			if Host == "Urmediazone":
 				oc = ObjectContainer(header="We Apologize", message=title + " does not have any Host sites listed for video playback.  Try again later to see if Movie2k site adds any Hosts.")
 			else:
-				oc.add(DirectoryObject(key=Callback(TheMovieListings, title=title, page=page, date=date, dateadd=dateadd, thumb=thumb, type=type, PageOfHosts=0, MOVIE2K_URL=MOVIE2K_URL, Host=Host), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=Callback(GetThumb, url=thumb)))
+				oc.add(DirectoryObject(key=Callback(TheMovieListings, title=title, page=page, date=date, dateadd=dateadd, thumb=thumb, type=type, PageOfHosts=0, MOVIE2K_URL=MOVIE2K_URL, Host=Host, watchitlater=watchitlater), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=Callback(GetThumb, url=thumb)))
 		except:
 			pass
 	else:
 		while i <= jj:
-			while HostCount <= int(Prefs['host_count']):
+			while HostCount <= host_count:
 				if Num1 < NumHostListing1:
 					try:
-						try:
-							Host = Listing[Num1].xpath("./td/a/img")[0].get('title').split(' ')[0].split('.')[0].capitalize()
-						except:
-							Host = Listing[Num1].xpath("./td/a/img")[0].get('title').split(' ')[0].capitalize()
+						Host = Listing[Num1].xpath("./td/a/img")[0].get('title').split(' ')[0].partition('.')[0].capitalize()
+						if type == 'Movies':
+							Quality = Listing[Num1].xpath("./td/img")[0].get('title').split(' ')[2]
 					except:
 						if MOVIE2K_URL == "www.movie2k.sx":
-							try:
-								Host = Listing[Num1].xpath("./td/a")[2].text.split('.')[0].capitalize()
-							except:
-								Host = Listing[Num1].xpath("./td/a")[2].text.capitalize()
+							Host = Listing[Num1].xpath("./td/a")[2].text.partition('.')[0].capitalize()
+							if type == 'Movies':
+								Quality = Listing[Num1].xpath("./td/img")[0].get('title').split(' ')[2].capitalize()
 					if Host == None or Host == "":
 						Host = GetHost(HostPageInfo=MOVIE_PAGE_HTML)
+						Quality = "N/A"
 					Num1 += 1
-					Hosts = Hosts + Host + ", "
 				elif Num2 < NumHostListing2:
 					ScriptListing = StringListing[k].text.split('links[')
 					NumHosts = len(ScriptListing) - 2	
-					try:
-						Host = ScriptListing[sll].split('title=\\"')[1].split('\\"')[0].split(' ')[0].split('.')[0].capitalize()
-					except:
-						Host = ScriptListing[sll].split('title=\\"')[1].split('\\"')[0].split(' ')[0].capitalize()
+					Host = ScriptListing[sll].split('title=\\"')[1].split('\\"')[0].split(' ')[0].partition('.')[0].capitalize()
+					Quality = ScriptListing[sll].split('title=\\"')[2].split('\\"')[0].split(' ')[2]
 					if sll == NumHosts:
 						k += 1
 						sll = 1
 					else:
 						sll += 1
 					Num2 += 1
-					Hosts = Hosts + Host + ", "
 				else:
-					HostCount = int(Prefs['host_count'])
+					HostCount = host_count
 				HostCount += 1
+				if host_count == 1 and type == 'Movies':
+					Hosts = Hosts + Host + " | Quality: "+Quality+", "
+				else:
+					Hosts = Hosts + Host + ", "
 
-			MOVIES_SUMMARY = "Page - " + str(i) + " | Hosts: " + Hosts[:-2]
+			MOVIES_SUMMARY = "Page - " + str(i) + " | Host"+pl+": " + Hosts[:-2]
 			MOVIES_TITLE = title
 			if Prefs['swaptitle'] == "Enabled":
 				MOVIES_SUMMARY = title
 				MOVIES_TITLE = str(i) + ": " + Hosts[:-2]
-			oc.add(DirectoryObject(key=Callback(TheMovieListings, title=title, page=page, date=date, dateadd=dateadd, thumb=thumb, type=type, PageOfHosts=i, MOVIE2K_URL=MOVIE2K_URL), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=Callback(GetThumb, url=thumb)))
+			oc.add(DirectoryObject(key=Callback(TheMovieListings, title=title, page=page, date=date, dateadd=dateadd, thumb=thumb, type=type, PageOfHosts=i, MOVIE2K_URL=MOVIE2K_URL, watchitlater=watchitlater), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=Callback(GetThumb, url=thumb)))
 			HostCount = 1
 			Hosts = ""
 			i += 1
@@ -1796,12 +2060,15 @@ def SubMoviePageAdd(title, page, date, dateadd, thumbck, type, MOVIE2K_URL):
 
 ####################################################################################################
 @route(PREFIX + '/TVandTheMovieListings')
-def TheMovieListings(title, page, date, dateadd, thumb, type, PageOfHosts, MOVIE2K_URL, Host=None):
+def TheMovieListings(title, page, date, dateadd, thumb, type, PageOfHosts, MOVIE2K_URL, Host=None, watchitlater=False):
 
+	title = unicode(title, errors='replace')
 	oc = ObjectContainer(title2=title+" - [HOST VIDEO INFO]")
 
+	global GoodLink
+
 	@parallelize
-	def GetMovieList(title=title, page=page, date=date, dateadd=dateadd, thumb=thumb, type=type, PageOfHosts=PageOfHosts, Host=Host):
+	def GetMovieList(title=title, page=page, date=date, dateadd=dateadd, thumb=thumb, type=type, PageOfHosts=PageOfHosts, Host=Host, watchitlater=watchitlater):
 
 		if page.split('/')[0] != "http:":
 			CURRENT_MOVIE2K_URL = MOVIE2K_URL
@@ -1918,6 +2185,11 @@ def TheMovieListings(title, page, date, dateadd, thumb, type, PageOfHosts, MOVIE
 			if type == 'N/A':
 				type = 'Movies'
 
+		if watchitlater == "True":
+			host_count = 1
+		else:
+			host_count = int(Prefs['host_count'])
+
 		Listing = MOVIE_PAGE_HTML.xpath('//div[@id="menu"]//tr[@id="tablemoviesindex2"]')
 		StringListing = MOVIE_PAGE_HTML.xpath('//div[@id="menu"]//script[@type="text/javascript"]')
 		NumHostListing1 = len(Listing)
@@ -1931,8 +2203,8 @@ def TheMovieListings(title, page, date, dateadd, thumb, type, PageOfHosts, MOVIE
 			NumHostListing2 = NumHostListing2 + NumHosts
 			nsl += 1
 
-		p = (float(NumHostListing1)+float(NumHostListing2))/float(Prefs['host_count']) - (NumHostListing1+NumHostListing2)/int(Prefs['host_count'])
-		NumPages = (NumHostListing1+NumHostListing2)/int(Prefs['host_count'])
+		p = (float(NumHostListing1)+float(NumHostListing2))/float(host_count) - (NumHostListing1+NumHostListing2)/host_count
+		NumPages = (NumHostListing1+NumHostListing2)/host_count
 		if p > 0:
 			NumPages += 1
 
@@ -1951,18 +2223,12 @@ def TheMovieListings(title, page, date, dateadd, thumb, type, PageOfHosts, MOVIE
 				num2 = num - NumHostListing1
 				if num < NumHostListing1:
 					try:
-						try:
-							Host = Listing[num].xpath("./td/a/img")[0].get('title').split(' ')[0].split('.')[0].capitalize()
-						except:
-							Host = Listing[num].xpath("./td/a/img")[0].get('title').split(' ')[0].capitalize()
+						Host = Listing[num].xpath("./td/a/img")[0].get('title').split(' ')[0].partition('.')[0].capitalize()
 					except:
 						if MOVIE2K_URL == "www.movie2k.sx":
-							try:
-								Host = Listing[num].xpath("./td/a")[2].text.split('.')[0].capitalize()
-							except:
-								Host = Listing[num].xpath("./td/a")[2].text.capitalize()
+							Host = Listing[num].xpath("./td/a")[2].text.partition('.')[0].capitalize()
 					if Host == None or Host == "":
-						Host = GetHost(HostPageInfo=MOVIE_PAGE_HTML)
+						Host = GetHost(url=page, HostPageInfo=MOVIE_PAGE_HTML)
 					MOVIE_PAGE = Listing[num].xpath("./td/a")[0].get('href')
 					if MOVIE_PAGE.split('/')[0] != "http:":
 						MOVIE_PAGE = "http://" + CURRENT_MOVIE2K_URL + "/" + MOVIE_PAGE
@@ -1975,10 +2241,7 @@ def TheMovieListings(title, page, date, dateadd, thumb, type, PageOfHosts, MOVIE
 				elif num2 < NumHostListing2:
 					ScriptListing = StringListing[out['k']].text.split('links[')
 					NumHosts = len(ScriptListing) - 2	
-					try:
-						Host = ScriptListing[out['sll']].split('title=\\"')[1].split('\\"')[0].split(' ')[0].split('.')[0].capitalize()
-					except:
-						Host = ScriptListing[out['sll']].split('title=\\"')[1].split('\\"')[0].split(' ')[0].capitalize()
+					Host = ScriptListing[out['sll']].split('title=\\"')[1].split('\\"')[0].split(' ')[0].partition('.')[0].capitalize()
 					MOVIE_PAGE = ScriptListing[out['sll']].split('href=\\"')[1].split('\\"')[0]
 					if MOVIE_PAGE.split('/')[0] != "http:":
 						MOVIE_PAGE = "http://" + CURRENT_MOVIE2K_URL + "/" + MOVIE_PAGE
@@ -2005,7 +2268,10 @@ def TheMovieListings(title, page, date, dateadd, thumb, type, PageOfHosts, MOVIE
 					Quality = QualitySub.xpath("./span/span/img")[0].get('title').split(' ')[2]
 
 			@task
-			def GetMovieObjects(Host=Host, MOVIE_PAGE=MOVIE_PAGE, DateAdded=DateAdded, Quality=Quality, CreatePage=out['CreatePage'], CurrentPage=out['CurrentPage']):
+			def GetMovieObjects(Host=Host, MOVIE_PAGE=MOVIE_PAGE, DateAdded=DateAdded, Quality=Quality, CreatePage=out['CreatePage'], CurrentPage=out['CurrentPage'], watchitlater=watchitlater):
+
+				global GoodLink
+
 				if CreatePage:
 					if CurrentPage == int(PageOfHosts):
 						if Host == 'N/a' or Host == 'Divx' or Host == 'DivX Hoster' or Host == 'Flash' or Host == 'Flash Hoster' or Host == 'Embed':
@@ -2023,6 +2289,8 @@ def TheMovieListings(title, page, date, dateadd, thumb, type, PageOfHosts, MOVIE
 							show_update = "Click here if you want OCR to try and decode Captcha text."
 							show_title = show_title +  " - [USES CAPTCHA]"
 							oc.add(DirectoryObject(key=Callback(CaptchaSection, title=title, page=page, date=date, thumb=thumb, type=type, summary=summary.strip(), directors=directors, guest_stars=guest_stars, genres=genres, duration=duration, rating=float(rating), season=season, index=index, show=show_update, content_rating=content_rating, source_title=source_title, url=url, Host=Host), title=show_title, thumb=Callback(GetThumb, url=thumb), summary=show))
+						elif watchitlater == "True":
+							GoodLink = GetHostVideo(title=title, date=String.Quote(str(date), usePlus=True), DateAdded=String.Quote(str(DateAdded), usePlus=True), Quality=Quality, thumb=String.Quote(thumb, usePlus=True), type=String.Quote(type, usePlus=True), summary=String.Quote(summary.strip(), usePlus=True), directors=String.Quote(director, usePlus=True), guest_stars=String.Quote(actors, usePlus=True), genres=String.Quote(genre, usePlus=True), duration=str(duration), rating=str(rating), season=str(season), index=str(index), content_rating=content_rating, source_title=source_title, url=MOVIE_PAGE, Host=Host)
 						else:
 							if type == 'TV Shows':
 								oc.add(EpisodeObject(
@@ -2055,7 +2323,7 @@ def TheMovieListings(title, page, date, dateadd, thumb, type, PageOfHosts, MOVIE
 										originally_available_at = date,
 										thumb = Callback(GetThumb, url=thumb)))
 
-			if (num+1)%int(Prefs['host_count']) == 0:
+			if (num+1)%host_count == 0:
 				if out['CurrentPage'] == int(PageOfHosts):
 					out['CreatePage'] = False
 				else:
@@ -2065,8 +2333,14 @@ def TheMovieListings(title, page, date, dateadd, thumb, type, PageOfHosts, MOVIE
 				out['CreatePage'] = False
 			else:
 				out['HostCountTotal'] = out['HostCountTotal'] + 1
-		
-	if len(oc) < 1:
+
+	if GoodLink != None:
+		if GoodLink == True:
+			oc = ObjectContainer(header="Download Started", message="Please DO NOT shut down or restart Plex Media Server at this time or download will fail.  Go to Watchit Later to check on the status.")
+		else:
+			oc = ObjectContainer(header="We Apologize", message="There was a problem with the Host video.  Host video errored do to "+GoodLink+".  Please try again by clicking the OK button, choose another Host.")
+		GoodLink = None
+	elif len(oc) < 1:
 		oc = ObjectContainer(header="We Apologize", message="An error has occured processing Host site information.  Please try again.")
 
 	return oc
@@ -2232,6 +2506,7 @@ def CaptchaInput(title, page, date, thumb, type, summary, directors, guest_stars
 
 #####################################################################################################
 # This is special instructions for Roku users
+@route(PREFIX + '/RokuUsers')
 def RokuUsers(title):
 
 	return ObjectContainer(header="Special Instructions for Roku Users", message="To enter Captcha text, Roku users must be using version 2.6.7 or later of the Plex Roku Channel. You can choose to type in the Captcha image text or allow the OCR to try and deocode it. However, the OCR decode rate is very low.  WARNING: DO NOT DIRECTLY TYPE OR PASTE THE TEXT IN THE INPUT CAPTCHA SECTION USING ROKU PLEX CHANNELS 2.6.4. THAT VERSION USES A SEARCH INSTEAD OF ENTRY SCREEN AND EVERY LETTER OF THE TEXT YOU ENTER WILL PRODUCE A SUBMIT FORM ON EACH CAPTCHA LETTER.")
@@ -2252,22 +2527,7 @@ def GetHost(Host=None, url=None, HostPageInfo=None):
 	#
 	#Check for Real Video Hoster if set to N/A or DivX Hoster or Flash Hoster is set
 	#
-	if Host != None:
-		cookies = Dict['_movie2k_uid']
-		CURRENT_MOVIE2K_URL = url.split('/')[2]
-		headers = {"Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8", "Accept-Charset": "ISO-8859-1,utf-8;q=0.7,*;q=0.3", "Accept-Encoding": "gzip,deflate,sdch", "Accept-Language": "en-US,en;q=0.8", "Connection": "keep-alive", "Host": CURRENT_MOVIE2K_URL, "Referer": "http://"+CURRENT_MOVIE2K_URL, "User-Agent": UserAgent[UserAgentNum]}
-		req = requests.get(url, headers=headers, cookies=cookies)
-
-		HostPageInfo = HTML.ElementFromString(req.content)
-
-	HostPageElm = HostPageInfo.xpath('//div[@id="maincontent5"]/div')[0]
-	try:
-		try:
-			HostPage =  HostPageElm.xpath('./a')[0].get('href')
-		except:
-			HostPage = HostPageElm.xpath('./iframe')[0].get('src')
-	except:
-		HostPage = HostPageElm.xpath('./object/param')[0].get('value')
+	(HostPage, LinkType) = GetHostPageURL(Host=Host, url=url, HostPageInfo=HostPageInfo)
 	Host = HostPage.split('http://')[1].split('.')[0].capitalize()
 	if Host == 'Www' or Host == 'Embed' or Host == 'Beta' or Host == 'Movie':
 		Host = HostPage.split('http://')[1].split('.')[1].capitalize()

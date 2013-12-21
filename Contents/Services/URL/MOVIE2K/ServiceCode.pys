@@ -17,6 +17,7 @@ import random
 import HostServices
 import HostSites
 from HostServices import StripArray
+from HostServices import GetHostPageURL
 from HostSites import GetMovie
 
 # Random User Agent
@@ -43,15 +44,9 @@ HostSites.HTML = HTML
 HostSites.String = String
 HostSites.Version = Version
 HostSites.UserAgent = UserAgent[UserAgentNum]
-#HostVideoDownload.Log = Log
-#HostVideoDownload.UserAgent = UserAgent[UserAgentNum]
 
 # Default Icon
-ICON                 = 'icon-default.png'
-
-# Default Movie2k URL
-MOVIE2K_PROXY_URL    = Prefs['movie2k_url']
-SET_VIDEO_RESOLUTION = Prefs['video_resolution']
+ICON = 'icon-default.png'
 
 
 ####################################################################################################
@@ -75,12 +70,9 @@ def GetItemInfo(url, itemInfo):
 	season = int(url.split("season=")[1].split("&")[0])
 	index = int(url.split("index=")[1].split("&")[0])
 	type = String.Unquote(url.split("type=")[1].split("&")[0], usePlus=True)
-	genres = []
 	genres = StripArray(arraystrings=String.Unquote(url.split("genres=")[1].split("&")[0], usePlus=True).split(','))
 	content_rating = url.split("content_rating=")[1].split("&")[0]
-	directors = []
 	directors = StripArray(arraystrings=String.Unquote(url.split("director=")[1].split("&")[0], usePlus=True).split(','))
-	guest_stars = []
 	guest_stars = StripArray(arraystrings=String.Unquote(url.split("actors=")[1].split("&")[0], usePlus=True).split(','))
 	rating = float(url.split("rating=")[1].split("&")[0])
 	duration = url.split("duration=")[1].split("&")[0]
@@ -147,8 +139,7 @@ def GetItemInfo(url, itemInfo):
 				i += 1
 
 			video_frame_rate = "30"
-			video_resolution = SET_VIDEO_RESOLUTION
-			protocols = Protocol.RTMP
+			video_resolution = Prefs['video_resolution']
 			container = Container.MP4
 			video_codec = VideoCodec.H264
 			audio_codec = AudioCodec.AAC
@@ -167,8 +158,7 @@ def GetItemInfo(url, itemInfo):
 
 				if video_url.endswith('.mp4') or video_url.endswith('.mp4?start=0'):
 					video_frame_rate = "30"
-					video_resolution = SET_VIDEO_RESOLUTION
-					protocols = None
+					video_resolution = Prefs['video_resolution']
 					container = Container.MP4
 					video_codec = VideoCodec.H264
 					audio_codec = AudioCodec.AAC
@@ -177,8 +167,7 @@ def GetItemInfo(url, itemInfo):
 					optimized_for_streaming = True
 				elif video_url.endswith('.flv') or video_url.endswith('.flv?start=0'):
 					video_frame_rate = "30"
-					video_resolution = SET_VIDEO_RESOLUTION
-					protocols = None
+					video_resolution = Prefs['video_resolution']
 					container = Container.FLV
 					video_codec = VideoCodec.VP6
 					audio_codec = AudioCodec.MP3
@@ -187,16 +176,14 @@ def GetItemInfo(url, itemInfo):
 					optimized_for_streaming = True
 				else:
 					video_frame_rate = "30"
-					video_resolution = SET_VIDEO_RESOLUTION
-					protocols = None
+					video_resolution = Prefs['video_resolution']
 					container = None
 					video_codec = None
 					audio_codec = None
 					bitrate = None
 					audio_channels = 2
 					optimized_for_streaming = True
-				
-				#MyDownload(title=title, VideoStreamLink=video_url)
+
 				Log("Part"+str(i)+": "+video_url)
 				i += 1
 
@@ -204,7 +191,6 @@ def GetItemInfo(url, itemInfo):
 				parts = parts,
 				video_frame_rate = video_frame_rate,
 				video_resolution = video_resolution,
-				protocols = protocols,
 				container = container,
 				video_codec = video_codec,
 				audio_codec = audio_codec,
@@ -317,47 +303,7 @@ def GetHostPage(Host, url):
 			Host = CkHost.capitalize()
 			url = CkMovie2kURL
 
-	session = requests.session()
-	headers = {'User-Agent': UserAgent[UserAgentNum]}
-	req = session.get(url, headers=headers)
-	HostPageInfo = HTML.ElementFromString(req.content)
-
-	CURRENT_MOVIE2K_URL = url.split('/')[2]
-
-	HostPageElm = HostPageInfo.xpath('//div[@id="maincontent5"]/div')[0]
-	try:
-		try:
-			if CURRENT_MOVIE2K_URL == "www.movie2k.sx":
-				GetDiv = HostPageElm.xpath('./div')[3]
-				HostPage = GetDiv.xpath('./iframe')[0].get('src')
-			else:
-				HostPage = HostPageElm.xpath('./iframe')[0].get('src')
-			LinkType = 1
-		except:
-			HostPage = HostPageElm.xpath('./embed')[0].get('src')
-			LinkType = 2
-	except:
-		try:
-			try:
-				HostPage = HostPageInfo.xpath('//div[@id="emptydiv"]//script')[0].get('src')
-				LinkType = 3	
-			except:
-				if CURRENT_MOVIE2K_URL == "www.movie2k.sx":
-					GetDiv = HostPageElm.xpath('./div')[3]
-					HostPage = GetDiv.xpath('./a')[0].get('href')
-				else:
-					try:
-						HostPage = HostPageElm.xpath('./a')[0].get('href')
-					except:
-						HostPage = HostPageElm.xpath('./div[@id="emptydiv"]/a')[0].get('href')
-				LinkType = 4
-		except:
-			try:
-				HostPage = HostPageElm.xpath('./object/param')[0].get('value')
-				LinkType = 5
-			except:
-				HostPage = None
-				LinkType = 0
+	(HostPage, LinkType) = GetHostPageURL(Host=Host, url=url)
 
 	#Check For Real Host
 	Host = HostPage.split('http://')[1].split('.')[0].capitalize()
