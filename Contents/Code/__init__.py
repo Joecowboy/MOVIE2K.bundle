@@ -1153,11 +1153,9 @@ def AlphabiticalTVShowsPageAdd(title, page, type, MOVIE2K_URL):
 		MOVIES_TITLE = Alpha_Type+" "+type
 		MOVIES_SUMMARY = "Your "+Alpha_Type+" list of the "+type+" database!"
 		MOVIES_THUMB = R(ICON_MOVIES)
-		MOVIES_PAGE_PART = AlphNumeric.xpath('./a')[0].get('href').split("/")[4]
+		MOVIES_PAGE = AlphNumeric.xpath('./a')[0].get('href')
 
-		MOVIES_PAGE = "http://" + MOVIE2K_URL + "/" + MOVIES_PAGE_PART
-
-		oc.add(DirectoryObject(key=Callback(TVShowsList, title=MOVIES_TITLE, page=MOVIES_PAGE, genre=Alpha_Type, type=type), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=MOVIES_THUMB))
+		oc.add(DirectoryObject(key=Callback(TVShowsList, title=MOVIES_TITLE, page=MOVIES_PAGE, genre=Alpha_Type, type=type, MOVIE2K_URL=MOVIE2K_URL), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=MOVIES_THUMB))
 
 	return oc
 
@@ -1229,7 +1227,7 @@ def TVShowsList(title, page, genre, type, MOVIE2K_URL):
 		except:
 			MOVIES_LANG = "N/A"
 		ICON_MOVIES = "icon-"+genre.lower()+".png"
-		MOVIES_TITLE = MOVIES_TD[0].xpath('./a')[0].text
+		MOVIES_TITLE = MOVIES_TD[0].xpath('./a')[0].text.strip()
 		MOVIES_SUMMARY = "Lang: "+MOVIES_LANG+" | Part of the "+genre+" TV Show line up on Movie2k."
 		MOVIES_THUMB = R(ICON_MOVIES)
 		MOVIES_PAGE = "http://" + MOVIE2K_URL + "/"+MOVIES_TD[0].xpath('./a')[0].get('href')
@@ -1288,80 +1286,136 @@ def FeaturedTVShowsPageAdd(title, page, type, MOVIE2K_URL):
 
 ####################################################################################################
 @route(PREFIX + '/TVShowSeasons')
-def TVShowSeasons(title, page, genre, type, MOVIE2K_URL):
+def TVShowSeasons(title, page, genre, type, MOVIE2K_URL, thumb=None, MOVIES_LANG=None):
 	
 	oc = ObjectContainer(title2=title)
+
+	if page.split('/')[0] != "http:":
+		page = "http://"+MOVIE2K_URL+"/"+page
 
 	cookies = Dict['_movie2k_uid']
 	headers = {"Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8", "Accept-Charset": "ISO-8859-1,utf-8;q=0.7,*;q=0.3", "Accept-Encoding": "gzip,deflate,sdch", "Accept-Language": "en-US,en;q=0.8", "Connection": "keep-alive", "Host": MOVIE2K_URL, "Referer": "http://"+MOVIE2K_URL, "User-Agent": UserAgent[UserAgentNum]}
 	req = requests.get(page, headers=headers, cookies=cookies)
+	MOVIE_PAGE = HTML.ElementFromString(req.content)
 
-	if MOVIE2K_URL == "www.movie2k.tl":
-		elm = '/tbody'
+	if MOVIE2K_URL == "www.movie2k.sx":
+		SEASON = '//select[@id="season"]/option'
 	else:
-		elm = ''
+		if MOVIE2K_URL == "www.movie2k.tl":
+			elm = '/tbody'
+		else:
+			elm = ''
+		SEASON = '//div[@id="maincontent4"]/table[@id="tablemoviesindex"]'+elm+'/tr'
 
-	for Seasons in HTML.ElementFromString(req.content).xpath('//div[@id="maincontent4"]/table[@id="tablemoviesindex"]'+elm+'/tr'):
-		MOVIES_TD = Seasons.xpath('./td[@id="tdmovies"]')
-		try:
-			LANGUAGE_URL = MOVIES_TD[1].xpath("./img")[0].get('src')
+	for Seasons in MOVIE_PAGE.xpath(SEASON):
+		if MOVIES_LANG == None:
+			MOVIES_TD = Seasons.xpath('./td[@id="tdmovies"]')
 			try:
-				MOVIES_LANG = GetLang(lang=LANGUAGE_URL.split('/')[5].split('.')[0])
+				LANGUAGE_URL = MOVIES_TD[1].xpath("./img")[0].get('src')
+				try:
+					MOVIES_LANG = GetLang(lang=LANGUAGE_URL.split('/')[5].split('.')[0])
+				except:
+					MOVIES_LANG = GetLang(lang=LANGUAGE_URL.split('/')[4].split('.')[0])
 			except:
-				MOVIES_LANG = GetLang(lang=LANGUAGE_URL.split('/')[4].split('.')[0])
-		except:
-			MOVIES_LANG = "N/A"
-		ICON_MOVIES = "icon-"+genre.lower()+".png"
-		MOVIES_TITLE = re.sub('\t', '', MOVIES_TD[0].xpath('./a')[0].text).replace('  ', '').replace(',', ', ').replace(':', ': ')
-		MOVIES_SUMMARY = "Lang: "+MOVIES_LANG+" | Part of the "+genre+" TV Shows season line up on Movie2k."
-		MOVIES_THUMB = R(ICON_MOVIES)
-		MOVIES_PAGE = "http://" + MOVIE2K_URL + "/"+MOVIES_TD[0].xpath('./a')[0].get('href')
+				MOVIES_LANG = "N/A"
+			MOVIES_TITLE = re.sub('\t', '', MOVIES_TD[0].xpath('./a')[0].text).replace('  ', '').replace(',', ', ').replace(':', ': ')
+			MOVIES_PAGE = "http://" + MOVIE2K_URL + "/"+MOVIES_TD[0].xpath('./a')[0].get('href')
+			CSRF_TOKEN = None
+			MOVIES_LANG_B = None
+		else:
+			try:
+				MOVIES_TITLE = title + ", " + Seasons.text.replace(' ', ': ')
+				MOVIES_PAGE = "http://www.movie2k.sx/seasons/" + Seasons.get('value') + "/get_episodes"
+				CSRF_TOKEN = MOVIE_PAGE.xpath('//meta[@name="csrf-token"]')[0].get('content')
+				MOVIES_LANG_B = MOVIES_LANG
+			except:
+				MOVIES_TITLE = title + ", Season: N/A"
+				MOVIES_PAGE = page
 
-		oc.add(DirectoryObject(key=Callback(TVShowEpisodes, title=MOVIES_TITLE, page=MOVIES_PAGE, genre=genre, type=type, MOVIE2K_URL=MOVIE2K_URL), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=MOVIES_THUMB))
+		if thumb == None:
+			ICON_MOVIES = "icon-"+genre.lower()+".png"
+			MOVIES_THUMB = R(ICON_MOVIES)
+		else:
+			MOVIES_THUMB = Callback(GetThumb, url=thumb)
+		
+		MOVIES_SUMMARY = "Lang: "+MOVIES_LANG+" | Part of the "+genre+" TV Shows season line up on Movie2k."
+
+		oc.add(DirectoryObject(key=Callback(TVShowEpisodes, title=MOVIES_TITLE, page=MOVIES_PAGE, genre=genre, type=type, MOVIE2K_URL=MOVIE2K_URL, thumb=thumb, MOVIES_LANG_B=MOVIES_LANG_B, CSRF_TOKEN=CSRF_TOKEN), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=MOVIES_THUMB))
+
+	if len(oc) < 1:
+		oc = ObjectContainer(header="We Apologize", message=title + " does not have any Host sites listed for video playback.  Try again later to see if Movie2k site adds any Hosts.")
 
 	return oc
 
 
 ####################################################################################################
 @route(PREFIX + '/TVShowEpisodes')
-def TVShowEpisodes(title, page, genre, type, MOVIE2K_URL):
+def TVShowEpisodes(title, page, genre, type, MOVIE2K_URL, thumb=None, MOVIES_LANG_B=None, CSRF_TOKEN=None):
 	
 	oc = ObjectContainer(title2=title)
 
-	THUMB = 0
-
 	cookies = Dict['_movie2k_uid']
-	headers = {"Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8", "Accept-Charset": "ISO-8859-1,utf-8;q=0.7,*;q=0.3", "Accept-Encoding": "gzip,deflate,sdch", "Accept-Language": "en-US,en;q=0.8", "Connection": "keep-alive", "Host": MOVIE2K_URL, "Referer": "http://"+MOVIE2K_URL, "User-Agent": UserAgent[UserAgentNum]}
+	if CSRF_TOKEN == None:
+		THUMB = 0
+		headers = {"Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8", "Accept-Charset": "ISO-8859-1,utf-8;q=0.7,*;q=0.3", "Accept-Encoding": "gzip,deflate,sdch", "Accept-Language": "en-US,en;q=0.8", "Connection": "keep-alive", "Host": MOVIE2K_URL, "Referer": "http://"+MOVIE2K_URL, "User-Agent": UserAgent[UserAgentNum]}
+
+		if MOVIE2K_URL == "www.movie2k.tl":
+			elm = '/tbody'
+		else:
+			elm = ''
+		EPISODE = '//div[@id="maincontent4"]/table[@id="tablemoviesindex"]'+elm+'/tr'
+	else:
+		THUMB = 1
+		headers = {"Accept": "text/javascript, application/javascript", "Referer": "http://"+MOVIE2K_URL, "User-Agent": UserAgent[UserAgentNum], "X-CSRF-Token": CSRF_TOKEN, "X-Requested-With": "XMLHttpReques"}
+		EPISODE = '//select[@id="episode"]/option'
+
 	req = requests.get(page, headers=headers, cookies=cookies)
 
-	if MOVIE2K_URL == "www.movie2k.tl":
-		elm = '/tbody'
-	else:
-		elm = ''
+	if CSRF_TOKEN != None:
+		headers = {"Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8", "Accept-Charset": "ISO-8859-1,utf-8;q=0.7,*;q=0.3", "Accept-Encoding": "gzip,deflate,sdch", "Accept-Language": "en-US,en;q=0.8", "Connection": "keep-alive", "Host": MOVIE2K_URL, "Referer": "http://"+MOVIE2K_URL, "User-Agent": UserAgent[UserAgentNum]}
+		page = "http://www.movie2k.sx" + req.content.split("'")[1]
+		req = requests.get(page, headers=headers, cookies=cookies)
 
-	for Episodes in HTML.ElementFromString(req.content).xpath('//div[@id="maincontent4"]/table[@id="tablemoviesindex"]'+elm+'/tr'):
-		MOVIES_TD = Episodes.xpath('./td[@id="tdmovies"]')
-		try:
-			LANGUAGE_URL = MOVIES_TD[4].xpath("./img")[0].get('src')
+	MOVIE_PAGE = HTML.ElementFromString(req.content)
+
+	for Episodes in MOVIE_PAGE.xpath(EPISODE):
+		if MOVIES_LANG_B == None:
+			MOVIES_TD = Episodes.xpath('./td[@id="tdmovies"]')
 			try:
-				MOVIES_LANG = GetLang(lang=LANGUAGE_URL.split('/')[5].split('.')[0])
+				LANGUAGE_URL = MOVIES_TD[4].xpath("./img")[0].get('src')
+				try:
+					MOVIES_LANG = GetLang(lang=LANGUAGE_URL.split('/')[5].split('.')[0])
+				except:
+					MOVIES_LANG = GetLang(lang=LANGUAGE_URL.split('/')[4].split('.')[0])
 			except:
-				MOVIES_LANG = GetLang(lang=LANGUAGE_URL.split('/')[4].split('.')[0])
-		except:
-			MOVIES_LANG = "N/A"
-		DATE_ADDED = MOVIES_TD[3].text
-		ICON_MOVIES = "icon-"+genre.lower()+".png"
-		MOVIES_TITLE = re.sub('\t', '', MOVIES_TD[0].xpath('./a')[0].text).replace('  ', '').replace(',', ', ').replace(':', ': ')
-		MOVIES_SUMMARY = "Added: "+DATE_ADDED+" | Lang: "+MOVIES_LANG+" | Part of the "+genre+" TV Shows episode line up on Movie2k."
-		MOVIES_PAGE = MOVIES_TD[0].xpath('./a')[0].get('href')
+				MOVIES_LANG = "N/A"
+			DATE_ADDED = MOVIES_TD[3].text
+			MOVIES_TITLE = re.sub('\t', '', MOVIES_TD[0].xpath('./a')[0].text).replace('  ', '').replace(',', ', ').replace(':', ': ')
+			MOVIES_PAGE = MOVIES_TD[0].xpath('./a')[0].get('href')
+			HasEpisode = True
+		else:
+			try:
+				DATE_ADDED = 'N/A'
+				MOVIES_LANG = MOVIES_LANG_B
+				MOVIES_TITLE = title + ",  " + Episodes.text.replace(' ', ': ')
+				MOVIES_PAGE = "http://www.movie2k.sx/episodes/" + Episodes.get('value') + "/get_links"
+				CSRF_TOKEN = MOVIE_PAGE.xpath('//meta[@name="csrf-token"]')[0].get('content')
+				HasEpisode = True
+			except:
+				HasEpisode = False
+
 		if THUMB == 0:
 			page = "http://"+MOVIE2K_URL+"/"+MOVIES_PAGE
 			req = requests.get(page, headers=headers, cookies=cookies)
 			GET_THUMB = HTML.ElementFromString(req.content).xpath('//div[@id="maincontent5"]/div/div')[0]
 			MOVIES_THUMB = GET_THUMB.xpath('./a/img')[0].get('src')
 			THUMB = 1
+		else:
+			MOVIES_THUMB = thumb
 
-		oc.add(DirectoryObject(key=Callback(SubGroupMoviePageAdd, title=MOVIES_TITLE, page=MOVIES_PAGE, date=DATE_ADDED, dateadd=DATE_ADDED, thumbck=MOVIES_THUMB, type=type, summary=MOVIES_SUMMARY, MOVIE2K_URL=MOVIE2K_URL), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=Callback(GetThumb, url=MOVIES_THUMB)))
+		if HasEpisode == True:
+			MOVIES_SUMMARY = "Added: "+DATE_ADDED+" | Lang: "+MOVIES_LANG+" | Part of the "+genre+" TV Shows episode line up on Movie2k."
+			oc.add(DirectoryObject(key=Callback(SubGroupMoviePageAdd, title=MOVIES_TITLE, page=MOVIES_PAGE, date=DATE_ADDED, dateadd=DATE_ADDED, thumbck=MOVIES_THUMB, type=type, summary=MOVIES_SUMMARY, MOVIE2K_URL=MOVIE2K_URL, CSRF_TOKEN=CSRF_TOKEN), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=Callback(GetThumb, url=MOVIES_THUMB)))
 
 	return oc
 
@@ -1891,7 +1945,10 @@ def MoviePageAdd(title, page, genre, type, MOVIE2K_URL):
 			MOVIES_THUMB = None
 
 		if MOVIES_LANG == GetLanguage() or MOVIES_LANG == 'N/A' or GetLanguage() == 'All':
-			oc.add(DirectoryObject(key=Callback(SubGroupMoviePageAdd, title=MOVIES_TITLE, page=MOVIES_PAGE, date=MOVIES_YEAR, dateadd=dateadd, thumbck=MOVIES_THUMB, type=type, summary=MOVIES_SUMMARY, MOVIE2K_URL=MOVIE2K_URL), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=Callback(GetThumb, url=MOVIES_THUMB)))
+			if MOVIE2K_URL == 'www.movie2k.sx' and type == 'TV Shows':
+				oc.add(DirectoryObject(key=Callback(TVShowSeasons, title=MOVIES_TITLE, page=MOVIES_PAGE, genre=genre, type=type, MOVIE2K_URL=MOVIE2K_URL, thumb=MOVIES_THUMB, MOVIES_LANG=MOVIES_LANG), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=Callback(GetThumb, url=MOVIES_THUMB)))
+			else:
+				oc.add(DirectoryObject(key=Callback(SubGroupMoviePageAdd, title=MOVIES_TITLE, page=MOVIES_PAGE, date=MOVIES_YEAR, dateadd=dateadd, thumbck=MOVIES_THUMB, type=type, summary=MOVIES_SUMMARY, MOVIE2K_URL=MOVIE2K_URL), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=Callback(GetThumb, url=MOVIES_THUMB)))
 		i += 1
 
 	if len(oc) < 1:
@@ -1902,10 +1959,16 @@ def MoviePageAdd(title, page, genre, type, MOVIE2K_URL):
 
 ####################################################################################################
 @route(PREFIX + '/TVandMovieGroupPage')
-def SubGroupMoviePageAdd(title, page, date, dateadd, thumbck, type, summary, MOVIE2K_URL):
+def SubGroupMoviePageAdd(title, page, date, dateadd, thumbck, type, summary, MOVIE2K_URL, CSRF_TOKEN=None):
 
 	title = unicode(title, errors='replace')
 	oc = ObjectContainer(title2=title)
+
+	if CSRF_TOKEN != None:
+		cookies = Dict['_movie2k_uid']
+		headers = {"Accept": "text/javascript, application/javascript", "Referer": "http://"+MOVIE2K_URL, "User-Agent": UserAgent[UserAgentNum], "X-CSRF-Token": CSRF_TOKEN, "X-Requested-With": "XMLHttpReques"}
+		req = requests.get(page, headers=headers, cookies=cookies)
+		page = "http://www.movie2k.sx" + req.content.split("'")[1]
 	
 	# List Host Sites for Playback
 	summary = summary.split(" | ")[0] + " | " + summary.split(" | ")[1] + " | List the Host Sites from Movie2k."
@@ -1945,7 +2008,7 @@ def SubMoviePageAdd(title, page, date, dateadd, thumbck, type, MOVIE2K_URL, watc
 		pl = ""
 
 	title = unicode(title, errors='replace')
-	oc = ObjectContainer(title2=title+" - ["+Prefs['host_count']+" HOST"+pl+" per Page]")
+	oc = ObjectContainer(title2=title+" - ["+str(host_count)+" HOST"+pl+" per Page]")
 
 	if page.split('/')[0] != "http:":
 		CURRENT_MOVIE2K_URL = MOVIE2K_URL
@@ -2012,12 +2075,12 @@ def SubMoviePageAdd(title, page, date, dateadd, thumbck, type, MOVIE2K_URL, watc
 				if Num1 < NumHostListing1:
 					try:
 						Host = Listing[Num1].xpath("./td/a/img")[0].get('title').split(' ')[0].partition('.')[0].capitalize()
-						if type == 'Movies':
+						if type == "Movies":
 							Quality = Listing[Num1].xpath("./td/img")[0].get('title').split(' ')[2]
 					except:
 						if MOVIE2K_URL == "www.movie2k.sx":
 							Host = Listing[Num1].xpath("./td/a")[2].text.partition('.')[0].capitalize()
-							if type == 'Movies':
+							if type == "Movies":
 								Quality = Listing[Num1].xpath("./td/img")[0].get('title').split(' ')[2].capitalize()
 					if Host == None or Host == "":
 						Host = GetHost(HostPageInfo=MOVIE_PAGE_HTML)
@@ -2037,8 +2100,9 @@ def SubMoviePageAdd(title, page, date, dateadd, thumbck, type, MOVIE2K_URL, watc
 				else:
 					HostCount = host_count
 				HostCount += 1
-				if host_count == 1 and type == 'Movies':
-					Hosts = Hosts + Host + " | Quality: "+Quality+", "
+
+				if host_count == 1 and type == "Movies":
+					Hosts =  "%s | Quality: %s, " % (Host, Quality)
 				else:
 					Hosts = Hosts + Host + ", "
 
