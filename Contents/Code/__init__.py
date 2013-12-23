@@ -345,7 +345,7 @@ def Search(title, MOVIE2K_URL, query):
 	i = 0
 	while (i < len(Movie)):
 		MOVIES_TD = Movie[i].xpath('./td[@id="tdmovies"]')
-		MOVIES_TITLE = re.sub('\t\r\0', '', MOVIES_TD[0].xpath(u'./a')[0].text).strip()
+		MOVIES_TITLE = re.sub('\t\r\0', '', MOVIES_TD[0].xpath(u'./a')[0].text).replace('     ', '').strip()
 
 		try:
 			try:
@@ -395,7 +395,10 @@ def Search(title, MOVIE2K_URL, query):
 		if MOVIES_HOST == "downloadnow!":
 			oc = MessageContainer("Search Error", "Search did not return any positive results.  Please try another key word search!")
 		elif MOVIES_LANG == GetLanguage() or MOVIES_LANG == 'N/A' or GetLanguage() == 'All':
-			oc.add(DirectoryObject(key=Callback(SubGroupMoviePageAdd, title=MOVIES_TITLE, page=MOVIES_PAGE, date=MOVIES_YEAR, dateadd=dateadd, thumbck=MOVIES_THUMB, type=type, summary=MOVIES_SUMMARY, MOVIE2K_URL=MOVIE2K_URL), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=Callback(GetThumb, url=MOVIES_THUMB)))
+			if "seri" in MOVIES_PAGE or "tvshow" in MOVIES_PAGE:
+				oc.add(DirectoryObject(key=Callback(TVShowSeasons, title=MOVIES_TITLE, page=MOVIES_PAGE, genre="N/A", type="TV Shows", MOVIE2K_URL=MOVIE2K_URL, thumb=MOVIES_THUMB, MOVIES_LANG=MOVIES_LANG), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=Callback(GetThumb, url=MOVIES_THUMB)))
+			else:
+				oc.add(DirectoryObject(key=Callback(SubGroupMoviePageAdd, title=MOVIES_TITLE, page=MOVIES_PAGE, date=MOVIES_YEAR, dateadd=dateadd, thumbck=MOVIES_THUMB, type=type, summary=MOVIES_SUMMARY, MOVIE2K_URL=MOVIE2K_URL), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=Callback(GetThumb, url=MOVIES_THUMB)))
 		i += 1
 
 	if len(oc) < 1:
@@ -702,51 +705,54 @@ def PlaybackDownloads(title):
 		contentlength = gethost[i]['ContentLength']
 		show = "ADDED: "+ dateadded + " | HOST: " + host + " | QUALITY: " + quality
 
-		if duration != "None":
+		if duration != "None" and duration != "":
 			duration = int(duration)
 		else:
 			duration = None
 
 		if path != "":
-			part = os.stat(path).st_size
-			percent = 100 * float(part)/float(contentlength)
+			try:
+				part = os.stat(path).st_size
+				percent = 100 * float(part)/float(contentlength)
 
-			if percent != 100:
-				if type == "TV Shows":
-					oc.add(EpisodeObject(
-							rating_key = path,
-							key = Callback(PlaybackDownloadDetails, type=type, path=path, title=title, summary=summary, genres=genres, directors=directors, guest_stars=guest_stars, duration=duration, rating=rating, index=index, season=season, content_rating=content_rating, source_title=source_title, originally_available_at=originally_available_at, show=show, thumb=thumb),
-							title = title,
-							summary = summary,
-							directors = directors,
-							guest_stars = guest_stars,
-							duration = duration,
-							rating = rating,
-							show = show,
-							index = index,
-							season = season,
-							content_rating = content_rating,
-							source_title = source_title,
-							originally_available_at = originally_available_at,
-							thumb = Callback(GetThumb, url=thumb),
-							items = MediaObjectsForURL(path, videotype)))
+				if percent == 100.0:
+					if type == "TV Shows":
+						oc.add(EpisodeObject(
+								rating_key = path,
+								key = Callback(PlaybackDownloadDetails, type=type, path=path, title=title, summary=summary, genres=genres, directors=directors, guest_stars=guest_stars, duration=duration, rating=rating, index=index, season=season, content_rating=content_rating, source_title=source_title, originally_available_at=originally_available_at, show=show, thumb=thumb),
+								title = title,
+								summary = summary,
+								directors = directors,
+								guest_stars = guest_stars,
+								duration = duration,
+								rating = rating,
+								show = show,
+								index = index,
+								season = season,
+								content_rating = content_rating,
+								source_title = source_title,
+								originally_available_at = originally_available_at,
+								thumb = Callback(GetThumb, url=thumb),
+								items = MediaObjectsForURL(path, videotype)))
+					else:
+						oc.add(MovieObject(
+								rating_key = path,
+								key = Callback(PlaybackDownloadDetails, type=type, path=path, title=title, summary=summary, genres=genres, directors=directors, guest_stars=guest_stars, duration=duration, rating=rating, index=index, season=season, content_rating=content_rating, source_title=source_title, originally_available_at=originally_available_at, show=show, thumb=thumb),
+								title = title,
+								summary = summary,
+								directors = directors,
+								genres = genres,
+								duration = duration,
+								rating = rating,
+								content_rating = content_rating,
+								source_title = show,
+								originally_available_at = originally_available_at,
+								thumb = Callback(GetThumb, url=thumb),
+								items = MediaObjectsForURL(path, videotype)))
 				else:
-					oc.add(MovieObject(
-							rating_key = path,
-							key = Callback(PlaybackDownloadDetails, type=type, path=path, title=title, summary=summary, genres=genres, directors=directors, guest_stars=guest_stars, duration=duration, rating=rating, index=index, season=season, content_rating=content_rating, source_title=source_title, originally_available_at=originally_available_at, show=show, thumb=thumb),
-							title = title,
-							summary = summary,
-							directors = directors,
-							genres = genres,
-							duration = duration,
-							rating = rating,
-							content_rating = content_rating,
-							source_title = show,
-							originally_available_at = originally_available_at,
-							thumb = Callback(GetThumb, url=thumb),
-							items = MediaObjectsForURL(path, videotype)))
-			else:
-				oc.add(DirectoryObject(key=Callback(WatchitDownloadInfo, title=title, percent=percent), title=title, summary=show, thumb=Callback(GetThumb, url=thumb)))
+					oc.add(DirectoryObject(key=Callback(WatchitDownloadInfo, title=title, percent=percent), title=title, summary=show, thumb=Callback(GetThumb, url=thumb)))
+			except:
+				Log("Error: %s file not found to play back." % path)
 
 		i += 1
 
@@ -834,7 +840,7 @@ def MediaObjectsForURL(path, videotype):
 		optimized_for_streaming = True
 
 	obj = [MediaObject(
-			video_frame_rate = ideo_frame_rate,
+			video_frame_rate = video_frame_rate,
 			video_resolution = video_resolution,
 			container = container,
 			video_codec = video_codec,
@@ -886,12 +892,12 @@ def DeleteWatchitLaterVideo(title):
 	hosts = LoadData(fp=WATCHIT_DATA, GetJson=3)
 	i = 1
 	for gethost in hosts:
-		dateadded = gethost[i]['DateAdded']
+		dateadded = String.Unquote(gethost[i]['DateAdded'], usePlus=True)
 		quality = gethost[i]['Quality']
 		path = gethost[i]['Path']
 		host = gethost[i]['Host']
 		title = gethost[i]['Title']
-		thumb = gethost[i]['ThumbURL']
+		thumb = String.Unquote(gethost[i]['ThumbURL'], usePlus=True)
 		summary = "ADDED: "+ dateadded + " | HOST: " + host + " | QUALITY: " + quality
 		i += 1
 
@@ -908,17 +914,19 @@ def DeleteWatchitLaterVideo(title):
 @route(PREFIX + '/DeleteVideo')
 def DeleteVideo(title, path):
 
+	title = unicode(title, errors='replace')
 	oc = ObjectContainer(title2=title)
 
 	if os.path.isfile(path):
 		os.remove(path)
 	else:
-		Log("Error: %s file not found" % path)
+		Log("Error: %s file not found to remove." % path)
 
 	hosts = LoadData(fp=WATCHIT_DATA, GetJson=3)
 	i = 1
 	for gethost in hosts:
 		if gethost[i]['Path'] == path:
+			Log(str(i)+": "+gethost[i]['Path'] +"=="+ path)
 			gethost[i]['Type'] = ""
 			gethost[i]['DateAdded'] = ""
 			gethost[i]['Quality'] = ""
@@ -944,8 +952,8 @@ def DeleteVideo(title, path):
 		else:
 			i += 1
 
-	JsonWrite(fp=FAVORITES_DATA, jsondata=hosts)
-	return ObjectContainer(header="Deleted Movie2k Host Video", message="The Movie2k Video has been removed from My Watchit Later.  Please click Ok to exit this screen.")
+	JsonWrite(fp=WATCHIT_DATA, jsondata=hosts)
+	return ObjectContainer(header="Deleted Movie2k Host Video", message="The Movie2k, " + title + " Video has been removed from My Watchit Later.  Please click Ok to exit this screen.")
 
 
 ####################################################################################################
@@ -1262,7 +1270,7 @@ def FeaturedTVShowsPageAdd(title, page, type, MOVIE2K_URL):
 		TVSHOW_THUMB = SiteURL + TVSHOWS_DIV[i].xpath("./a/img")[0].get('src')
 		TVSHOW_TITLE = TVSHOWS_DIV[i].xpath("./a/img")[0].get('title')
 		i += 1
-		TVSHOW_TITLE = TVSHOW_TITLE + "  [ " + TVSHOWS_DIV[i].xpath('./div[@class="beschreibung"]/table[@id="tablemoviesindex"]//td')[1].text.strip() + " ]"
+		TVSHOW_TITLE = TVSHOW_TITLE
 		if MOVIE2K_URL == "www.movie2k.sx":
 			TVSHOW_PAGE = SiteURL + TVSHOWS_DIV[i-1].xpath("./a")[0].get('href')
 		else:
@@ -1279,7 +1287,8 @@ def FeaturedTVShowsPageAdd(title, page, type, MOVIE2K_URL):
 			TVSHOW_LANG = GetLang(lang=LANGUAGE_URL.split('/')[1].split('.')[0])
 		TVSHOW_SUMMARY = "Year: "+TVSHOW_YEAR+" | Lang: "+TVSHOW_LANG+" | Part of the Featured TV Show line up on Movie2k."
 		i += 2
-		oc.add(DirectoryObject(key=Callback(SubGroupMoviePageAdd, title=TVSHOW_TITLE, page=TVSHOW_PAGE, date=TVSHOW_YEAR, dateadd=dateadd, thumbck=TVSHOW_THUMB, type=type, summary=TVSHOW_SUMMARY, MOVIE2K_URL=MOVIE2K_URL), title=TVSHOW_TITLE, summary=TVSHOW_SUMMARY, thumb=Callback(GetThumb, url=TVSHOW_THUMB)))
+
+		oc.add(DirectoryObject(key=Callback(TVShowSeasons, title=TVSHOW_TITLE, page=TVSHOW_PAGE, genre="N/A", type=type, MOVIE2K_URL=MOVIE2K_URL, thumb=TVSHOW_THUMB, MOVIES_LANG=TVSHOW_LANG), title=TVSHOW_TITLE, summary=TVSHOW_SUMMARY, thumb=Callback(GetThumb, url=TVSHOW_THUMB)))
 
 	return oc
 
@@ -1305,7 +1314,10 @@ def TVShowSeasons(title, page, genre, type, MOVIE2K_URL, thumb=None, MOVIES_LANG
 			elm = '/tbody'
 		else:
 			elm = ''
-		SEASON = '//div[@id="maincontent4"]/table[@id="tablemoviesindex"]'+elm+'/tr'
+		if thumb == None:
+			SEASON = '//div[@id="maincontent4"]/table[@id="tablemoviesindex"]'+elm+'/tr'
+		else:
+			SEASON = '//select[@name="season"]/option'
 
 	for Seasons in MOVIE_PAGE.xpath(SEASON):
 		if MOVIES_LANG == None:
@@ -1322,15 +1334,23 @@ def TVShowSeasons(title, page, genre, type, MOVIE2K_URL, thumb=None, MOVIES_LANG
 			MOVIES_PAGE = "http://" + MOVIE2K_URL + "/"+MOVIES_TD[0].xpath('./a')[0].get('href')
 			CSRF_TOKEN = None
 			MOVIES_LANG_B = None
+			HasSeason = True
 		else:
 			try:
-				MOVIES_TITLE = title + ", " + Seasons.text.replace(' ', ': ')
-				MOVIES_PAGE = "http://www.movie2k.sx/seasons/" + Seasons.get('value') + "/get_episodes"
-				CSRF_TOKEN = MOVIE_PAGE.xpath('//meta[@name="csrf-token"]')[0].get('content')
-				MOVIES_LANG_B = MOVIES_LANG
+				try:
+					MOVIES_TITLE = title + ", " + Seasons.text.replace(' ', ': ')
+					MOVIES_PAGE = "http://www.movie2k.sx/seasons/" + Seasons.get('value') + "/get_episodes"
+					CSRF_TOKEN = MOVIE_PAGE.xpath('//meta[@name="csrf-token"]')[0].get('content')
+					MOVIES_LANG_B = MOVIES_LANG
+					HasSeason = True
+				except:
+					MOVIES_TITLE = title + ", " + Seasons.text.replace(' ', ': ')
+					MOVIES_PAGE = page
+					CSRF_TOKEN = None
+					MOVIES_LANG_B = MOVIES_LANG
+					HasSeason = True
 			except:
-				MOVIES_TITLE = title + ", Season: N/A"
-				MOVIES_PAGE = page
+				HasSeason = False
 
 		if thumb == None:
 			ICON_MOVIES = "icon-"+genre.lower()+".png"
@@ -1338,9 +1358,9 @@ def TVShowSeasons(title, page, genre, type, MOVIE2K_URL, thumb=None, MOVIES_LANG
 		else:
 			MOVIES_THUMB = Callback(GetThumb, url=thumb)
 		
-		MOVIES_SUMMARY = "Lang: "+MOVIES_LANG+" | Part of the "+genre+" TV Shows season line up on Movie2k."
-
-		oc.add(DirectoryObject(key=Callback(TVShowEpisodes, title=MOVIES_TITLE, page=MOVIES_PAGE, genre=genre, type=type, MOVIE2K_URL=MOVIE2K_URL, thumb=thumb, MOVIES_LANG_B=MOVIES_LANG_B, CSRF_TOKEN=CSRF_TOKEN), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=MOVIES_THUMB))
+		if HasSeason == True:
+			MOVIES_SUMMARY = "Lang: "+MOVIES_LANG+" | Part of the "+genre+" TV Shows season line up on Movie2k."
+			oc.add(DirectoryObject(key=Callback(TVShowEpisodes, title=MOVIES_TITLE, page=MOVIES_PAGE, genre=genre, type=type, MOVIE2K_URL=MOVIE2K_URL, thumb=thumb, MOVIES_LANG_B=MOVIES_LANG_B, CSRF_TOKEN=CSRF_TOKEN), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=MOVIES_THUMB))
 
 	if len(oc) < 1:
 		oc = ObjectContainer(header="We Apologize", message=title + " does not have any Host sites listed for video playback.  Try again later to see if Movie2k site adds any Hosts.")
@@ -1356,18 +1376,23 @@ def TVShowEpisodes(title, page, genre, type, MOVIE2K_URL, thumb=None, MOVIES_LAN
 
 	cookies = Dict['_movie2k_uid']
 	if CSRF_TOKEN == None:
-		THUMB = 0
 		headers = {"Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8", "Accept-Charset": "ISO-8859-1,utf-8;q=0.7,*;q=0.3", "Accept-Encoding": "gzip,deflate,sdch", "Accept-Language": "en-US,en;q=0.8", "Connection": "keep-alive", "Host": MOVIE2K_URL, "Referer": "http://"+MOVIE2K_URL, "User-Agent": UserAgent[UserAgentNum]}
 
 		if MOVIE2K_URL == "www.movie2k.tl":
 			elm = '/tbody'
 		else:
 			elm = ''
-		EPISODE = '//div[@id="maincontent4"]/table[@id="tablemoviesindex"]'+elm+'/tr'
+		if MOVIES_LANG_B == None:
+			EPISODE = '//div[@id="maincontent4"]/table[@id="tablemoviesindex"]'+elm+'/tr'
+			THUMB = 0
+		else:
+			whichSeason = title.split('Season:')[1].strip()
+			EPISODE = '//form[@name="episodeform'+whichSeason+'"]/select/option'
+			THUMB = 1
 	else:
-		THUMB = 1
 		headers = {"Accept": "text/javascript, application/javascript", "Referer": "http://"+MOVIE2K_URL, "User-Agent": UserAgent[UserAgentNum], "X-CSRF-Token": CSRF_TOKEN, "X-Requested-With": "XMLHttpReques"}
 		EPISODE = '//select[@id="episode"]/option'
+		THUMB = 1
 
 	req = requests.get(page, headers=headers, cookies=cookies)
 
@@ -1377,6 +1402,7 @@ def TVShowEpisodes(title, page, genre, type, MOVIE2K_URL, thumb=None, MOVIES_LAN
 		req = requests.get(page, headers=headers, cookies=cookies)
 
 	MOVIE_PAGE = HTML.ElementFromString(req.content)
+	MOVIES_THUMB = thumb
 
 	for Episodes in MOVIE_PAGE.xpath(EPISODE):
 		if MOVIES_LANG_B == None:
@@ -1395,12 +1421,19 @@ def TVShowEpisodes(title, page, genre, type, MOVIE2K_URL, thumb=None, MOVIES_LAN
 			HasEpisode = True
 		else:
 			try:
-				DATE_ADDED = 'N/A'
-				MOVIES_LANG = MOVIES_LANG_B
-				MOVIES_TITLE = title + ",  " + Episodes.text.replace(' ', ': ')
-				MOVIES_PAGE = "http://www.movie2k.sx/episodes/" + Episodes.get('value') + "/get_links"
-				CSRF_TOKEN = MOVIE_PAGE.xpath('//meta[@name="csrf-token"]')[0].get('content')
-				HasEpisode = True
+				try:
+					DATE_ADDED = 'N/A'
+					MOVIES_LANG = MOVIES_LANG_B
+					MOVIES_TITLE = title + ",  " + Episodes.text.replace(' ', ': ')
+					MOVIES_PAGE = "http://www.movie2k.sx/episodes/" + Episodes.get('value') + "/get_links"
+					CSRF_TOKEN = MOVIE_PAGE.xpath('//meta[@name="csrf-token"]')[0].get('content')
+					HasEpisode = True
+				except:
+					DATE_ADDED = 'N/A'
+					MOVIES_LANG = MOVIES_LANG_B
+					MOVIES_TITLE = title + ",  " + Episodes.text.replace(' ', ': ')
+					MOVIES_PAGE = Episodes.get('value')
+					HasEpisode = True
 			except:
 				HasEpisode = False
 
@@ -1410,8 +1443,6 @@ def TVShowEpisodes(title, page, genre, type, MOVIE2K_URL, thumb=None, MOVIES_LAN
 			GET_THUMB = HTML.ElementFromString(req.content).xpath('//div[@id="maincontent5"]/div/div')[0]
 			MOVIES_THUMB = GET_THUMB.xpath('./a/img')[0].get('src')
 			THUMB = 1
-		else:
-			MOVIES_THUMB = thumb
 
 		if HasEpisode == True:
 			MOVIES_SUMMARY = "Added: "+DATE_ADDED+" | Lang: "+MOVIES_LANG+" | Part of the "+genre+" TV Shows episode line up on Movie2k."
@@ -1887,7 +1918,7 @@ def MoviePageAdd(title, page, genre, type, MOVIE2K_URL):
 	i = 0
 	for Movie in GENRE_MOVIE_PAGE.xpath('//div[@id="maincontent4"]/table[@id="tablemoviesindex"]'+elm+'/tr'):
 		MOVIES_TD = Movie.xpath('./td[@id="tdmovies"]')
-		MOVIES_TITLE = re.sub('\t', '', MOVIES_TD[0].xpath("./a")[0].text).replace('  ', '').replace(',', ', ').replace(':', ': ')
+		MOVIES_TITLE = re.sub('\t\r\0', '', MOVIES_TD[0].xpath("./a")[0].text).replace('     ', '').replace(',', ', ').replace(':', ': ')
 		if type == 'TV Shows':
 			dateadd = MOVIES_TD[3].text
 			if dateadd == None:
@@ -2058,11 +2089,17 @@ def SubMoviePageAdd(title, page, date, dateadd, thumbck, type, MOVIE2K_URL, watc
 	if jj == 0:
 		try:
 			Host = GetHost(url=page, HostPageInfo=MOVIE_PAGE_HTML)
-			MOVIES_SUMMARY = "Page - " + str(i) + " | Host: " + Host
+			if type == "Movies":
+				Quality = MOVIE_PAGE_HTML.xpath('//div[@id="maincontent5"]//span/span/img')[0].get('title').split(' ')[2].capitalize()
+				Hosts =  "%s | Quality: %s" % (Host, Quality)
+			else:
+					Hosts = Hosts + Host
+
+			MOVIES_SUMMARY = "Page - " + str(i) + " | Host: " + Hosts
 			MOVIES_TITLE = title
 			if Prefs['swaptitle'] == "Enabled":
 				MOVIES_SUMMARY = title
-				MOVIES_TITLE = str(i) + ": " + Host
+				MOVIES_TITLE = str(i) + ": " + Hosts
 			if Host == "Urmediazone":
 				oc = ObjectContainer(header="We Apologize", message=title + " does not have any Host sites listed for video playback.  Try again later to see if Movie2k site adds any Hosts.")
 			else:
@@ -2076,21 +2113,32 @@ def SubMoviePageAdd(title, page, date, dateadd, thumbck, type, MOVIE2K_URL, watc
 					try:
 						Host = Listing[Num1].xpath("./td/a/img")[0].get('title').split(' ')[0].partition('.')[0].capitalize()
 						if type == "Movies":
-							Quality = Listing[Num1].xpath("./td/img")[0].get('title').split(' ')[2]
+							try:
+								Quality = Listing[Num1].xpath("./td/img")[0].get('title').split(' ')[2]
+							except:
+								Quality = "N/A"
 					except:
 						if MOVIE2K_URL == "www.movie2k.sx":
 							Host = Listing[Num1].xpath("./td/a")[2].text.partition('.')[0].capitalize()
 							if type == "Movies":
-								Quality = Listing[Num1].xpath("./td/img")[0].get('title').split(' ')[2].capitalize()
+								try:
+									Quality = Listing[Num1].xpath("./td/img")[0].get('title').split(' ')[2].capitalize()
+								except:
+									Quality = "N/A"
 					if Host == None or Host == "":
 						Host = GetHost(HostPageInfo=MOVIE_PAGE_HTML)
-						Quality = "N/A"
+						if type == "Movies":
+							try:
+								Quality = MOVIE_PAGE_HTML.xpath('//div[@id="maincontent5"]//span/span/img')[0].get('title').split(' ')[2].capitalize()
+							except:
+								Quality = "N/A"
 					Num1 += 1
 				elif Num2 < NumHostListing2:
 					ScriptListing = StringListing[k].text.split('links[')
 					NumHosts = len(ScriptListing) - 2	
 					Host = ScriptListing[sll].split('title=\\"')[1].split('\\"')[0].split(' ')[0].partition('.')[0].capitalize()
-					Quality = ScriptListing[sll].split('title=\\"')[2].split('\\"')[0].split(' ')[2]
+					#if type == "Movies":
+					#	Quality = ScriptListing[sll].split('title=\\"')[2].split('\\"')[0].split(' ')[2]
 					if sll == NumHosts:
 						k += 1
 						sll = 1

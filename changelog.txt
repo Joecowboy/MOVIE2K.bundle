@@ -1,5 +1,7 @@
+[B]Version 1.7.15[/B]
+- Changed default of preferences "Number of Hosts Per Page" to 1 now, updated TV Shows Featured and Search to now give Season/Episode choices 
 [B]Version 1.7.14[/B]
-- Added TV Show Season/Episode choices for Alphibetical and Genre for Movie2k.sx and fixed Alphibetical TV Show selection for Movie4k.to and Movie2k.tv
+- Added TV Show Season/Episode choices for Added TV Show Season/Episode choices for Alphabetical and Genre for Movie2k.sx and fixed Added TV Show Season/Episode choices for Alphabetical and Genre for Movie2k.sx and fixed Added TV Show Season/Episode choices for Alphibetical and Genre for Movie2k.sx and fixed Alphibetical TV Show selection for Movie4k.to and Movie2k.tv TV Show selection for Movie4k.to and Movie2k.tv TV Show selection for Movie4k.to and Movie2k.tv and Genre for Movie2k.sx and fixed Alphibetical TV Show selection for Movie4k.to and Movie2k.tv
 [B]Version 1.7.13[/B]
 - Fixed Alphabetical Listing of TV Shows error and added "FOR TESTING ONLY" - Not fully working My Watchit Later
 [B]Version 1.7.12[/B]

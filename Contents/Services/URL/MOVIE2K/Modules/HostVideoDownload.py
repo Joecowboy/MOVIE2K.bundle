@@ -3,8 +3,9 @@
 
 import os
 import sys
-import threading
 import time
+import re
+from threading import Thread
 from HostSites import GetMovie
 from HostServices import GetHostPageURL
 from HostServices import LoadData
@@ -23,17 +24,7 @@ except:
 
 ContentLength = None
 NoError = None
-
-####################################################################################################
-class VideoDownloader(threading.Thread):
-
-	def __init__(self, function_that_downloads):
-		threading.Thread.__init__(self)
-		self.runnable = function_that_downloads
-		#self.daemon = True
-
-	def run(self):
-		self.runnable()
+threadList = []
 
 
 def downloads(VideoStreamLink, path, startByte=0, endByte=None):
@@ -75,17 +66,24 @@ def downloads(VideoStreamLink, path, startByte=0, endByte=None):
 				break
 			handle.write(chunk)
 
+	handle.close()
 
 def MyDownload(title, VideoStreamLink, path=None):
+	global threadList
+
 	if path != None:
 		startByte = os.stat(path).st_size
 	else:
-		path = "Videos\%s_%s.%s" % (title, str(time.time()), VideoStreamLink.split('/')[-1].split('.')[1].partition('?')[0])
+		path = "Videos\%s_%s.%s" % (re.sub('\W', '_', title, flags=re.UNICODE), str(time.time()), VideoStreamLink.split('/')[-1].split('.')[1].partition('?')[0])
 		startByte = 0
 
-	thread = VideoDownloader(downloads(VideoStreamLink=VideoStreamLink, path=path, startByte=startByte))
+	thread = Thread(target=downloads, args=(VideoStreamLink, path, startByte,))
+	#thread.setDaemon(True)
 	thread.start()
-	#thread.join()
+	threadList.append(thread)
+
+	for myThreads in threadList:
+		myThreads.join()
 
 	Log('Thread is not alive: ' + str(thread.is_alive()))
 
