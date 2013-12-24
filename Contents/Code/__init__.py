@@ -721,10 +721,11 @@ def PlaybackDownloads(title):
 				percent = 100 * float(part)/float(contentlength)
 
 				if percent == 100.0:
+					path = os.path.abspath(path)
 					if type == "TV Shows":
 						oc.add(EpisodeObject(
 								rating_key = path,
-								key = Callback(PlaybackDownloadDetails, type=type, path=path, title=title, summary=summary, genres=genres, directors=directors, guest_stars=guest_stars, duration=duration, rating=rating, index=index, season=season, content_rating=content_rating, source_title=source_title, originally_available_at=originally_available_at, show=show, thumb=thumb),
+								key = Callback(PlaybackDownloadDetails, type=type, path=path, videotype=videotype, title=title, summary=summary, genres=genres, directors=directors, guest_stars=guest_stars, duration=duration, rating=rating, index=index, season=season, content_rating=content_rating, source_title=source_title, originally_available_at=originally_available_at, show=show, thumb=thumb),
 								title = title,
 								summary = summary,
 								directors = directors,
@@ -742,7 +743,7 @@ def PlaybackDownloads(title):
 					else:
 						oc.add(MovieObject(
 								rating_key = path,
-								key = Callback(PlaybackDownloadDetails, type=type, path=path, title=title, summary=summary, genres=genres, directors=directors, guest_stars=guest_stars, duration=duration, rating=rating, index=index, season=season, content_rating=content_rating, source_title=source_title, originally_available_at=originally_available_at, show=show, thumb=thumb),
+								key = Callback(PlaybackDownloadDetails, type=type, path=path, videotype=videotype, title=title, summary=summary, genres=genres, directors=directors, guest_stars=guest_stars, duration=duration, rating=rating, index=index, season=season, content_rating=content_rating, source_title=source_title, originally_available_at=originally_available_at, show=show, thumb=thumb),
 								title = title,
 								summary = summary,
 								directors = directors,
@@ -769,15 +770,24 @@ def PlaybackDownloads(title):
 
 ####################################################################################################
 @route(PREFIX + '/PlaybackDownloadDetails')
-def PlaybackDownloadDetails(type, path, title, summary, genres, directors, guest_stars, duration, rating, index, season, content_rating, source_title, originally_available_at, show, thumb, maxVideoBitrate=None, videoQuality=None, directPlay=None, audioBoost=None, partIndex=None, waitForSegments=None, session=None, offset=None, videoResolution=None, subtitleSize=None, directStream=None):
+def PlaybackDownloadDetails(type, path, videotype, title, summary, genres, directors, guest_stars, duration, rating, index, season, content_rating, source_title, originally_available_at, show, thumb, maxVideoBitrate=None, videoQuality=None, directPlay=None, audioBoost=None, partIndex=None, waitForSegments=None, session=None, offset=None, videoResolution=None, subtitleSize=None, directStream=None):
 	title = unicode(title, errors='replace')
 	summary = unicode(summary, errors='replace')
 	oc = ObjectContainer(title2=title)
 
+	originally_available_at = Datetime.ParseDate(originally_available_at, "%Y")
+	directors = [directors]
+	guest_stars = [guest_stars]
+	genres = [genres]
+	duration = int(duration)
+	rating = float(rating)
+	season = int(season)
+	index = int(index)
+
 	if type == "TV Shows":
 		oc.add(EpisodeObject(
 				rating_key = path,
-				key = Callback(PlaybackDownloadDetails, type=type, path=path, title=title, summary=summary, genres=genres, directors=directors, guest_stars=guest_stars, duration=duration, rating=rating, index=index, season=season, content_rating=content_rating, source_title=source_title, originally_available_at=originally_available_at, show=show, thumb=thumb),
+				key = Callback(PlaybackDownloadDetails, type=type, path=path, videotype=videotype, title=title, summary=summary, genres=genres, directors=directors, guest_stars=guest_stars, duration=duration, rating=rating, index=index, season=season, content_rating=content_rating, source_title=source_title, originally_available_at=originally_available_at, show=show, thumb=thumb),
 				title = title,
 				summary = summary,
 				directors = directors,
@@ -789,13 +799,13 @@ def PlaybackDownloadDetails(type, path, title, summary, genres, directors, guest
 				season = season,
 				content_rating = content_rating,
 				source_title = source_title,
-				originally_available_at = date,
+				originally_available_at = originally_available_at,
 				thumb = Callback(GetThumb, url=thumb),
 				items = MediaObjectsForURL(path, videotype)))
 	else:
 		oc.add(MovieObject(
 				rating_key = path,
-				key = Callback(PlaybackDownloadDetails, type=type, path=path, title=title, summary=summary, genres=genres, directors=directors, guest_stars=guest_stars, duration=duration, rating=rating, index=index, season=season, content_rating=content_rating, source_title=source_title, originally_available_at=originally_available_at, show=show, thumb=thumb),
+				key = Callback(PlaybackDownloadDetails, type=type, path=path, videotype=videotype, title=title, summary=summary, genres=genres, directors=directors, guest_stars=guest_stars, duration=duration, rating=rating, index=index, season=season, content_rating=content_rating, source_title=source_title, originally_available_at=originally_available_at, show=show, thumb=thumb),
 				title = title,
 				summary = summary,
 				directors = directors,
@@ -804,7 +814,7 @@ def PlaybackDownloadDetails(type, path, title, summary, genres, directors, guest
 				rating = rating,
 				content_rating = content_rating,
 				source_title = show,
-				originally_available_at = date,
+				originally_available_at = originally_available_at,
 				thumb = Callback(GetThumb, url=thumb),
 				items = MediaObjectsForURL(path, videotype)))
 
@@ -878,7 +888,7 @@ def PlayVideo(path):
 
 ###################################################################################################
 @route(PREFIX + '/CreateLocalURL')
-def CreateLocalURL(path):
+def CreateLocalURL(path, *argparams, **kwparams):
 	return Redirect(Stream.LocalFile(path))
 
 
