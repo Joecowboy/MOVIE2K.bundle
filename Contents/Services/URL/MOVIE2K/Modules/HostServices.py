@@ -112,7 +112,7 @@ def JsonWatchLaterOpen(fp):
 #The JSON file is saved in the data cache for this plugin setup by Plex
 def JsonWatchLaterStruct(fp):
 	jsondata = '[\n'
-	jsondata = jsondata + '{1 : {Type: "", Path: "", Host: "", DateAdded: "", Quality: "", ThumbURL: "", Title: "", Summary:"", Genres: "", Directors: "", GuestStars: "", Duration: "None", Rating: "0.0", Index: "0", Season: "0", ContentRating: "", SourceTitle: "", Date: "", VideoType: "", VideoStreamLink: "", ContentLength: ""}},\n'
+	jsondata = jsondata + '{1 : {Type: "", Path: "", Host: "", DateAdded: "", Quality: "", ThumbURL: "", Title: "", Summary:"", Genres: "", Directors: "", GuestStars: "", Duration: "None", Rating: "0.0", Index: "0", Season: "0", ContentRating: "", SourceTitle: "", Date: "", VideoType: "", VideoStreamLink: "", ContentLength: "", Thread: "", FailedFileDeletion: ""}},\n'
 	jsondata = jsondata + ']'
 	
 	JsonWrite(fp=fp, jsondata=jsondata)

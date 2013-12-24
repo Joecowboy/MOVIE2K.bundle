@@ -34,6 +34,8 @@ from HostServices import JsonWrite
 from HostServices import CookieDict
 from HostServices import GetHostPageURL
 from HostVideoDownload import GetHostVideo
+from HostVideoDownload import CheckForDownload
+from HostVideoDownload import KillMyDownloadThread
 
 # Random User Agent
 UserAgent = ['Mozilla/4.0 (compatible; MSIE 5.5; Windows NT)', 'Opera/9.25 (Windows NT 6.0; U; ja)', 'Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 6.0)', 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.31 (KHTML, like Gecko) Chrome/26.0.1410.64 Safari/537.31', 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:20.0) Gecko/20100101 Firefox/20.0', 'Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.1; WOW64; Trident/6.0)', 'Mozilla/4.0 (compatible; MSIE 5.0; Windows 2000) Opera 6.01 [ja]', 'Mozilla/5.0 (Windows; U; Windows NT 5.0; ja-JP; m18) Gecko/20010131 Netscape6/6.01', 'Mozilla/5.0 (Macintosh; U; PPC Mac OS X; ja-jp) AppleWebKit/85.7 (KHTML, like Gecko) Safari/85.7']
@@ -46,21 +48,21 @@ Version = Prefs['version']
 VideoError = Prefs["videoerror"]
 
 # Set up Host Services
-HostServices.R = R
-HostServices.Log = Log
-HostServices.HTML = HTML
-HostServices.String = String
-HostServices.Version = Version
-HostServices.VideoError = VideoError
-HostServices.UserAgent = UserAgent[UserAgentNum]
-HostSites.Log = Log
-HostSites.XML = XML
-HostSites.HTML = HTML
-HostSites.String = String
-HostSites.Version = Version
-HostSites.UserAgent = UserAgent[UserAgentNum]
-HostVideoDownload.Log = Log
-HostVideoDownload.UserAgent = UserAgent[UserAgentNum]
+HostServices.R                      = R
+HostServices.Log                    = Log
+HostServices.HTML                   = HTML
+HostServices.String                 = String
+HostServices.Version                = Version
+HostServices.VideoError             = VideoError
+HostServices.UserAgent              = UserAgent[UserAgentNum]
+HostSites.Log                       = Log
+HostSites.XML                       = XML
+HostSites.HTML                      = HTML
+HostSites.String                    = String
+HostSites.Version                   = Version
+HostSites.UserAgent                 = UserAgent[UserAgentNum]
+HostVideoDownload.Log               = Log
+HostVideoDownload.UserAgent         = UserAgent[UserAgentNum]
 
 PREFIX            = "/video/movie2k"
 NAME              = "Movie2k"
@@ -119,6 +121,9 @@ def MainMenu():
 
 	# Enable Tor Proxy
 	EnableTorConnect()
+
+	# Clean Up Any Failed File Deletions of Video Downloads
+	CheckFailedFileDeletions()
 
 	oc = ObjectContainer()
 
@@ -917,16 +922,10 @@ def DeleteVideo(title, path):
 	title = unicode(title, errors='replace')
 	oc = ObjectContainer(title2=title)
 
-	if os.path.isfile(path):
-		os.remove(path)
-	else:
-		Log("Error: %s file not found to remove." % path)
-
 	hosts = LoadData(fp=WATCHIT_DATA, GetJson=3)
 	i = 1
 	for gethost in hosts:
 		if gethost[i]['Path'] == path:
-			Log(str(i)+": "+gethost[i]['Path'] +"=="+ path)
 			gethost[i]['Type'] = ""
 			gethost[i]['DateAdded'] = ""
 			gethost[i]['Quality'] = ""
@@ -948,12 +947,44 @@ def DeleteVideo(title, path):
 			gethost[i]['VideoType'] = ""
 			gethost[i]['VideoStreamLink'] = ""
 			gethost[i]['ContentLength'] = ""
+			KillMyDownloadThread(MyThread=gethost[i]['Thread'])
+			gethost[i]['Thread'] = ""
 			break
 		else:
 			i += 1
 
+	if os.path.isfile(path):
+		try:
+			os.remove(path)
+		except OSError:
+			gethost[i]['FailedFileDeletion'] = path
+            		Log("Unable to remove file: %s" % path)
+	else:
+		Log("Error: %s file not found to remove." % path)
+
 	JsonWrite(fp=WATCHIT_DATA, jsondata=hosts)
 	return ObjectContainer(header="Deleted Movie2k Host Video", message="The Movie2k, " + title + " Video has been removed from My Watchit Later.  Please click Ok to exit this screen.")
+
+
+####################################################################################################
+def CheckFailedFileDeletions():
+
+	hosts = LoadData(fp=WATCHIT_DATA, GetJson=3)
+	i = 1
+	for gethost in hosts:
+		path = gethost[i]['FailedFileDeletion']
+		i += 1
+		if path != "":
+			if os.path.isfile(path):
+				try:
+					os.remove(path)
+					gethost[i]['FailedFileDeletion'] = ""
+				except OSError:
+            				Log("Unable to remove file: %s" % path)
+			else:
+				Log("Error: %s file not found to remove." % path)
+
+	JsonWrite(fp=WATCHIT_DATA, jsondata=hosts)
 
 
 ####################################################################################################
@@ -2015,6 +2046,8 @@ def SubGroupMoviePageAdd(title, page, date, dateadd, thumbck, type, summary, MOV
 	oc.add(DirectoryObject(key=Callback(InputFavoriteURL, title=ADDFAVORITE_TITLE, MOVIE2K_URL=MOVIE2K_URL, query=page), title=ADDFAVORITE_TITLE, summary=summary, thumb=ADDFAVORITE_THUMB))
 
 	# Add Watchit Later Video Movie4k.to link
+	if HostVideoDownload.stop == None:
+		HostVideoDownload.stop = CheckForDownload()
 	ICON_ADDWATCHITLATER = "icon-add-watchit-later.png"
 	WATCHIT_THUMB = R(ICON_ADDWATCHITLATER)
 	summary = "Add \""+title+"\" as a watchit later video download from a Movie2k Host!"
@@ -2402,7 +2435,7 @@ def TheMovieListings(title, page, date, dateadd, thumb, type, PageOfHosts, MOVIE
 							show_title = show_title +  " - [USES CAPTCHA]"
 							oc.add(DirectoryObject(key=Callback(CaptchaSection, title=title, page=page, date=date, thumb=thumb, type=type, summary=summary.strip(), directors=directors, guest_stars=guest_stars, genres=genres, duration=duration, rating=float(rating), season=season, index=index, show=show_update, content_rating=content_rating, source_title=source_title, url=url, Host=Host), title=show_title, thumb=Callback(GetThumb, url=thumb), summary=show))
 						elif watchitlater == "True":
-							GoodLink = GetHostVideo(title=title, date=String.Quote(str(date), usePlus=True), DateAdded=String.Quote(str(DateAdded), usePlus=True), Quality=Quality, thumb=String.Quote(thumb, usePlus=True), type=String.Quote(type, usePlus=True), summary=String.Quote(summary.strip(), usePlus=True), directors=String.Quote(director, usePlus=True), guest_stars=String.Quote(actors, usePlus=True), genres=String.Quote(genre, usePlus=True), duration=str(duration), rating=str(rating), season=str(season), index=str(index), content_rating=content_rating, source_title=source_title, url=MOVIE_PAGE, Host=Host)
+							(HostVideoDownload.MyDownloadPath, HostVideoDownload.MyDownloadRequest, GoodLink) = GetHostVideo(title=title, date=String.Quote(str(date), usePlus=True), DateAdded=String.Quote(str(DateAdded), usePlus=True), Quality=Quality, thumb=String.Quote(thumb, usePlus=True), type=String.Quote(type, usePlus=True), summary=String.Quote(summary.strip(), usePlus=True), directors=String.Quote(director, usePlus=True), guest_stars=String.Quote(actors, usePlus=True), genres=String.Quote(genre, usePlus=True), duration=str(duration), rating=str(rating), season=str(season), index=str(index), content_rating=content_rating, source_title=source_title, url=MOVIE_PAGE, Host=Host)
 						else:
 							if type == 'TV Shows':
 								oc.add(EpisodeObject(

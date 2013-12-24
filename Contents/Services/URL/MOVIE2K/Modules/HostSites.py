@@ -1232,7 +1232,10 @@ def GetMovie(Host, HostPage, url, LinkType):
 		try:
 			VideoPage = SecondButtonPress(url=url, HostPage=HostPage, addkey={'method_free': 'Free'})
 			try:
-				VideoInfo = HTML.ElementFromString(VideoPage.content).xpath('//div[@id="player_code"]/script')[1].text
+				try:
+					VideoInfo = HTML.ElementFromString(VideoPage.content).xpath('//div[@id="player_code"]/script')[1].text
+				except:
+					VideoInfo = HTML.ElementFromString(VideoPage.content).xpath('//div[@id="player_code"]/script')[0].text
 				VideoStream = ScriptConvert(script=VideoInfo)
 			except:
 				InputError = HTML.ElementFromString(VideoPage.content).xpath('//div[@id="progress_div"]/b')[0].text.strip()

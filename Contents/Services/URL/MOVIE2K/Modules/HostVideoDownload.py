@@ -5,7 +5,8 @@ import os
 import sys
 import time
 import re
-from threading import Thread
+import threading
+
 from HostSites import GetMovie
 from HostServices import GetHostPageURL
 from HostServices import LoadData
@@ -22,14 +23,49 @@ try:
 except:
 	import requests25 as requests
 
-ContentLength = None
-NoError = None
-threadList = []
+
+threadList        = []
+MyDownloadPath    = None
+MyDownloadRequest = None
+stop              = None
+WATCHIT_DATA      = "watchit.data.json"
 
 
+####################################################################################################
+def setInterval(interval):
+	def decorator(function):
+		def wrapper(*args, **kwargs):
+			stopped = threading.Event()
+
+			def loop(): # executed in another thread
+				while not stopped.wait(interval): # until stopped
+					function(*args, **kwargs)
+
+			t = threading.Thread(target=loop)
+			t.daemon = True # stop if the program exits
+			t.start()
+			return stopped
+		return wrapper
+	return decorator
+
+
+####################################################################################################
+@setInterval(.5)
+def CheckForDownload():
+	global MyDownloadPath
+	global MyDownloadRequest
+	global stop
+
+	if MyDownloadRequest != None:
+		MyDownloadThread(MyDownloadPath, MyDownloadRequest)
+		MyDownloadPath = None
+		MyDownloadRequest = None
+		stop.set() # stop the timer loop
+		stop = None
+
+
+####################################################################################################
 def downloads(VideoStreamLink, path, startByte=0, endByte=None):
-	global ContentLength
-	global NoError
 
 	Log("DOWNLOAD URL: "+VideoStreamLink)
 	headers = {'User-Agent': UserAgent, 'Connection': 'keep-alive'}
@@ -38,25 +74,38 @@ def downloads(VideoStreamLink, path, startByte=0, endByte=None):
 		headers['Range'] = 'bytes=%d-%d' % (startByte,endByte)
 
 	request = requests.get(VideoStreamLink, headers=headers, stream=True, allow_redirects=True)
+
+	try:
+		ContentLength = int(request.headers['Content-Length'].strip())
+	except:
+		ContentLength = -1
+
 	Log("####################################################################################################")
 	Log(request.headers)
 	Log("####################################################################################################")
 	Log("STATUS CODE: "+str(request.status_code))
 	Log("####################################################################################################")
+	Log("CONTENT-LENGTH: "+str(ContentLength))
+	Log("####################################################################################################")
+
 	if str(request.status_code) == "416":
-		Log("Thread didn't get the file it was expecting. Retrying...")
+		Log("Didn't get the file it was expecting. Retrying...")
 		time.sleep(5)
 		return downloads(VideoStreamLink, path, startByte, endByte)
 	elif str(request.status_code) == "403":
 		NoError = "Wrong IP was returned"
-		ContentLength = -1
-		return
-	try:
-		ContentLength = int(request.headers['Content-Length'].strip())
-	except:
-		ContentLength = -1
-	Log("GET CONTENT-LENGTH IN DOWNLOADS: "+str(ContentLength))
+		request = None
+	elif int(ContentLength) == 8 or int(ContentLength) == 15:
+		NoError = "failed to start downloading"
+		request = None
+	else:
+		NoError = True
 
+	return (request, ContentLength, NoError)
+
+
+####################################################################################################
+def StartMyDownload(path, request):
 	if not os.path.exists(os.path.dirname(path)):
 		os.makedirs(os.path.dirname(path))
 
@@ -68,33 +117,62 @@ def downloads(VideoStreamLink, path, startByte=0, endByte=None):
 
 	handle.close()
 
-def MyDownload(title, VideoStreamLink, path=None):
-	global threadList
 
+####################################################################################################
+def MyDownload(title, VideoStreamLink, path=None):
 	if path != None:
 		startByte = os.stat(path).st_size
 	else:
 		path = "Videos\%s_%s.%s" % (re.sub('\W', '_', title, flags=re.UNICODE), str(time.time()), VideoStreamLink.split('/')[-1].split('.')[1].partition('?')[0])
 		startByte = 0
 
-	thread = Thread(target=downloads, args=(VideoStreamLink, path, startByte,))
+	(request, ContentLength, NoError) = downloads(VideoStreamLink, path, startByte)
+
+	return (path, request, ContentLength, NoError)
+
+
+####################################################################################################
+def MyDownloadThread(path, request):
+	thread = threading.Thread(target=StartMyDownload, args=(path, request,))
 	#thread.setDaemon(True)
-	thread.start()
 	threadList.append(thread)
 
-	for myThreads in threadList:
-		myThreads.join()
+	hosts = LoadData(fp=WATCHIT_DATA, GetJson=3)
+	i = 1
+	for gethost in hosts:
+		if gethost[i]['Path'] == path:
+			gethost[i]['Thread'] = str(thread)
+			break
+		else:
+			i += 1
+	JsonWrite(fp=WATCHIT_DATA, jsondata=hosts)
 
-	Log('Thread is not alive: ' + str(thread.is_alive()))
+	thread.start()
 
-	return path
+	#for myThreads in threadList:
+	#	myThreads.join()
+
+	#Log('Thread is not alive: ' + str(thread.is_alive()))
+
+
+####################################################################################################
+def KillMyDownloadThread(MyThread):
+	global threadList
+
+	for KillThread in threadList:
+		if str(KillThread) == MyThread:
+			if KillThread.isAlive():
+				try:
+					#KillThread.__stop = True
+					KillThread._Thread__stop()
+				except:
+					Log(str(KillThread.getName()) + ' could not be terminated')
 
 
 ####################################################################################################
 def GetHostVideo(title, date, DateAdded, Quality, thumb, type, summary, directors, guest_stars, genres, duration, rating, season, index, content_rating, source_title, url, Host):
-	global ContentLength
-	global NoError
-	WATCHIT_DATA = "watchit.data.json"
+	path = None
+	request = None
 
 	(HostPage, LinkType) = GetHostPageURL(Host=Host, url=url)
 
@@ -113,18 +191,9 @@ def GetHostVideo(title, date, DateAdded, Quality, thumb, type, summary, director
 	elif "Geolocation_Lockout" in VideoStreamLink:
 		NoError = "Geolocation Lockout was returned"
 	else:
-		NoError = True
-		path = MyDownload(title=title, VideoStreamLink=VideoStreamLink)
-		Log("Get Conntent Length: "+str(ContentLength))
+		(path, request, ContentLength, NoError) = MyDownload(title=title, VideoStreamLink=VideoStreamLink)
 
-		if int(ContentLength) == 8 and NoError == True:
-			NoError = "failed to start downloading"
-
-			if os.path.isfile(path):
-				os.remove(path)
-			else:
-				Log("Error: %s file not found" % path)
-		elif NoError == True:
+		if NoError == True:
 			videotype = path.split('/')[-1].split('.')[1]
 
 			hosts = LoadData(fp=WATCHIT_DATA, GetJson=3)
@@ -155,13 +224,14 @@ def GetHostVideo(title, date, DateAdded, Quality, thumb, type, summary, director
 						hosts[jj][i]['VideoType'] = videotype
 						hosts[jj][i]['VideoStreamLink'] = VideoStreamLink
 						hosts[jj][i]['ContentLength'] = ContentLength
+						break
 					else:
 						i += 1
 						jj += 1
 				except:
-					hosts.append({i : {'Type': type, 'Path': path, 'Host': Host, 'DateAdded': DateAdded, 'Quality': Quality, 'ThumbURL': thumb, 'Title': title, 'Summary':summary, 'Genres': genres, 'Directors': directors, 'GuestStars':guest_stars, 'Duration': duration, 'Rating': rating, 'Index': index, 'Season': season, 'ContentRating': content_rating, 'SourceTitle': source_title, 'Date': date, 'VideoType': videotype, 'VideoStreamLink': VideoStreamLink, 'ContentLength': ContentLength}})
+					hosts.append({i : {'Type': type, 'Path': path, 'Host': Host, 'DateAdded': DateAdded, 'Quality': Quality, 'ThumbURL': thumb, 'Title': title, 'Summary':summary, 'Genres': genres, 'Directors': directors, 'GuestStars':guest_stars, 'Duration': duration, 'Rating': rating, 'Index': index, 'Season': season, 'ContentRating': content_rating, 'SourceTitle': source_title, 'Date': date, 'VideoType': videotype, 'VideoStreamLink': VideoStreamLink, 'ContentLength': ContentLength, 'Thread': '', 'FailedFileDeletion': ''}})
 					break
 
 			JsonWrite(fp=WATCHIT_DATA, jsondata=hosts)
 
-	return NoError
+	return (path, request, NoError)
