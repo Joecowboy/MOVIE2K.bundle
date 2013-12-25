@@ -1056,7 +1056,11 @@ def CheckFailedFileDeletions():
 	hosts = LoadData(fp=WATCHIT_DATA, GetJson=3)
 	i = 1
 	for gethost in hosts:
-		path = gethost[i]['FailedFileDeletion']
+		try:
+			path = gethost[i]['FailedFileDeletion']
+		except:
+			gethost[i].update({'FailedFileDeletion': ''})
+			path = ""
 
 		if path != "":
 			if os.path.isfile(path):
