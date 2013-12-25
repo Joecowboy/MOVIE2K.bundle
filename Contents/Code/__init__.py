@@ -4,8 +4,10 @@
 import os, sys
 try:
 	path = os.getcwd().split("?\\")[1].split('Plug-in Support')[0]+"Plug-ins\MOVIE2K.bundle\Contents\Services\URL\MOVIE2K\Modules"
+	DownloadPath = '\\'
 except:
 	path = os.getcwd().split("Plug-in Support")[0]+"Plug-ins/MOVIE2K.bundle/Contents/Services/URL/MOVIE2K/Modules"
+	DownloadPath = '/'
 sys.path.append(path)
 
 try:
@@ -36,6 +38,8 @@ from HostServices import GetHostPageURL
 from HostVideoDownload import GetHostVideo
 from HostVideoDownload import CheckForDownload
 from HostVideoDownload import KillMyDownloadThread
+from HostVideoDownload import ResumeMyDownload
+from HostVideoDownload import combine_files
 
 # Random User Agent
 UserAgent = ['Mozilla/4.0 (compatible; MSIE 5.5; Windows NT)', 'Opera/9.25 (Windows NT 6.0; U; ja)', 'Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 6.0)', 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.31 (KHTML, like Gecko) Chrome/26.0.1410.64 Safari/537.31', 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:20.0) Gecko/20100101 Firefox/20.0', 'Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.1; WOW64; Trident/6.0)', 'Mozilla/4.0 (compatible; MSIE 5.0; Windows 2000) Opera 6.01 [ja]', 'Mozilla/5.0 (Windows; U; Windows NT 5.0; ja-JP; m18) Gecko/20010131 Netscape6/6.01', 'Mozilla/5.0 (Macintosh; U; PPC Mac OS X; ja-jp) AppleWebKit/85.7 (KHTML, like Gecko) Safari/85.7']
@@ -48,21 +52,22 @@ Version = Prefs['version']
 VideoError = Prefs["videoerror"]
 
 # Set up Host Services
-HostServices.R                      = R
-HostServices.Log                    = Log
-HostServices.HTML                   = HTML
-HostServices.String                 = String
-HostServices.Version                = Version
-HostServices.VideoError             = VideoError
-HostServices.UserAgent              = UserAgent[UserAgentNum]
-HostSites.Log                       = Log
-HostSites.XML                       = XML
-HostSites.HTML                      = HTML
-HostSites.String                    = String
-HostSites.Version                   = Version
-HostSites.UserAgent                 = UserAgent[UserAgentNum]
-HostVideoDownload.Log               = Log
-HostVideoDownload.UserAgent         = UserAgent[UserAgentNum]
+HostServices.R              = R
+HostServices.Log            = Log
+HostServices.HTML           = HTML
+HostServices.String         = String
+HostServices.Version        = Version
+HostServices.VideoError     = VideoError
+HostServices.UserAgent      = UserAgent[UserAgentNum]
+HostSites.Log               = Log
+HostSites.XML               = XML
+HostSites.HTML              = HTML
+HostSites.String            = String
+HostSites.Version           = Version
+HostSites.UserAgent         = UserAgent[UserAgentNum]
+HostVideoDownload.Log       = Log
+HostVideoDownload.String    = String
+HostVideoDownload.UserAgent = UserAgent[UserAgentNum]
 
 PREFIX            = "/video/movie2k"
 NAME              = "Movie2k"
@@ -119,13 +124,13 @@ def GetLanguage():
 @handler(PREFIX, NAME, art = ART, thumb = ICON)
 def MainMenu():
 
+	oc = ObjectContainer()
+
 	# Enable Tor Proxy
 	EnableTorConnect()
 
 	# Clean Up Any Failed File Deletions of Video Downloads
 	CheckFailedFileDeletions()
-
-	oc = ObjectContainer()
 
 	#Add Movie4k.to site
 	ICON_MOVIES4k_TO  = "icon-movie4k-to.png"
@@ -170,7 +175,7 @@ def MainMenu():
 	#Add Search only for Plex/Web
 	if Client.Product == "Web Client":
 		ICON_SEARCH = "icon-search.png"
-		title = "Movie4k.to"
+		title = "Movie2k Search"
 		SEARCH_TITLE = "Search the "+title+" Database"
 		SEARCH_SUMMARY ="Find a TV Show or Movie from the "+title+" database!"
 		SEARCH_THUMB = R(ICON_SEARCH)
@@ -302,7 +307,7 @@ def Search(title, MOVIE2K_URL, query):
 	#for SearchList in AutoSearch:
 	#	MOVIES_TITLE = SearchList.xpath('./td/a')[0].text
 
-	type = 'N/A'
+	type = 'Movies'
 	dateadd = 'N/A'
 	if MOVIE2K_URL == "www.movie2k.tl":
 		url = 'http://www.movie2k.tl/search'
@@ -401,6 +406,8 @@ def Search(title, MOVIE2K_URL, query):
 			oc = MessageContainer("Search Error", "Search did not return any positive results.  Please try another key word search!")
 		elif MOVIES_LANG == GetLanguage() or MOVIES_LANG == 'N/A' or GetLanguage() == 'All':
 			if "seri" in MOVIES_PAGE or "tvshow" in MOVIES_PAGE:
+				if MOVIES_THUMB == None:
+					MOVIES_THUMB = "N/A"
 				oc.add(DirectoryObject(key=Callback(TVShowSeasons, title=MOVIES_TITLE, page=MOVIES_PAGE, genre="N/A", type="TV Shows", MOVIE2K_URL=MOVIE2K_URL, thumb=MOVIES_THUMB, MOVIES_LANG=MOVIES_LANG), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=Callback(GetThumb, url=MOVIES_THUMB)))
 			else:
 				oc.add(DirectoryObject(key=Callback(SubGroupMoviePageAdd, title=MOVIES_TITLE, page=MOVIES_PAGE, date=MOVIES_YEAR, dateadd=dateadd, thumbck=MOVIES_THUMB, type=type, summary=MOVIES_SUMMARY, MOVIE2K_URL=MOVIE2K_URL), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=Callback(GetThumb, url=MOVIES_THUMB)))
@@ -707,7 +714,13 @@ def PlaybackDownloads(title):
 		thumb = String.Unquote(gethost[i]['ThumbURL'], usePlus=True)
 		videotype = gethost[i]['VideoType']
 		videostreamlink = gethost[i]['VideoStreamLink']
+		HostPage = gethost[i]['HostPage']
+		url = gethost[i]['URL']
+		LinkType = gethost[i]['LinkType']
 		contentlength = gethost[i]['ContentLength']
+		FileCheckSize = gethost[i]['FileCheckSize']
+		resumepath = gethost[i]['ResumePath']
+		resumecontentlength = gethost[i]['ResumeContentLength']
 		show = "ADDED: "+ dateadded + " | HOST: " + host + " | QUALITY: " + quality
 
 		if duration != "None" and duration != "":
@@ -717,48 +730,96 @@ def PlaybackDownloads(title):
 
 		if path != "":
 			try:
-				part = os.stat(path).st_size
-				percent = 100 * float(part)/float(contentlength)
+				if resumepath == "":
+					part = os.stat(path).st_size
+					percent = 100 * float(part)/float(contentlength)
 
-				if percent == 100.0:
-					path = os.path.abspath(path)
-					if type == "TV Shows":
-						oc.add(EpisodeObject(
-								rating_key = path,
-								key = Callback(PlaybackDownloadDetails, type=type, path=path, videotype=videotype, title=title, summary=summary, genres=genres, directors=directors, guest_stars=guest_stars, duration=duration, rating=rating, index=index, season=season, content_rating=content_rating, source_title=source_title, originally_available_at=originally_available_at, show=show, thumb=thumb),
-								title = title,
-								summary = summary,
-								directors = directors,
-								guest_stars = guest_stars,
-								duration = duration,
-								rating = rating,
-								show = show,
-								index = index,
-								season = season,
-								content_rating = content_rating,
-								source_title = source_title,
-								originally_available_at = originally_available_at,
-								thumb = Callback(GetThumb, url=thumb),
-								items = MediaObjectsForURL(path, videotype)))
-					else:
-						oc.add(MovieObject(
-								rating_key = path,
-								key = Callback(PlaybackDownloadDetails, type=type, path=path, videotype=videotype, title=title, summary=summary, genres=genres, directors=directors, guest_stars=guest_stars, duration=duration, rating=rating, index=index, season=season, content_rating=content_rating, source_title=source_title, originally_available_at=originally_available_at, show=show, thumb=thumb),
-								title = title,
-								summary = summary,
-								directors = directors,
-								genres = genres,
-								duration = duration,
-								rating = rating,
-								content_rating = content_rating,
-								source_title = show,
-								originally_available_at = originally_available_at,
-								thumb = Callback(GetThumb, url=thumb),
-								items = MediaObjectsForURL(path, videotype)))
+					LastTimeFileWrite = os.path.getmtime(path)
+					LocalTime = time.time()
+					ElapseTime = LocalTime - LastTimeFileWrite
 				else:
-					oc.add(DirectoryObject(key=Callback(WatchitDownloadInfo, title=title, percent=percent), title=title, summary=show, thumb=Callback(GetThumb, url=thumb)))
+					part = os.stat(path).st_size + os.stat(resumepath).st_size
+					percent = 100 * float(part)/float(contentlength)
+
+					if percent == 100.0:
+						combine_files(parts=[path, resumepath], path=path.replace('Part1.', ''))
+						gethost[i]['Path'] = path.replace('Part1.', '')
+						gethost[i]['ResumePath'] = ""
+
+					LastTimeFileWrite = os.path.getmtime(resumepath)
+					LocalTime = time.time()
+					ElapseTime = LocalTime - LastTimeFileWrite
 			except:
 				Log("Error: %s file not found to play back." % path)
+				part = 0
+				FileCheckSize = 0
+				percent = 0.0
+				ElapseTime = 120.0
+
+			if percent == 100.0:
+				path = os.path.abspath(path)
+				if type == "TV Shows":
+					oc.add(EpisodeObject(
+							rating_key = path,
+							key = Callback(PlaybackDownloadDetails, type=type, path=path, videotype=videotype, title=title, summary=summary, genres=genres, directors=directors, guest_stars=guest_stars, duration=duration, rating=rating, index=index, season=season, content_rating=content_rating, source_title=source_title, originally_available_at=originally_available_at, show=show, thumb=thumb),
+							title = title,
+							summary = summary,
+							directors = directors,
+							guest_stars = guest_stars,
+							duration = duration,
+							rating = rating,
+							show = show,
+							index = index,
+							season = season,
+							content_rating = content_rating,
+							source_title = source_title,
+							originally_available_at = originally_available_at,
+							thumb = Callback(GetThumb, url=thumb),
+							items = MediaObjectsForURL(path, videotype)))
+				else:
+					oc.add(MovieObject(
+							rating_key = path,
+							key = Callback(PlaybackDownloadDetails, type=type, path=path, videotype=videotype, title=title, summary=summary, genres=genres, directors=directors, guest_stars=guest_stars, duration=duration, rating=rating, index=index, season=season, content_rating=content_rating, source_title=source_title, originally_available_at=originally_available_at, show=show, thumb=thumb),
+							title = title,
+							summary = summary,
+							directors = directors,
+							genres = genres,
+							duration = duration,
+							rating = rating,
+							content_rating = content_rating,
+							source_title = show,
+							originally_available_at = originally_available_at,
+							thumb = Callback(GetThumb, url=thumb),
+							items = MediaObjectsForURL(path, videotype)))
+			elif ElapseTime >= 120.0 and int(FileCheckSize) == part:
+
+				if HostVideoDownload.stop == None:
+					HostVideoDownload.stop = CheckForDownload()
+				jj = 0
+				while jj < 4:
+					(HostVideoDownload.MyDownloadPath, HostVideoDownload.MyDownloadRequest, ResumeContentLength, GoodLink, VideoStreamLink) = ResumeMyDownload(Host=host, HostPage=HostPage, url=url, LinkType=LinkType, path=path, ContentLength=contentlength)
+					if GoodLink != True:
+						time.sleep(1)
+						jj += 1
+					else:
+						jj = 4
+
+				if int(ResumeContentLength) != int(contentlength) and GoodLink == True:
+					if not "Part1." in path:
+						gethost[i]['Path'] = os.renames(path, path.replace(DownloadPath, DownloadPath+'Part1.'))
+					gethost[i]['ResumePath'] = HostVideoDownload.MyDownloadPath
+					gethost[i]['ResumeContentLength'] = ResumeContentLength
+
+				if GoodLink == True:
+					gethost[i]['FileCheckSize'] = "0"
+					JsonWrite(fp=WATCHIT_DATA, jsondata=hosts)
+					oc.add(DirectoryObject(key=Callback(WatchitDownloadInfo, title=title), title=title, summary=show, thumb=Callback(GetThumb, url=thumb)))
+				else:
+					oc.add(DirectoryObject(key=Callback(WatchitDownloadInfo, title=title, GoodLink=GoodLink), title=title, summary=show, thumb=Callback(GetThumb, url=thumb)))
+			else:
+				gethost[i]['FileCheckSize'] = str(part)
+				JsonWrite(fp=WATCHIT_DATA, jsondata=hosts)
+				oc.add(DirectoryObject(key=Callback(WatchitDownloadInfo, title=title, percent=percent), title=title, summary=show, thumb=Callback(GetThumb, url=thumb)))
 
 		i += 1
 
@@ -894,8 +955,15 @@ def CreateLocalURL(path, *argparams, **kwparams):
 
 ####################################################################################################
 @route(PREFIX + '/WatchitDownloadInfo')
-def WatchitDownloadInfo(title, percent):
-	return ObjectContainer(header=title+" Still Downloading", message="Your video download is still in progress.  Please check back later.  DOWNLOAD PERCENTAGE: "+str(percent)+"%")
+def WatchitDownloadInfo(title, percent=None, GoodLink=True):
+	if percent != None:
+		oc = ObjectContainer(header=title+" Still Downloading", message="Your video download is still in progress.  Please check back later.  DOWNLOAD PERCENTAGE: "+str(percent)+"%")
+	elif GoodLink != True:
+		oc = ObjectContainer(header="We Apologize", message="There was a problem with the Host video resuming download.  Host video errored do to "+GoodLink+".  Please try again later to resume download.")
+	else:
+		oc = ObjectContainer(header=title+" Resuming Download", message="Your video stopped downloading and now resuming your video download.  Please check back later.")
+
+	return oc
 
 
 ####################################################################################################
@@ -956,7 +1024,13 @@ def DeleteVideo(title, path):
 			gethost[i]['ThumbURL'] = ""
 			gethost[i]['VideoType'] = ""
 			gethost[i]['VideoStreamLink'] = ""
+			gethost[i]['HostPage'] = ""
+			gethost[i]['URL'] = ""
+			gethost[i]['LinkType'] = ""
 			gethost[i]['ContentLength'] = ""
+			gethost[i]['FileCheckSize'] = "0"
+			gethost[i]['ResumePath'] = ""
+			gethost[i]['ResumeContentLength'] = ""
 			KillMyDownloadThread(MyThread=gethost[i]['Thread'])
 			gethost[i]['Thread'] = ""
 			break
@@ -983,7 +1057,7 @@ def CheckFailedFileDeletions():
 	i = 1
 	for gethost in hosts:
 		path = gethost[i]['FailedFileDeletion']
-		i += 1
+
 		if path != "":
 			if os.path.isfile(path):
 				try:
@@ -993,6 +1067,126 @@ def CheckFailedFileDeletions():
             				Log("Unable to remove file: %s" % path)
 			else:
 				Log("Error: %s file not found to remove." % path)
+
+		#Fix any patch issues between plugin updates if dictionary has changed.
+		try:
+			gethost[i]['Type']
+		except:
+			gethost[i].update({'Type': ''})
+		try:
+			gethost[i]['DateAdded']
+		except:
+			gethost[i].update({'DateAdded': ''})
+		try:
+			gethost[i]['Quality']
+		except:
+			gethost[i].update({'Quality': ''})
+		try:
+			gethost[i]['Path']
+		except:
+			gethost[i].update({'Path': ''})
+		try:
+			gethost[i]['Host']
+		except:
+			gethost[i].update({'Host': ''})
+		try:
+			gethost[i]['Title']
+		except:
+			gethost[i].update({'Title': ''})
+		try:
+			gethost[i]['Summary']
+		except:
+			gethost[i].update({'Summary': ''})
+		try:
+			gethost[i]['Genres']
+		except:
+			gethost[i].update({'Genres': ''})
+		try:
+			gethost[i]['Directors'] = ""
+		except:
+			gethost[i].update({'Directors': ''})
+		try:
+			gethost[i]['GuestStars']
+		except:
+			gethost[i].update({'GuestStars': ''})
+		try:
+			gethost[i]['Duration']
+		except:
+			gethost[i].update({'Duration': ''})
+		try:
+			gethost[i]['Rating']
+		except:
+			gethost[i].update({'Rating': '0.0'})
+		try:
+			gethost[i]['Index']
+		except:
+			gethost[i].update({'Index': '0'})
+		try:
+			gethost[i]['Season']
+		except:
+			gethost[i].update({'Season': '0'})
+		try:
+			gethost[i]['ContentRating']
+		except:
+			gethost[i].update({'ContentRating': ''})
+		try:
+			gethost[i]['SourceTitle']
+		except:
+			gethost[i].update({'SourceTitle': ''})
+		try:
+			gethost[i]['Date']
+		except:
+			gethost[i].update({'Date': ''})
+		try:
+			gethost[i]['ThumbURL']
+		except:
+			gethost[i].update({'ThumbURL': ''})
+		try:
+			gethost[i]['VideoType']
+		except:
+			gethost[i].update({'VideoType': ''})
+		try:
+			gethost[i]['VideoStreamLink']
+		except:
+			gethost[i].update({'VideoStreamLink': ''})
+		try:
+			gethost[i]['HostPage']
+		except:
+			gethost[i].update({'HostPage': ''})
+		try:
+			gethost[i]['URL']
+		except:
+			gethost[i].update({'URL': ''})
+		try:
+			gethost[i]['LinkType']
+		except:
+			gethost[i].update({'LinkType': ''})
+		try:
+			gethost[i]['ContentLength']
+		except:
+			gethost[i].update({'ContentLength': ''})
+		try:
+			gethost[i]['FileCheckSize']
+		except:
+			gethost[i].update({'FileCheckSize': '0'})
+		try:
+			gethost[i]['ResumePath']
+		except:
+			gethost[i].update({'ResumePath': ''})
+		try:
+			gethost[i]['ResumeContentLength']
+		except:
+			gethost[i].update({'ResumeContentLength': ''})
+		try:
+			gethost[i]['Thread']
+		except:
+			gethost[i].update({'Thread': ''})
+		try:
+			gethost[i]['FailedFileDeletion']
+		except:
+			gethost[i].update({'FailedFileDeletion': ''})
+
+		i += 1
 
 	JsonWrite(fp=WATCHIT_DATA, jsondata=hosts)
 
@@ -1358,7 +1552,10 @@ def TVShowSeasons(title, page, genre, type, MOVIE2K_URL, thumb=None, MOVIES_LANG
 		if thumb == None:
 			SEASON = '//div[@id="maincontent4"]/table[@id="tablemoviesindex"]'+elm+'/tr'
 		else:
+			if thumb == "N/A":
+				thumb = None
 			SEASON = '//select[@name="season"]/option'
+
 
 	for Seasons in MOVIE_PAGE.xpath(SEASON):
 		if MOVIES_LANG == None:
