@@ -75,6 +75,7 @@ def downloads(VideoStreamLink, path, startByte="0", endByte=""):
 		video_url = VideoStreamLink.split("?cookies=")[0]
 		cookies = ast.literal_eval(String.Unquote(VideoStreamLink.split("cookies=")[1].split("&")[0], usePlus=True))
 		headers = ast.literal_eval(String.Unquote(VideoStreamLink.split("headers=")[1], usePlus=True))
+		headers['Connection'] = 'keep-alive'
 	except:
 		video_url = VideoStreamLink
 		headers = {'User-Agent': UserAgent, 'Connection': 'keep-alive'}

@@ -806,7 +806,8 @@ def PlaybackDownloads(title):
 
 				if int(ResumeContentLength) != int(contentlength) and GoodLink == True:
 					if not "Part1." in path:
-						gethost[i]['Path'] = os.renames(path, path.replace(DownloadPath, DownloadPath+'Part1.'))
+						os.renames(path, path.replace(DownloadPath, DownloadPath+'Part1.'))
+						gethost[i]['Path'] = path.replace(DownloadPath, DownloadPath+'Part1.')
 					gethost[i]['ResumePath'] = HostVideoDownload.MyDownloadPath
 					gethost[i]['ResumeContentLength'] = ResumeContentLength
 
@@ -1185,10 +1186,6 @@ def CheckFailedFileDeletions():
 			gethost[i]['Thread']
 		except:
 			gethost[i].update({'Thread': ''})
-		try:
-			gethost[i]['FailedFileDeletion']
-		except:
-			gethost[i].update({'FailedFileDeletion': ''})
 
 		i += 1
 
