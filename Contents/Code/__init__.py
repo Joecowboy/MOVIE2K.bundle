@@ -741,10 +741,17 @@ def PlaybackDownloads(title):
 					LocalTime = time.time()
 					ElapseTime = LocalTime - LastTimeFileWrite
 				else:
-					part = os.stat(path).st_size 
-					for getPaths in resumepath:
-						part = part + os.stat(getPaths).st_size
-					percent = 100 * float(part)/float(contentlength)
+					try:
+						part = os.stat(path).st_size 
+						for getPaths in resumepath:
+							part = part + os.stat(getPaths).st_size
+						percent = 100 * float(part)/float(contentlength)
+					except:
+						gethost[i]['Path'] = path.replace('Part1.', '')
+						gethost[i]['ResumePath'] = []
+						gethost[i]['ResumeContentLength'] = ""
+						part = os.stat(path.replace('Part1.', '')).st_size
+						percent = 100 * float(part)/float(contentlength)
 
 					if percent == 100.0:
 						parts = [path]+resumepath
@@ -1022,7 +1029,7 @@ def DeleteWatchitLaterVideo(title):
 
 ####################################################################################################
 @route(PREFIX + '/DeleteVideo')
-def DeleteVideo(title, path, resumepath):
+def DeleteVideo(title, path, resumepath=[]):
 
 	title = unicode(title, errors='replace')
 	oc = ObjectContainer(title2=title)
@@ -1074,7 +1081,7 @@ def DeleteVideo(title, path, resumepath):
 	else:
 		Log("Error: %s file not found to remove." % path)
 
-	if resumepath != "":
+	if len(resumepath) != 0:
 		for getPaths in resumepath:
 			if os.path.isfile(getPaths):
 				try:

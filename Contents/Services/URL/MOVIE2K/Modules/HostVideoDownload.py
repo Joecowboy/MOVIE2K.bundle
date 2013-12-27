@@ -111,10 +111,17 @@ def AutoCheckMyDownload():
 					LocalTime = time.time()
 					ElapseTime = LocalTime - LastTimeFileWrite
 				else:
-					part = os.stat(path).st_size 
-					for getPaths in resumepath:
-						part = part + os.stat(getPaths).st_size
-					percent = 100 * float(part)/float(contentlength)
+					try:
+						part = os.stat(path).st_size 
+						for getPaths in resumepath:
+							part = part + os.stat(getPaths).st_size
+						percent = 100 * float(part)/float(contentlength)
+					except:
+						gethost[i]['Path'] = path.replace('Part1.', '')
+						gethost[i]['ResumePath'] = []
+						gethost[i]['ResumeContentLength'] = ""
+						part = os.stat(path.replace('Part1.', '')).st_size
+						percent = 100 * float(part)/float(contentlength)
 
 					if percent == 100.0:
 						parts = [path]+resumepath
