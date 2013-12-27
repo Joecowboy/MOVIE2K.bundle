@@ -116,6 +116,17 @@ def AutoCheckMyDownload():
 						for getPaths in resumepath:
 							part = part + os.stat(getPaths).st_size
 						percent = 100 * float(part)/float(contentlength)
+
+						if percent == 100.0:
+							parts = [path]+resumepath
+							combine_files(parts=parts, path=path.replace('Part1.', ''))
+							gethost[i]['Path'] = path.replace('Part1.', '')
+							gethost[i]['ResumePath'] = []
+							gethost[i]['ResumeContentLength'] = ""
+
+						LastTimeFileWrite = os.path.getmtime(resumepath[-1])
+						LocalTime = time.time()
+						ElapseTime = LocalTime - LastTimeFileWrite
 					except:
 						gethost[i]['Path'] = path.replace('Part1.', '')
 						gethost[i]['ResumePath'] = []
@@ -123,16 +134,9 @@ def AutoCheckMyDownload():
 						part = os.stat(path.replace('Part1.', '')).st_size
 						percent = 100 * float(part)/float(contentlength)
 
-					if percent == 100.0:
-						parts = [path]+resumepath
-						combine_files(parts=parts, path=path.replace('Part1.', ''))
-						gethost[i]['Path'] = path.replace('Part1.', '')
-						gethost[i]['ResumePath'] = []
-						gethost[i]['ResumeContentLength'] = ""
-
-					LastTimeFileWrite = os.path.getmtime(resumepath[-1])
-					LocalTime = time.time()
-					ElapseTime = LocalTime - LastTimeFileWrite
+						LastTimeFileWrite = os.path.getmtime(path.replace('Part1.', ''))
+						LocalTime = time.time()
+						ElapseTime = LocalTime - LastTimeFileWrite
 			except:
 				Log("Error: %s file not found to play back." % path)
 				part = 0
