@@ -112,7 +112,7 @@ def JsonWatchLaterOpen(fp):
 #The JSON file is saved in the data cache for this plugin setup by Plex
 def JsonWatchLaterStruct(fp):
 	jsondata = '[\n'
-	jsondata = jsondata + '{1 : {Type: "", Path: "", Host: "", DateAdded: "", Quality: "", ThumbURL: "", Title: "", Summary:"", Genres: "", Directors: "", GuestStars: "", Duration: "None", Rating: "0.0", Index: "0", Season: "0", ContentRating: "", SourceTitle: "", Date: "", VideoType: "", VideoStreamLink: "", HostPage: "", URL: "", LinkType: "", ContentLength: "", FileCheckSize: "0", ResumePath: "", ResumeContentLength: "", Thread: "", FailedFileDeletion: ""}},\n'
+	jsondata = jsondata + '{1 : {Type: "", Path: "", Host: "", DateAdded: "", Quality: "", ThumbURL: "", Title: "", Summary:"", Genres: "", Directors: "", GuestStars: "", Duration: "None", Rating: "0.0", Index: "0", Season: "0", ContentRating: "", SourceTitle: "", Date: "", VideoType: "", VideoStreamLink: "", HostPage: "", URL: "", LinkType: "", ContentLength: "", FileCheckSize: "0", ResumePath: [], ResumeContentLength: "", ResumeCount: "0", Thread: "", FailedFileDeletion: ""}},\n'
 	jsondata = jsondata + ']'
 	
 	JsonWrite(fp=fp, jsondata=jsondata)
@@ -124,7 +124,7 @@ def JsonWatchLaterStruct(fp):
 #The JSON file is saved in the data cache for this plugin setup by Plex
 def JsonWrite(fp, jsondata):
 	f = open(fp, "w+")
-	f.write(str(jsondata).replace(", u'", ", '").replace(": u'", ": '").replace("{u'", "{'").replace("}},", "}},\n").replace("[", "[\n ").replace("]", "\n]"))
+	f.write(str(jsondata).replace(", u'", ", '").replace(": u'", ": '").replace("{u'", "{'").replace("}},", "}},\n").replace("[", "[\n ").replace("]", "\n]").replace("[\n u'", "['").replace("[\n '", "['").replace("'\n]", "']"))
 	f.close()
 
 	return True

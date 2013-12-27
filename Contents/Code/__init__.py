@@ -39,6 +39,7 @@ from HostVideoDownload import GetHostVideo
 from HostVideoDownload import CheckForDownload
 from HostVideoDownload import KillMyDownloadThread
 from HostVideoDownload import ResumeMyDownload
+from HostVideoDownload import AutoCheckMyDownload
 from HostVideoDownload import combine_files
 
 # Random User Agent
@@ -719,8 +720,10 @@ def PlaybackDownloads(title):
 		LinkType = gethost[i]['LinkType']
 		contentlength = gethost[i]['ContentLength']
 		FileCheckSize = gethost[i]['FileCheckSize']
-		resumepath = gethost[i]['ResumePath']
+		resumepath = []
+		resumepath.extend(gethost[i]['ResumePath'])
 		resumecontentlength = gethost[i]['ResumeContentLength']
+		resumecount = gethost[i]['ResumeCount']
 		show = "ADDED: "+ dateadded + " | HOST: " + host + " | QUALITY: " + quality
 
 		if duration != "None" and duration != "":
@@ -730,7 +733,7 @@ def PlaybackDownloads(title):
 
 		if path != "":
 			try:
-				if resumepath == "":
+				if resumecontentlength == "":
 					part = os.stat(path).st_size
 					percent = 100 * float(part)/float(contentlength)
 
@@ -738,15 +741,19 @@ def PlaybackDownloads(title):
 					LocalTime = time.time()
 					ElapseTime = LocalTime - LastTimeFileWrite
 				else:
-					part = os.stat(path).st_size + os.stat(resumepath).st_size
+					part = os.stat(path).st_size 
+					for getPaths in resumepath:
+						part = part + os.stat(getPaths).st_size
 					percent = 100 * float(part)/float(contentlength)
 
 					if percent == 100.0:
-						combine_files(parts=[path, resumepath], path=path.replace('Part1.', ''))
+						parts = [path]+resumepath
+						combine_files(parts=parts, path=path.replace('Part1.', ''))
 						gethost[i]['Path'] = path.replace('Part1.', '')
-						gethost[i]['ResumePath'] = ""
+						gethost[i]['ResumePath'] = []
+						gethost[i]['ResumeContentLength'] = ""
 
-					LastTimeFileWrite = os.path.getmtime(resumepath)
+					LastTimeFileWrite = os.path.getmtime(resumepath[-1])
 					LocalTime = time.time()
 					ElapseTime = LocalTime - LastTimeFileWrite
 			except:
@@ -791,32 +798,42 @@ def PlaybackDownloads(title):
 							originally_available_at = originally_available_at,
 							thumb = Callback(GetThumb, url=thumb),
 							items = MediaObjectsForURL(path, videotype)))
-			elif ElapseTime >= 120.0 and int(FileCheckSize) == part:
+			elif ElapseTime >= 120.0 and int(FileCheckSize) == part and HostVideoDownload.isAwake == False:
+				HostVideoDownload.isAwake = True
 
-				if HostVideoDownload.stop == None:
-					HostVideoDownload.stop = CheckForDownload()
-				jj = 0
-				while jj < 4:
-					(HostVideoDownload.MyDownloadPath, HostVideoDownload.MyDownloadRequest, ResumeContentLength, GoodLink, VideoStreamLink) = ResumeMyDownload(Host=host, HostPage=HostPage, url=url, LinkType=LinkType, path=path, ContentLength=contentlength)
-					if GoodLink != True:
-						time.sleep(1)
-						jj += 1
+				#Check for Manual Resume Downloads that have failed
+				if Prefs['manualresume'] == "Enabled":
+					if HostVideoDownload.stop == None:
+						HostVideoDownload.stop = CheckForDownload()
+
+					(NullPath, NewDownloadRequest, ResumeContentLength, GoodLink, VideoStreamLink) = ResumeMyDownload(Host=host, HostPage=HostPage, url=url, LinkType=LinkType, startByte=str(part), ContentLength=contentlength)
+
+					if int(ResumeContentLength) != int(contentlength) and GoodLink == True:
+						if not "Part1." in path:
+							os.renames(path, path.replace(DownloadPath, DownloadPath+'Part1.'))
+							gethost[i]['Path'] = path.replace(DownloadPath, DownloadPath+'Part1.')
+							NewDownloadPath = path.replace(DownloadPath, DownloadPath+'Part2.')
+						else:
+							partnum = len(resumepath) + 2
+							NewDownloadPath = path.replace(DownloadPath+'Part1.', DownloadPath+'Part'+str(partnum)+'.')
+
+						HostVideoDownload.MyDownloadPath = NewDownloadPath
+						gethost[i]['ResumePath'] = resumepath+[NewDownloadPath]
+						gethost[i]['ResumeContentLength'] = str(ResumeContentLength)
 					else:
-						jj = 4
+						HostVideoDownload.MyDownloadPath = path
 
-				if int(ResumeContentLength) != int(contentlength) and GoodLink == True:
-					if not "Part1." in path:
-						os.renames(path, path.replace(DownloadPath, DownloadPath+'Part1.'))
-						gethost[i]['Path'] = path.replace(DownloadPath, DownloadPath+'Part1.')
-					gethost[i]['ResumePath'] = HostVideoDownload.MyDownloadPath
-					gethost[i]['ResumeContentLength'] = ResumeContentLength
-
-				if GoodLink == True:
-					gethost[i]['FileCheckSize'] = "0"
-					JsonWrite(fp=WATCHIT_DATA, jsondata=hosts)
-					oc.add(DirectoryObject(key=Callback(WatchitDownloadInfo, title=title), title=title, summary=show, thumb=Callback(GetThumb, url=thumb)))
+					if GoodLink == True:
+						HostVideoDownload.MyDownloadRequest = NewDownloadRequest
+						gethost[i]['FileCheckSize'] = "0"
+						resumecount = int(resumecount) + 1
+						gethost[i]['ResumeCount'] = str(resumecount)
+						JsonWrite(fp=WATCHIT_DATA, jsondata=hosts)
+						oc.add(DirectoryObject(key=Callback(WatchitDownloadInfo, title=title, ResumeCount=str(resumecount)), title=title, summary=show, thumb=Callback(GetThumb, url=thumb)))
+					else:
+						oc.add(DirectoryObject(key=Callback(WatchitDownloadInfo, title=title, GoodLink=GoodLink), title=title, summary=show, thumb=Callback(GetThumb, url=thumb)))
 				else:
-					oc.add(DirectoryObject(key=Callback(WatchitDownloadInfo, title=title, GoodLink=GoodLink), title=title, summary=show, thumb=Callback(GetThumb, url=thumb)))
+					oc.add(DirectoryObject(key=Callback(WatchitDownloadInfo, title=title, ManualResume=True), title=title, summary=show, thumb=Callback(GetThumb, url=thumb)))
 			else:
 				gethost[i]['FileCheckSize'] = str(part)
 				JsonWrite(fp=WATCHIT_DATA, jsondata=hosts)
@@ -824,6 +841,7 @@ def PlaybackDownloads(title):
 
 		i += 1
 
+	HostVideoDownload.isAwake = False
 	if len(oc) < 1:
 		oc = ObjectContainer(header="We Apologize", message="This section does not contain any Watchit Later videos.  Please add a video to view.")
 
@@ -956,13 +974,19 @@ def CreateLocalURL(path, *argparams, **kwparams):
 
 ####################################################################################################
 @route(PREFIX + '/WatchitDownloadInfo')
-def WatchitDownloadInfo(title, percent=None, GoodLink=True):
+def WatchitDownloadInfo(title, percent=None, GoodLink=True, ManualResume=False, ResumeCount="1"):
 	if percent != None:
-		oc = ObjectContainer(header=title+" Still Downloading", message="Your video download is still in progress.  Please check back later.  DOWNLOAD PERCENTAGE: "+str(percent)+"%")
+		oc = ObjectContainer(header=title+" Still Downloading", message="Your video download is still in progress.  Please check back later.  DOWNLOAD PERCENTAGE: %.2f %%" % float(percent))
 	elif GoodLink != True:
 		oc = ObjectContainer(header="We Apologize", message="There was a problem with the Host video resuming download.  Host video errored do to "+GoodLink+".  Please try again later to resume download.")
+	elif ManualResume != False:
+		if Prefs['manualresume'] == "Enabled":
+			AutoResumeMessage = "However, autoresume is enabled and your video will try to resume within five minutes."
+		else:
+			AutoResumeMessage = "Autoresume is also disabled and your video download will not resume at any time.  Please enable Autoresume Download or Manual Resume Download in plugin preferences."
+		oc = ObjectContainer(header="Manual Resume Diabled", message="Your video "+title+" stopped downloading.  Cannot manually resume the video.  "+AutoResumeMessage)
 	else:
-		oc = ObjectContainer(header=title+" Resuming Download", message="Your video stopped downloading and now resuming your video download.  Please check back later.")
+		oc = ObjectContainer(header=title+" Resuming Download", message="Your video stopped downloading and now resuming your video download.  Please check back later.  NUMBER OF RETRIES: "+ResumeCount)
 
 	return oc
 
@@ -981,12 +1005,14 @@ def DeleteWatchitLaterVideo(title):
 		path = gethost[i]['Path']
 		host = gethost[i]['Host']
 		title = gethost[i]['Title']
+		resumepath = []
+		resumepath.extend(gethost[i]['ResumePath'])
 		thumb = String.Unquote(gethost[i]['ThumbURL'], usePlus=True)
 		summary = "ADDED: "+ dateadded + " | HOST: " + host + " | QUALITY: " + quality
 		i += 1
 
 		if path != "":
-			oc.add(DirectoryObject(key=Callback(DeleteVideo, title=title, path=path), title=title, summary=summary, thumb=Callback(GetThumb, url=thumb)))
+			oc.add(DirectoryObject(key=Callback(DeleteVideo, title=title, path=path, resumepath=resumepath), title=title, summary=summary, thumb=Callback(GetThumb, url=thumb)))
 
 	if len(oc) < 1:
 		oc = ObjectContainer(header="We Apologize", message="This section does not contain any My Watchit Later videos to delete.")
@@ -996,7 +1022,7 @@ def DeleteWatchitLaterVideo(title):
 
 ####################################################################################################
 @route(PREFIX + '/DeleteVideo')
-def DeleteVideo(title, path):
+def DeleteVideo(title, path, resumepath):
 
 	title = unicode(title, errors='replace')
 	oc = ObjectContainer(title2=title)
@@ -1030,8 +1056,9 @@ def DeleteVideo(title, path):
 			gethost[i]['LinkType'] = ""
 			gethost[i]['ContentLength'] = ""
 			gethost[i]['FileCheckSize'] = "0"
-			gethost[i]['ResumePath'] = ""
+			gethost[i]['ResumePath'] = []
 			gethost[i]['ResumeContentLength'] = ""
+			gethost[i]['ResumeCount'] = "0"
 			KillMyDownloadThread(MyThread=gethost[i]['Thread'])
 			gethost[i]['Thread'] = ""
 			break
@@ -1047,12 +1074,28 @@ def DeleteVideo(title, path):
 	else:
 		Log("Error: %s file not found to remove." % path)
 
+	if resumepath != "":
+		for getPaths in resumepath:
+			if os.path.isfile(getPaths):
+				try:
+					os.remove(getPaths)
+				except OSError:
+					gethost[i]['FailedFileDeletion'] = getPaths
+            				Log("Unable to remove file: %s" % getPaths)
+			else:
+				Log("Error: %s file not found to remove." % getPaths)
+
 	JsonWrite(fp=WATCHIT_DATA, jsondata=hosts)
 	return ObjectContainer(header="Deleted Movie2k Host Video", message="The Movie2k, " + title + " Video has been removed from My Watchit Later.  Please click Ok to exit this screen.")
 
 
 ####################################################################################################
 def CheckFailedFileDeletions():
+
+	#Check for autoResume Downloads that have failed
+	if Prefs['autoresume'] == "Enabled":
+		if HostVideoDownload.stopAutoResume == None:
+			HostVideoDownload.stopAutoResume = AutoCheckMyDownload()
 
 	hosts = LoadData(fp=WATCHIT_DATA, GetJson=3)
 	i = 1
@@ -1175,13 +1218,19 @@ def CheckFailedFileDeletions():
 		except:
 			gethost[i].update({'FileCheckSize': '0'})
 		try:
-			gethost[i]['ResumePath']
+			if type(gethost[i]['ResumePath']) != type(list()):
+				ResumePath = gethost[i]['ResumePath']
+				gethost[i]['ResumePath'] = [ResumePath]
 		except:
-			gethost[i].update({'ResumePath': ''})
+			gethost[i].update({'ResumePath': []})
 		try:
 			gethost[i]['ResumeContentLength']
 		except:
 			gethost[i].update({'ResumeContentLength': ''})
+		try:
+			gethost[i]['ResumeCount']
+		except:
+			gethost[i].update({'ResumeCount': '0'})
 		try:
 			gethost[i]['Thread']
 		except:

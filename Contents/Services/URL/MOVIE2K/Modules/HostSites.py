@@ -1116,7 +1116,7 @@ def GetMovie(Host, HostPage, url, LinkType):
 			VideoPage = SecondButtonPress(url=url, HostPage=HostPage, wait=8)
 			VideoInfo = HTML.ElementFromString(VideoPage.content)
 			try:
-				VideoStream = VideoInfo.xpath('//div[@id="player"]/script')[0].text.split("clip: {")[1].split("url: '")[1].split("'")[0]
+				VideoStream = VideoInfo.xpath('//div[@class="box"]/div/script')[0].text.split("clip: {")[1].split("url: '")[1].split("'")[0]
 			except:
 				InputError = VideoInfo.xpath('//div[@class="content-1col-nobox"]//b')[0].text.strip()
 				VideoStream = ErrorMessage(Host=Host, InputError=InputError, ErrorType="VideoRemoved")
@@ -1514,7 +1514,10 @@ def GetMovie(Host, HostPage, url, LinkType):
 				HostPage = "http://vidbull.com/embed-"+HostPage.split('/')[3].split('.')[0]+"-640x318.html"
 			VideoPage = HTML.ElementFromURL(HostPage)
 			try:
-				VideoInfo = VideoPage.xpath('//div[@id="player_code"]/script')[2].text
+				try:
+					VideoInfo = VideoPage.xpath('//div[@id="player_code"]/script')[2].text
+				except:
+					VideoInfo = VideoPage.xpath('//div[@id="player_code"]/script')[0].text
 				VideoStream = ScriptConvert(script=VideoInfo)
 			except:
 				InputError = VideoPage.xpath('//body/div/span')[0].text.strip()

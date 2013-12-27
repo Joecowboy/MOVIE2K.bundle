@@ -1,3 +1,5 @@
+[B]Version 1.7.18[/B]
+- More improvements and fixes in Watchit Later. Added an autoresume function now.  Couple updates to host sites.
 [B]Version 1.7.17[/B]
 - More improvements and fixes in Watchit Later.  Added a resume function now.  Couple of fixes with search and TV shows.
 [B]Version 1.7.16[/B]

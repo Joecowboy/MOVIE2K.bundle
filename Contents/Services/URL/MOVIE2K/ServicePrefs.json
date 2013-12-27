@@ -3,8 +3,8 @@
 		"id": "version",
 		"type": "enum",
 		"label": "Version",
-		"values": ["1.7.17"],
-		"default": "1.7.17"
+		"values": ["1.7.18"],
+		"default": "1.7.18"
 	},
 	{
 		"id": "video_resolution",
@@ -83,6 +83,26 @@
 			"Enabled"
 		],
 		"default": "Disabled" 
+	},
+	{
+		"id": "autoresume",
+		"type": "enum",
+		"label": "Autoresume Downloads",
+		"values": [
+			"Disabled",
+			"Enabled"
+		],
+		"default": "Disabled" 
+	},
+	{
+		"id": "manualresume",
+		"type": "enum",
+		"label": "Manual Resume Downloads",
+		"values": [
+			"Disabled",
+			"Enabled"
+		],
+		"default": "Enabled" 
 	},
 	{
 		"id": "videoerror",

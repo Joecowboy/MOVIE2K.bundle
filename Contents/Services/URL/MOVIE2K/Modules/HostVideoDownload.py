@@ -31,6 +31,9 @@ threadList        = []
 MyDownloadPath    = None
 MyDownloadRequest = None
 stop              = None
+stopAutoResume    = None
+isAwake           = False
+
 WATCHIT_DATA      = "watchit.data.json"
 
 
@@ -45,7 +48,7 @@ def setInterval(interval):
 					function(*args, **kwargs)
 
 			t = threading.Thread(target=loop)
-			t.daemon = True # stop if the program exits
+			#t.daemon = True # stop if the program exits
 			t.start()
 			return stopped
 		return wrapper
@@ -67,8 +70,110 @@ def CheckForDownload():
 		stop = None
 
 
+
 ####################################################################################################
-def downloads(VideoStreamLink, path, startByte="0", endByte=""):
+@setInterval(300)
+def AutoCheckMyDownload():
+	global MyDownloadPath
+	global MyDownloadRequest
+	global isAwake
+	global stop
+	i = 1
+
+	hosts = LoadData(fp=WATCHIT_DATA, GetJson=3)
+
+	for gethost in hosts:
+		if isAwake == True:
+			break
+		else:
+			isAwake = True
+
+		path = gethost[i]['Path']
+		host = gethost[i]['Host']
+		videostreamlink = gethost[i]['VideoStreamLink']
+		HostPage = gethost[i]['HostPage']
+		url = gethost[i]['URL']
+		LinkType = gethost[i]['LinkType']
+		contentlength = gethost[i]['ContentLength']
+		FileCheckSize = gethost[i]['FileCheckSize']
+		resumepath = []
+		resumepath.extend(gethost[i]['ResumePath'])
+		resumecontentlength = gethost[i]['ResumeContentLength']
+		resumecount = gethost[i]['ResumeCount']
+
+		if path != "":
+			try:
+				if resumecontentlength == "":
+					part = os.stat(path).st_size
+					percent = 100 * float(part)/float(contentlength)
+
+					LastTimeFileWrite = os.path.getmtime(path)
+					LocalTime = time.time()
+					ElapseTime = LocalTime - LastTimeFileWrite
+				else:
+					part = os.stat(path).st_size 
+					for getPaths in resumepath:
+						part = part + os.stat(getPaths).st_size
+					percent = 100 * float(part)/float(contentlength)
+
+					if percent == 100.0:
+						parts = [path]+resumepath
+						combine_files(parts=parts, path=path.replace('Part1.', ''))
+						gethost[i]['Path'] = path.replace('Part1.', '')
+						gethost[i]['ResumePath'] = []
+						gethost[i]['ResumeContentLength'] = ""
+
+					LastTimeFileWrite = os.path.getmtime(resumepath[-1])
+					LocalTime = time.time()
+					ElapseTime = LocalTime - LastTimeFileWrite
+			except:
+				Log("Error: %s file not found to play back." % path)
+				part = 0
+				FileCheckSize = 0
+				percent = 0.0
+				ElapseTime = 120.0
+
+			if percent == 100.0:
+				pass
+			elif ElapseTime >= 120.0 and int(FileCheckSize) == part:
+				if stop == None:
+					stop = CheckForDownload()
+
+				(NullPath, NewDownloadRequest, ResumeContentLength, GoodLink, VideoStreamLink) = ResumeMyDownload(Host=host, HostPage=HostPage, url=url, LinkType=LinkType, startByte=str(part), ContentLength=contentlength)
+
+				Log("TRYING TO RESUME DOWNLOAD FROM AUTUTORESUEM: "+str(GoodLink))
+
+				if int(ResumeContentLength) != int(contentlength) and GoodLink == True:
+					if not "Part1." in path:
+						os.renames(path, path.replace(DownloadPath, DownloadPath+'Part1.'))
+						gethost[i]['Path'] = path.replace(DownloadPath, DownloadPath+'Part1.')
+						NewDownloadPath = path.replace(DownloadPath, DownloadPath+'Part2.')
+					else:
+						partnum = len(resumepath) + 2
+						NewDownloadPath = path.replace(DownloadPath+'Part1.', DownloadPath+'Part'+str(partnum)+'.')
+	
+					MyDownloadPath = NewDownloadPath
+					gethost[i]['ResumePath'] = resumepath+[NewDownloadPath]
+					gethost[i]['ResumeContentLength'] = str(ResumeContentLength)
+				else:
+					MyDownloadPath = path
+
+				if GoodLink == True:
+					MyDownloadRequest = NewDownloadRequest
+					gethost[i]['FileCheckSize'] = "0"
+					resumecount = int(resumecount) + 1
+					gethost[i]['ResumeCount'] = str(resumecount)
+					JsonWrite(fp=WATCHIT_DATA, jsondata=hosts)
+			else:
+				gethost[i]['FileCheckSize'] = str(part)
+				JsonWrite(fp=WATCHIT_DATA, jsondata=hosts)
+
+		i += 1
+	isAwake = False
+
+
+####################################################################################################
+def downloads(VideoStreamLink, startByte="0", endByte=""):
 
 	Log("DOWNLOAD URL: "+VideoStreamLink)
 	try:
@@ -104,7 +209,7 @@ def downloads(VideoStreamLink, path, startByte="0", endByte=""):
 	if str(request.status_code) == "416":
 		Log("Didn't get the file it was expecting. Retrying...")
 		time.sleep(5)
-		return downloads(VideoStreamLink, path, startByte, endByte)
+		return downloads(VideoStreamLink, startByte, endByte)
 	elif str(request.status_code) == "403":
 		NoError = "Wrong IP was returned"
 		request = None
@@ -132,21 +237,15 @@ def StartMyDownload(path, request):
 
 
 ####################################################################################################
-def MyDownload(VideoStreamLink, title=None, path=None, OldContentLength="0"):
-	if path != None:
-		startByte = os.stat(path).st_size
-	else:
-		path = "Videos%s%s_%s.%s" % (DownloadPath, re.sub('\W', '_', str(title), flags=re.UNICODE), str(time.time()), VideoStreamLink.split('/')[-1].split('.')[1].partition('?')[0])
-		startByte = "0"
-	endByte=""
+def MyDownload(VideoStreamLink, title=None, startByte="0", OldContentLength="0"):
+	endByte = ""
+	path = ""
 
-	(request, ContentLength, NoError) = downloads(VideoStreamLink, path, startByte, endByte)
-	
-	if OldContentLength != "0" and int(ContentLength) != int(OldContentLength) and NoError == True:
-		if not "Part1." in path:
-			path = path.replace(DownloadPath, DownloadPath+'Part2.')
-		else:
-			path = path.replace('Part1.', 'Part2.')
+	if startByte == "0":
+		path = "Videos%s%s_%s.%s" % (DownloadPath, re.sub('\W', '_', str(title), flags=re.UNICODE), str(time.time()), VideoStreamLink.split('/')[-1].split('.')[1].partition('?')[0])
+
+
+	(request, ContentLength, NoError) = downloads(VideoStreamLink, startByte, endByte)
 
 	return (path, request, ContentLength, NoError)
 
@@ -190,9 +289,10 @@ def KillMyDownloadThread(MyThread):
 
 
 ####################################################################################################
-def ResumeMyDownload(Host, HostPage, url, LinkType, title=None, path=None, ContentLength="0"):
+def ResumeMyDownload(Host, HostPage, url, LinkType, title=None, startByte="0", ContentLength="0"):
 	request = None
-
+	path = ""
+ 
 	VideoStreamLink = GetMovie(Host=Host, HostPage=HostPage, url=url, LinkType=LinkType)
 	if "Wrong_IP" in VideoStreamLink:
 		NoError = "Wrong IP was returned"
@@ -203,7 +303,7 @@ def ResumeMyDownload(Host, HostPage, url, LinkType, title=None, path=None, Conte
 	elif "Geolocation_Lockout" in VideoStreamLink:
 		NoError = "Geolocation Lockout was returned"
 	else:
-		(path, request, ContentLength, NoError) = MyDownload(VideoStreamLink=VideoStreamLink, title=title, path=path, OldContentLength=ContentLength)
+		(path, request, ContentLength, NoError) = MyDownload(VideoStreamLink=VideoStreamLink, title=title, startByte=startByte, OldContentLength=ContentLength)
 
 	return (path, request, ContentLength, NoError, VideoStreamLink)
 
@@ -259,7 +359,7 @@ def GetHostVideo(title, date, DateAdded, Quality, thumb, type, summary, director
 					i += 1
 					jj += 1
 			except:
-				hosts.append({i : {'Type': type, 'Path': path, 'Host': Host, 'DateAdded': DateAdded, 'Quality': Quality, 'ThumbURL': thumb, 'Title': title, 'Summary':summary, 'Genres': genres, 'Directors': directors, 'GuestStars':guest_stars, 'Duration': duration, 'Rating': rating, 'Index': index, 'Season': season, 'ContentRating': content_rating, 'SourceTitle': source_title, 'Date': date, 'VideoType': videotype, 'VideoStreamLink': VideoStreamLink, 'HostPage': HostPage, 'URL': url, 'LinkType': LinkType, 'ContentLength': ContentLength, 'FileCheckSize': '0', 'ResumePath': '', 'ResumeContentLength': '', 'Thread': '', 'FailedFileDeletion': ''}})
+				hosts.append({i : {'Type': type, 'Path': path, 'Host': Host, 'DateAdded': DateAdded, 'Quality': Quality, 'ThumbURL': thumb, 'Title': title, 'Summary':summary, 'Genres': genres, 'Directors': directors, 'GuestStars':guest_stars, 'Duration': duration, 'Rating': rating, 'Index': index, 'Season': season, 'ContentRating': content_rating, 'SourceTitle': source_title, 'Date': date, 'VideoType': videotype, 'VideoStreamLink': VideoStreamLink, 'HostPage': HostPage, 'URL': url, 'LinkType': LinkType, 'ContentLength': ContentLength, 'FileCheckSize': '0', 'ResumePath': [], 'ResumeContentLength': '', 'ResumeCount': '0', 'Thread': '', 'FailedFileDeletion': ''}})
 				break
 
 		JsonWrite(fp=WATCHIT_DATA, jsondata=hosts)

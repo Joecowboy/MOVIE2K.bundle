@@ -100,7 +100,7 @@ def GetItemInfo(url, itemInfo):
 					content_rating = content_rating,
 					source_title = source_title,
 					originally_available_at = date,
-					thumb = Resource.ContentsOfURLWithFallback(url=thumb))
+					thumb = thumb)
 		else:
 			obj = MovieObject(
 					url = url,
@@ -113,7 +113,7 @@ def GetItemInfo(url, itemInfo):
 					content_rating = content_rating,
 					source_title = source_title,
 					originally_available_at = date,
-					thumb = Resource.ContentsOfURLWithFallback(url=thumb))
+					thumb = thumb)
 
 	elif itemInfo == "MediaObject":
 		if Host == 'TrailerAddict':
@@ -364,6 +364,6 @@ def GetMovieDebugger(Host, HostPage, url, LinkType):
 	import urllib
 	import base64
 
-	
+
 
 	return VideoStream
