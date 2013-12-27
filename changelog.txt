@@ -1,3 +1,5 @@
+[B]Version 1.7.19[/B]
+- Added threading to Stitching files together that where created during resume.
 [B]Version 1.7.18[/B]
 - More improvements and fixes in Watchit Later. Added an autoresume function now.  Couple updates to host sites.
 [B]Version 1.7.17[/B]

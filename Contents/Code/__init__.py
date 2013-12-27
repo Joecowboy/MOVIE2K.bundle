@@ -40,7 +40,7 @@ from HostVideoDownload import CheckForDownload
 from HostVideoDownload import KillMyDownloadThread
 from HostVideoDownload import ResumeMyDownload
 from HostVideoDownload import AutoCheckMyDownload
-from HostVideoDownload import combine_files
+from HostVideoDownload import StitchFilesTogether
 
 # Random User Agent
 UserAgent = ['Mozilla/4.0 (compatible; MSIE 5.5; Windows NT)', 'Opera/9.25 (Windows NT 6.0; U; ja)', 'Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 6.0)', 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.31 (KHTML, like Gecko) Chrome/26.0.1410.64 Safari/537.31', 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:20.0) Gecko/20100101 Firefox/20.0', 'Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.1; WOW64; Trident/6.0)', 'Mozilla/4.0 (compatible; MSIE 5.0; Windows 2000) Opera 6.01 [ja]', 'Mozilla/5.0 (Windows; U; Windows NT 5.0; ja-JP; m18) Gecko/20010131 Netscape6/6.01', 'Mozilla/5.0 (Macintosh; U; PPC Mac OS X; ja-jp) AppleWebKit/85.7 (KHTML, like Gecko) Safari/85.7']
@@ -741,30 +741,22 @@ def PlaybackDownloads(title):
 					LocalTime = time.time()
 					ElapseTime = LocalTime - LastTimeFileWrite
 				else:
-					try:
-						part = os.stat(path).st_size 
-						for getPaths in resumepath:
-							part = part + os.stat(getPaths).st_size
-						percent = 100 * float(part)/float(contentlength)
+					part = os.stat(path).st_size 
+					for getPaths in resumepath:
+						part = part + os.stat(getPaths).st_size
+					percent = 100 * float(part)/float(contentlength)
 
-						if percent == 100.0:
-							parts = [path]+resumepath
-							combine_files(parts=parts, path=path.replace('Part1.', ''))
-							gethost[i]['Path'] = path.replace('Part1.', '')
-							gethost[i]['ResumePath'] = []
-							gethost[i]['ResumeContentLength'] = ""
-
-						LastTimeFileWrite = os.path.getmtime(resumepath[-1])
-						LocalTime = time.time()
-						ElapseTime = LocalTime - LastTimeFileWrite
-					except:
+					if percent == 100.0:
+						if HostVideoDownload.stopStitching == None:
+							HostVideoDownload.stopStitching = StitchFilesTogether()
+						HostVideoDownload.isStitchingFiles = True
+						HostVideoDownload.ResumeParts = [path]+resumepath
+						HostVideoDownload.ResumePath = path.replace('Part1.', '')
 						gethost[i]['Path'] = path.replace('Part1.', '')
 						gethost[i]['ResumePath'] = []
 						gethost[i]['ResumeContentLength'] = ""
-						part = os.stat(path.replace('Part1.', '')).st_size
-						percent = 100 * float(part)/float(contentlength)
-
-						LastTimeFileWrite = os.path.getmtime(path.replace('Part1.', ''))
+					else:
+						LastTimeFileWrite = os.path.getmtime(resumepath[-1])
 						LocalTime = time.time()
 						ElapseTime = LocalTime - LastTimeFileWrite
 			except:
@@ -774,7 +766,9 @@ def PlaybackDownloads(title):
 				percent = 0.0
 				ElapseTime = 120.0
 
-			if percent == 100.0:
+			if HostVideoDownload.isStitchingFiles == True:
+				oc.add(DirectoryObject(key=Callback(WatchitDownloadInfo, title=title, percent=percent), title=title, summary=show, thumb=Callback(GetThumb, url=thumb)))
+			elif percent == 100.0:
 				path = os.path.abspath(path)
 				if type == "TV Shows":
 					oc.add(EpisodeObject(
@@ -986,7 +980,9 @@ def CreateLocalURL(path, *argparams, **kwparams):
 ####################################################################################################
 @route(PREFIX + '/WatchitDownloadInfo')
 def WatchitDownloadInfo(title, percent=None, GoodLink=True, ManualResume=False, ResumeCount="1"):
-	if percent != None:
+	if HostVideoDownload.isStitchingFiles == True:
+		oc = ObjectContainer(header=title+" Finished Downloading", message="Your video download has finished downloading.  However, the video file is being processed.  Please check back later.  DOWNLOAD PERCENTAGE: %.2f %%" % float(percent))
+	elif percent != None:
 		oc = ObjectContainer(header=title+" Still Downloading", message="Your video download is still in progress.  Please check back later.  DOWNLOAD PERCENTAGE: %.2f %%" % float(percent))
 	elif GoodLink != True:
 		oc = ObjectContainer(header="We Apologize", message="There was a problem with the Host video resuming download.  Host video errored do to "+GoodLink+".  Please try again later to resume download.")

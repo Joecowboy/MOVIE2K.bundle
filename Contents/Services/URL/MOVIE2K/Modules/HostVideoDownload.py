@@ -28,11 +28,15 @@ except:
 
 
 threadList        = []
+ResumeParts       = []
+ResumePath        = None
 MyDownloadPath    = None
 MyDownloadRequest = None
-stop              = None
 stopAutoResume    = None
+stopStitching     = None
+stop              = None
 isAwake           = False
+isStitchingFiles  = False
 
 WATCHIT_DATA      = "watchit.data.json"
 
@@ -70,12 +74,31 @@ def CheckForDownload():
 		stop = None
 
 
+####################################################################################################
+@setInterval(.5)
+def StitchFilesTogether():
+	global ResumeParts
+	global ResumePath
+	global stopStitching
+	global isStitchingFiles
+
+	if ResumePath != None:
+		combine_files(parts=ResumeParts, path=ResumePath)
+		ResumeParts       = []
+		ResumePath        = None
+		stopStitching.set() # stop the timer loop
+		stopStitching = None
+		isStitchingFiles = False
 
 ####################################################################################################
 @setInterval(300)
 def AutoCheckMyDownload():
 	global MyDownloadPath
 	global MyDownloadRequest
+	global isStitchingFiles
+	global stopStitching
+	global ResumeParts
+	global ResumePath
 	global isAwake
 	global stop
 	i = 1
@@ -111,30 +134,22 @@ def AutoCheckMyDownload():
 					LocalTime = time.time()
 					ElapseTime = LocalTime - LastTimeFileWrite
 				else:
-					try:
-						part = os.stat(path).st_size 
-						for getPaths in resumepath:
-							part = part + os.stat(getPaths).st_size
-						percent = 100 * float(part)/float(contentlength)
+					part = os.stat(path).st_size 
+					for getPaths in resumepath:
+						part = part + os.stat(getPaths).st_size
+					percent = 100 * float(part)/float(contentlength)
 
-						if percent == 100.0:
-							parts = [path]+resumepath
-							combine_files(parts=parts, path=path.replace('Part1.', ''))
-							gethost[i]['Path'] = path.replace('Part1.', '')
-							gethost[i]['ResumePath'] = []
-							gethost[i]['ResumeContentLength'] = ""
-
-						LastTimeFileWrite = os.path.getmtime(resumepath[-1])
-						LocalTime = time.time()
-						ElapseTime = LocalTime - LastTimeFileWrite
-					except:
+					if percent == 100.0:
+						if stopStitching == None:
+							stopStitching = StitchFilesTogether()
+						isStitchingFiles = True
+						ResumeParts = [path]+resumepath
+						ResumePath = path.replace('Part1.', '')
 						gethost[i]['Path'] = path.replace('Part1.', '')
 						gethost[i]['ResumePath'] = []
 						gethost[i]['ResumeContentLength'] = ""
-						part = os.stat(path.replace('Part1.', '')).st_size
-						percent = 100 * float(part)/float(contentlength)
-
-						LastTimeFileWrite = os.path.getmtime(path.replace('Part1.', ''))
+					else:
+						LastTimeFileWrite = os.path.getmtime(resumepath[-1])
 						LocalTime = time.time()
 						ElapseTime = LocalTime - LastTimeFileWrite
 			except:
@@ -181,6 +196,20 @@ def AutoCheckMyDownload():
 
 		i += 1
 	isAwake = False
+
+
+####################################################################################################
+def combine_files(parts, path):
+	'''
+	Function combines file parts.
+	@param parts: List of file paths.
+	@param path: Destination path.
+	'''
+	with open(path,'wb') as output:
+		for part in parts:
+			with open(part,'rb') as f:
+				output.writelines(f.readlines())
+			os.remove(part)
 
 
 ####################################################################################################
@@ -376,17 +405,3 @@ def GetHostVideo(title, date, DateAdded, Quality, thumb, type, summary, director
 		JsonWrite(fp=WATCHIT_DATA, jsondata=hosts)
 
 	return (path, request, NoError)
-
-
-####################################################################################################
-def combine_files(parts, path):
-	'''
-	Function combines file parts.
-	@param parts: List of file paths.
-	@param path: Destination path.
-	'''
-	with open(path,'wb') as output:
-		for part in parts:
-			with open(part,'rb') as f:
-				output.writelines(f.readlines())
-			os.remove(part)
