@@ -1266,7 +1266,10 @@ def GetMovie(Host, HostPage, url, LinkType):
 			try:
 				VideoInfo = HTML.ElementFromString(VideoPage.content).xpath('//div[@id="play"]/script')[0].text.split("playlist: '")[1].split("',")[0]
 				VideoPageXML = "http://www.sockshare.com" + VideoInfo
-				VideoStream = XML.ElementFromURL(VideoPageXML).xpath('//item/media:content', namespaces=NS)[0].get('url').replace('&amp;', '&')
+				try:
+					VideoStream = XML.ElementFromURL(VideoPageXML).xpath('//item/media:content', namespaces=NS)[1].get('url').replace('&amp;', '&')
+				except:
+					VideoStream = XML.ElementFromURL(VideoPageXML).xpath('//item/media:content', namespaces=NS)[0].get('url').replace('&amp;', '&')
 			except:
 				InputError = HTML.ElementFromString(VideoPage.content).xpath('//div[@id="deleted"]')[0].text
 				VideoStream = ErrorMessage(Host=Host, InputError=InputError, ErrorType="VideoRemoved")
@@ -1497,7 +1500,7 @@ def GetMovie(Host, HostPage, url, LinkType):
 				VideoURL = vidID.split('clip: {')[1].split("url: '")[1].split("'")[0]
 				VideoStream = VideoURL + "?cookies="+String.Quote(str(cookies), usePlus=True)+"&headers="+String.Quote(str(headers), usePlus=True)
 			except:
-				InputError = HTML.ElementFromString(VideoPage.content).xpath('//div[@id="not_found_404_page"]/div')[0].text.strip()
+				InputError = HTML.ElementFromString(VideoPage.content).xpath('//div[@id="error_500_page"]/div')[0].text.strip()
 				VideoStream = ErrorMessage(Host=Host, InputError=InputError, ErrorType="VideoRemoved")
 		except:
 			VideoStream = ErrorMessage(Host=Host, LogError=8, ErrorType="HostDown")

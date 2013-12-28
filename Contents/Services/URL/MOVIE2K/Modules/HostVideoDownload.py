@@ -80,15 +80,13 @@ def StitchFilesTogether():
 	global ResumeParts
 	global ResumePath
 	global stopStitching
-	global isStitchingFiles
 
 	if ResumePath != None:
 		combine_files(parts=ResumeParts, path=ResumePath)
-		ResumeParts       = []
-		ResumePath        = None
+		ResumeParts = []
+		ResumePath = None
 		stopStitching.set() # stop the timer loop
 		stopStitching = None
-		isStitchingFiles = False
 
 ####################################################################################################
 @setInterval(300)
@@ -200,6 +198,8 @@ def AutoCheckMyDownload():
 
 ####################################################################################################
 def combine_files(parts, path):
+	global isStitchingFiles
+
 	'''
 	Function combines file parts.
 	@param parts: List of file paths.
@@ -210,6 +210,8 @@ def combine_files(parts, path):
 			with open(part,'rb') as f:
 				output.writelines(f.readlines())
 			os.remove(part)
+
+	isStitchingFiles = False
 
 
 ####################################################################################################
