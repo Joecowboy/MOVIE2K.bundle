@@ -1,3 +1,5 @@
+[B]Version 1.7.21[/B]
+- Fixed issue with Title and Summary and updated one host code.
 [B]Version 1.7.20[/B]
 - Fixed unicode stuff for TV Show Listings, added Some IMDB tweaks if content info missing.  Udated one host code.
 [B]Version 1.7.19[/B]

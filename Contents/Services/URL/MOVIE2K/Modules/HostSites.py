@@ -1278,6 +1278,9 @@ def GetMovie(Host, HostPage, url, LinkType):
 	elif Host == "Space72":
 		try:
 			VideoPage = HTML.ElementFromURL(HostPage)
+			if LinkType == 4:
+				VideoURL = VideoPage.xpath('//div[@id="contentt"]/div/iframe')[0].get('src')
+				VideoPage = HTML.ElementFromURL(VideoURL)
 			VideoInfo = VideoPage.xpath('//embed')[0].get('flashvars')
 			try:
 				VideoStream = urllib.unquote(VideoInfo.split('vdo=')[1])

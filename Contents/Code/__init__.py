@@ -702,9 +702,9 @@ def PlaybackDownloads(title):
 		host = gethost[i]['Host']
 		title = gethost[i]['Title']
 		summary = String.Unquote(gethost[i]['Summary'], usePlus=True)
-		genres = StripArray(String.Unquote(gethost[i]['Genres'], usePlus=True).split(','))
-		directors = StripArray(String.Unquote(gethost[i]['Directors'], usePlus=True).split(','))
-		guest_stars = StripArray(String.Unquote(gethost[i]['GuestStars'], usePlus=True).split(','))
+		genres = StripArray(arraystrings=String.Unquote(gethost[i]['Genres'], usePlus=True).split(','))
+		directors = StripArray(arraystrings=String.Unquote(gethost[i]['Directors'], usePlus=True).split(','))
+		guest_stars = StripArray(arraystrings=String.Unquote(gethost[i]['GuestStars'], usePlus=True).split(','))
 		duration = gethost[i]['Duration']
 		rating = float(gethost[i]['Rating'])
 		index = int(gethost[i]['Index'])
@@ -2145,7 +2145,7 @@ def CinemaMoviePageAdd(title, page, type, MOVIE2K_URL):
 		try:	
 			MOVIES_TD = Movie
 			MOVIES_YEAR = time.strftime("%Y", time.localtime(time.time()))
-			MOVIES_TITLE = MOVIES_TD.xpath("."+elm+"/a/img")[0].get('title').replace(' kostenlos','')
+			MOVIES_TITLE = MOVIES_TD.xpath("."+elm+"/a/img")[0].get('title').replace(' kostenlos','').strip()
 			MOVIES_PAGE = MOVIES_TD.xpath("."+elm+"/a")[0].get('href')
 			MOVIES_THUMB = SiteURL + MOVIES_TD.xpath("."+elm+"/a/img")[0].get('src')
 			MOVIES_SUMMARY = "Year: "+MOVIES_YEAR+" | Lang: "+MOVIES_LANG+" | Part of the Cinema Movies line up on Movie2k."
@@ -2158,7 +2158,7 @@ def CinemaMoviePageAdd(title, page, type, MOVIE2K_URL):
 		try:	
 			MOVIES_TD = Movie.xpath('./div')[0]
 			MOVIES_YEAR = 'N/A'
-			MOVIES_TITLE = MOVIES_TD.xpath("."+elm+"/a/img")[0].get('title').replace(' kostenlos','')
+			MOVIES_TITLE = MOVIES_TD.xpath("."+elm+"/a/img")[0].get('title').replace(' kostenlos','').strip()
 			MOVIES_PAGE = MOVIES_TD.xpath("."+elm+"/a")[0].get('href')
 			MOVIES_THUMB = SiteURL + MOVIES_TD.xpath("."+elm+"/a/img")[0].get('src')
 			MOVIES_SUMMARY = "Year: "+MOVIES_YEAR+" | Lang: "+MOVIES_LANG+" | Part of the Older Cinema Movies line up on Movie2k."
@@ -2186,7 +2186,7 @@ def FeaturedMoviePageAdd(title, page, type, MOVIE2K_URL):
 	while i <= 3:
 		for Movie in FEATURED_MOVIE_PAGE.xpath('//div[@id="maincontent'+str(i)+'"]/div[@id="divnotinuse"]'):	
 			MOVIES_TD = Movie.xpath('./div')[0]
-			MOVIES_TITLE = MOVIES_TD.xpath("./a/img")[0].get('title')
+			MOVIES_TITLE = MOVIES_TD.xpath("./a/img")[0].get('title').strip()
 			MOVIES_PAGE = MOVIES_TD.xpath("./a")[0].get('href')
 			MOVIES_THUMB = MOVIES_TD.xpath("./a/img")[0].get('src')
 			MOVIES_YEAR = time.strftime("%Y", time.localtime(time.time()))
@@ -2228,7 +2228,7 @@ def MoviePageAdd(title, page, genre, type, MOVIE2K_URL):
 	i = 0
 	for Movie in GENRE_MOVIE_PAGE.xpath('//div[@id="maincontent4"]/table[@id="tablemoviesindex"]'+elm+'/tr'):
 		MOVIES_TD = Movie.xpath('./td[@id="tdmovies"]')
-		MOVIES_TITLE = re.sub('\t\r\0', '', MOVIES_TD[0].xpath("./a")[0].text).replace('     ', '').replace(',', ', ').replace(':', ': ')
+		MOVIES_TITLE = re.sub('\t\r\0', '', MOVIES_TD[0].xpath("./a")[0].text).replace(',', ', ').replace(':', ': ').strip()
 		if type == 'TV Shows':
 			dateadd = MOVIES_TD[3].text
 			if dateadd == None:
@@ -2530,17 +2530,20 @@ def TheMovieListings(title, page, date, dateadd, thumb, type, PageOfHosts, MOVIE
 		MOVIE_INFO = MOVIE_PAGE_HTML.xpath('//div[@id="details"]')[0].text_content()
 		source_title = "Movie2k"
 
-		summary = MOVIE_PAGE_HTML.xpath('//div[@class="moviedescription"]')[0].text.strip()
+		summary = MOVIE_PAGE_HTML.xpath('//div[@class="moviedescription"]')[0].text
 		if summary == None or summary == "":
 			try:
 				summary = IMDB_PAGE_HTML.xpath('//td[@id="overview-top"]/p')[1].text.strip()
 			except:
 				summary = "Description not given..."
+		else:
+			summary = summary.strip()
+
 		try:
 			rating = float(MOVIE_PAGE_HTML.xpath('//div[@id="details"]/a')[0].text)
 		except:
 			try:
-				rating = float(IMDB_PAGE_HTML.xpath('//span[@itemprop="description"]')[0].text)
+				rating = float(IMDB_PAGE_HTML.xpath('//span[@itemprop="description"]')[0].text).strip()
 				if rating == None or rating == "":
 					rating = 0.0
 			except:
