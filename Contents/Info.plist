@@ -21,5 +21,9 @@
 
 	<key>PlexPluginDevMode</key>
 	<string>0</string>
+
+	<key>PlexPluginCodePolicy</key>
+	<string>Elevated</string>
+
 </dict>
 </plist>

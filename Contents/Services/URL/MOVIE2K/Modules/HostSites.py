@@ -6,7 +6,9 @@ try:
 	path = os.getcwd().split("?\\")[1].split('Plug-in Support')[0]+"Plug-ins\MOVIE2K.bundle\Contents\Services\URL\MOVIE2K\Modules"
 except:
 	path = os.getcwd().split("Plug-in Support")[0]+"Plug-ins/MOVIE2K.bundle/Contents/Services/URL/MOVIE2K/Modules"
-sys.path.append(path)
+	
+if path not in sys.path:
+    sys.path.append(path)
 
 try:
 	import requests
@@ -1337,7 +1339,7 @@ def GetMovie(Host, HostPage, url, LinkType):
 			VideoPage = SecondButtonPress(url=url, HostPage=HostPage, cookies=cookies, wait=10, addkey={'referer': url})
 			try:
 				VideoURL = HTML.ElementFromString(VideoPage.content).xpath('//div[@id="player_code"]/script')[1].text.split('file: "')[1].split('"')[0]
-				headers = {'User-Agent': UserAgent, 'Host': VideoURL.split('/')[2], 'Referer': HostPage}
+				headers = {'User-Agent': UserAgent, 'Host': VideoURL.split('/')[2], 'Referer': 'http://streamcloud.eu/player/player.swf'}
 				VideoStream = VideoURL + "?cookies="+String.Quote(str(cookies), usePlus=True)+"&headers="+String.Quote(str(headers), usePlus=True)
 			except:
 				try:
@@ -1756,7 +1758,7 @@ def GetMovie(Host, HostPage, url, LinkType):
 				VideoURL = session.head(VideoID, headers=headers)
 				VideoStream = VideoURL.headers['location'] + "?cookies="+String.Quote(str(cookies), usePlus=True)+"&headers="+String.Quote(str(headers), usePlus=True)
 			except:
-				InputError = HTML.ElementFromString(VideoPage.content).xpath('//div[@class="content-bg"]/h3')[0].text.strip()
+				InputError = HTML.ElementFromString(VideoPage.content).xpath('//div[@class="content-bg"]/b')[0].text.strip()
 				VideoStream = ErrorMessage(Host=Host, InputError=InputError, ErrorType="VideoRemoved")
 		except:
 			VideoStream = ErrorMessage(Host=Host, LogError=1, ErrorType="HostDown")

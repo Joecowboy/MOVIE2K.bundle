@@ -8,7 +8,9 @@ try:
 except:
 	path = os.getcwd().split("Plug-in Support")[0]+"Plug-ins/MOVIE2K.bundle/Contents/Services/URL/MOVIE2K/Modules"
 	DownloadPath = '/'
-sys.path.append(path)
+	
+if path not in sys.path:
+    sys.path.append(path)
 
 try:
 	import requests
@@ -41,6 +43,8 @@ from HostVideoDownload import KillMyDownloadThread
 from HostVideoDownload import ResumeMyDownload
 from HostVideoDownload import AutoCheckMyDownload
 from HostVideoDownload import StitchFilesTogether
+from HostVideoDownload import CheckFailedFileDeletions
+from HostVideoDownload import CheckPrefsEnabled
 
 # Random User Agent
 UserAgent = ['Mozilla/4.0 (compatible; MSIE 5.5; Windows NT)', 'Opera/9.25 (Windows NT 6.0; U; ja)', 'Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 6.0)', 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.31 (KHTML, like Gecko) Chrome/26.0.1410.64 Safari/537.31', 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:20.0) Gecko/20100101 Firefox/20.0', 'Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.1; WOW64; Trident/6.0)', 'Mozilla/4.0 (compatible; MSIE 5.0; Windows 2000) Opera 6.01 [ja]', 'Mozilla/5.0 (Windows; U; Windows NT 5.0; ja-JP; m18) Gecko/20010131 Netscape6/6.01', 'Mozilla/5.0 (Macintosh; U; PPC Mac OS X; ja-jp) AppleWebKit/85.7 (KHTML, like Gecko) Safari/85.7']
@@ -69,6 +73,9 @@ HostSites.UserAgent         = UserAgent[UserAgentNum]
 HostVideoDownload.Log       = Log
 HostVideoDownload.String    = String
 HostVideoDownload.UserAgent = UserAgent[UserAgentNum]
+HostVideoDownload.Prefs     = Prefs
+HostVideoDownload.Hash      = Hash
+HostVideoDownload.Core      = Core
 
 PREFIX            = "/video/movie2k"
 NAME              = "Movie2k"
@@ -91,7 +98,6 @@ def Start():
 	ObjectContainer.art = R(ART)
 	ObjectContainer.title1 = NAME
 	#ObjectContainer.view_group = "InfoList"
-
 
 	# Setup the default attributes for the other objects
 	DirectoryObject.thumb = R(ICON)
@@ -132,6 +138,9 @@ def MainMenu():
 
 	# Clean Up Any Failed File Deletions of Video Downloads
 	CheckFailedFileDeletions()
+	
+	# Check to see if autoResume and autoPatcher Enabled/Disabled
+	CheckPrefsEnabled()
 
 	#Add Movie4k.to site
 	ICON_MOVIES4k_TO  = "icon-movie4k-to.png"
@@ -855,12 +864,15 @@ def PlaybackDownloads(title):
 
 ####################################################################################################
 @route(PREFIX + '/PlaybackDownloadDetails')
-def PlaybackDownloadDetails(type, path, videotype, title, summary, genres, directors, guest_stars, duration, rating, index, season, content_rating, source_title, originally_available_at, show, thumb, maxVideoBitrate=None, videoQuality=None, directPlay=None, audioBoost=None, partIndex=None, waitForSegments=None, session=None, offset=None, videoResolution=None, subtitleSize=None, directStream=None):
+def PlaybackDownloadDetails(type=None, path=None, videotype=None, title=None, summary=None, genres=None, directors=None, guest_stars=None, duration=None, rating=None, index=None, season=None, content_rating=None, source_title=None, originally_available_at=None, show=None, thumb=None, *argparams, **kwparams):
+
 	title = unicode(title, errors='replace')
 	summary = unicode(summary, errors='replace')
 	oc = ObjectContainer(title2=title)
 
-	originally_available_at = Datetime.ParseDate(originally_available_at, "%Y")
+	originally_available_at = None #Datetime.ParseDate(originally_available_at, "%Y-%b-%d %I:%M:%S")
+	if directors == None:
+		directors = 'Not Available'
 	directors = [directors]
 	guest_stars = [guest_stars]
 	genres = [genres]
@@ -904,7 +916,6 @@ def PlaybackDownloadDetails(type, path, videotype, title, summary, genres, direc
 				items = MediaObjectsForURL(path, videotype)))
 
 	return oc
-
 
 
 ####################################################################################################
@@ -956,15 +967,16 @@ def MediaObjectsForURL(path, videotype):
 
 ###################################################################################################
 @indirect
+@route(PREFIX + '/PlayVideo')
 def PlayVideo(path):
 
 	oc = ObjectContainer()
 
 	oc.add(VideoClipObject(
 		items = [
-				MediaObject(
-					parts = [PartObject(key=Callback(CreateLocalURL, path=path))]
-				)
+					MediaObject(
+						parts = [PartObject(key=Callback(CreateLocalURL, path=path))]
+					)
         		]
 	))
 
@@ -974,8 +986,8 @@ def PlayVideo(path):
 ###################################################################################################
 @route(PREFIX + '/CreateLocalURL')
 def CreateLocalURL(path, *argparams, **kwparams):
-	return Redirect(Stream.LocalFile(path))
-
+	return Redirect(Stream.LocalFile(path.replace('+', ' ')))
+	
 
 ####################################################################################################
 @route(PREFIX + '/WatchitDownloadInfo')
@@ -1094,158 +1106,6 @@ def DeleteVideo(title, path, resumepath=[]):
 
 	JsonWrite(fp=WATCHIT_DATA, jsondata=hosts)
 	return ObjectContainer(header="Deleted Movie2k Host Video", message="The Movie2k, " + title + " Video has been removed from My Watchit Later.  Please click Ok to exit this screen.")
-
-
-####################################################################################################
-def CheckFailedFileDeletions():
-
-	#Check for autoResume Downloads that have failed
-	if Prefs['autoresume'] == "Enabled":
-		if HostVideoDownload.stopAutoResume == None:
-			HostVideoDownload.stopAutoResume = AutoCheckMyDownload()
-
-	hosts = LoadData(fp=WATCHIT_DATA, GetJson=3)
-	i = 1
-	for gethost in hosts:
-		try:
-			path = gethost[i]['FailedFileDeletion']
-		except:
-			gethost[i].update({'FailedFileDeletion': ''})
-			path = ""
-
-		if path != "":
-			if os.path.isfile(path):
-				try:
-					os.remove(path)
-					gethost[i]['FailedFileDeletion'] = ""
-				except OSError:
-            				Log("Unable to remove file: %s" % path)
-			else:
-				Log("Error: %s file not found to remove." % path)
-
-		#Fix any patch issues between plugin updates if dictionary has changed.
-		try:
-			gethost[i]['Type']
-		except:
-			gethost[i].update({'Type': ''})
-		try:
-			gethost[i]['DateAdded']
-		except:
-			gethost[i].update({'DateAdded': ''})
-		try:
-			gethost[i]['Quality']
-		except:
-			gethost[i].update({'Quality': ''})
-		try:
-			gethost[i]['Path']
-		except:
-			gethost[i].update({'Path': ''})
-		try:
-			gethost[i]['Host']
-		except:
-			gethost[i].update({'Host': ''})
-		try:
-			gethost[i]['Title']
-		except:
-			gethost[i].update({'Title': ''})
-		try:
-			gethost[i]['Summary']
-		except:
-			gethost[i].update({'Summary': ''})
-		try:
-			gethost[i]['Genres']
-		except:
-			gethost[i].update({'Genres': ''})
-		try:
-			gethost[i]['Directors'] = ""
-		except:
-			gethost[i].update({'Directors': ''})
-		try:
-			gethost[i]['GuestStars']
-		except:
-			gethost[i].update({'GuestStars': ''})
-		try:
-			gethost[i]['Duration']
-		except:
-			gethost[i].update({'Duration': ''})
-		try:
-			gethost[i]['Rating']
-		except:
-			gethost[i].update({'Rating': '0.0'})
-		try:
-			gethost[i]['Index']
-		except:
-			gethost[i].update({'Index': '0'})
-		try:
-			gethost[i]['Season']
-		except:
-			gethost[i].update({'Season': '0'})
-		try:
-			gethost[i]['ContentRating']
-		except:
-			gethost[i].update({'ContentRating': ''})
-		try:
-			gethost[i]['SourceTitle']
-		except:
-			gethost[i].update({'SourceTitle': ''})
-		try:
-			gethost[i]['Date']
-		except:
-			gethost[i].update({'Date': ''})
-		try:
-			gethost[i]['ThumbURL']
-		except:
-			gethost[i].update({'ThumbURL': ''})
-		try:
-			gethost[i]['VideoType']
-		except:
-			gethost[i].update({'VideoType': ''})
-		try:
-			gethost[i]['VideoStreamLink']
-		except:
-			gethost[i].update({'VideoStreamLink': ''})
-		try:
-			gethost[i]['HostPage']
-		except:
-			gethost[i].update({'HostPage': ''})
-		try:
-			gethost[i]['URL']
-		except:
-			gethost[i].update({'URL': ''})
-		try:
-			gethost[i]['LinkType']
-		except:
-			gethost[i].update({'LinkType': ''})
-		try:
-			gethost[i]['ContentLength']
-		except:
-			gethost[i].update({'ContentLength': ''})
-		try:
-			gethost[i]['FileCheckSize']
-		except:
-			gethost[i].update({'FileCheckSize': '0'})
-		try:
-			if type(gethost[i]['ResumePath']) != type(list()):
-				ResumePath = gethost[i]['ResumePath']
-				gethost[i]['ResumePath'] = [ResumePath]
-		except:
-			gethost[i].update({'ResumePath': []})
-		try:
-			gethost[i]['ResumeContentLength']
-		except:
-			gethost[i].update({'ResumeContentLength': ''})
-		try:
-			gethost[i]['ResumeCount']
-		except:
-			gethost[i].update({'ResumeCount': '0'})
-		try:
-			gethost[i]['Thread']
-		except:
-			gethost[i].update({'Thread': ''})
-
-		i += 1
-
-	JsonWrite(fp=WATCHIT_DATA, jsondata=hosts)
 
 
 ####################################################################################################
@@ -2335,7 +2195,7 @@ def SubGroupMoviePageAdd(title, page, date, dateadd, thumbck, type, summary, MOV
 
 	return oc
 
-
+	
 ####################################################################################################
 @route(PREFIX + '/TVandMovieHostPage')
 def SubMoviePageAdd(title, page, date, dateadd, thumbck, type, MOVIE2K_URL, watchitlater=False):
@@ -2364,6 +2224,12 @@ def SubMoviePageAdd(title, page, date, dateadd, thumbck, type, MOVIE2K_URL, watc
 	
 	req = requests.get(page, headers=headers, cookies=cookies)
 	MOVIE_PAGE_HTML = HTML.ElementFromString(req.content)
+
+	try:
+		if "502 Bad Gateway" in MOVIE_PAGE_HTML.xpath('//body/center/h1')[0].text.strip():
+				return ObjectContainer(header="We Apologize", message="A connection error has occurred.  502 Bad Gateway was returned when accessing the site.  Please try again to get your Host listings.")
+	except:
+		pass
 
 	try:
 		url = MOVIE_PAGE_HTML.xpath('//div[@id="details"]/a')[0].get('href')
@@ -2516,6 +2382,11 @@ def TheMovieListings(title, page, date, dateadd, thumb, type, PageOfHosts, MOVIE
 		req = requests.get(page, headers=headers, cookies=cookies)
 
 		MOVIE_PAGE_HTML = HTML.ElementFromString(req.content)
+		try:
+			if "502 Bad Gateway" in MOVIE_PAGE_HTML.xpath('//body/center/h1')[0].text.strip():
+				return ObjectContainer(header="We Apologize", message="A connection  error has occurred.  502 Bad Gateway was returned when accessing the site.  Please try again to get your Host listing.")
+		except:
+			pass
 		
 		try:
 			url = MOVIE_PAGE_HTML.xpath('//div[@id="details"]/a')[0].get('href')
@@ -2530,14 +2401,16 @@ def TheMovieListings(title, page, date, dateadd, thumb, type, PageOfHosts, MOVIE
 		MOVIE_INFO = MOVIE_PAGE_HTML.xpath('//div[@id="details"]')[0].text_content()
 		source_title = "Movie2k"
 
-		summary = MOVIE_PAGE_HTML.xpath('//div[@class="moviedescription"]')[0].text
+		try:
+			summary = MOVIE_PAGE_HTML.xpath('//div[@class="moviedescription"]')[0].text.strip()
+		except:
+			summary = None
+			
 		if summary == None or summary == "":
 			try:
 				summary = IMDB_PAGE_HTML.xpath('//td[@id="overview-top"]/p')[1].text.strip()
 			except:
 				summary = "Description not given..."
-		else:
-			summary = summary.strip()
 
 		try:
 			rating = float(MOVIE_PAGE_HTML.xpath('//div[@id="details"]/a')[0].text)
@@ -2606,10 +2479,10 @@ def TheMovieListings(title, page, date, dateadd, thumb, type, PageOfHosts, MOVIE
 		directors = []
 		try:
 			try:
-				director = IMDB_PAGE_HTML.xpath('//div[@itemprop="director"]')[0].text_content().split('Director:')[1]
+				director = IMDB_PAGE_HTML.xpath('//div[@itemprop="director"]')[0].text_content().split(':')[1]
 				directors = StripArray(arraystrings=director.split(','))
 			except:
-				director = IMDB_PAGE_HTML.xpath('//div[@itemprop="creator"]')[0].text_content().split('Creator:')[1]
+				director = IMDB_PAGE_HTML.xpath('//div[@itemprop="creator"]')[0].text_content().split(':')[1]
 				directors = StripArray(arraystrings=director.split(','))
 		except:
 			try:
@@ -2626,7 +2499,7 @@ def TheMovieListings(title, page, date, dateadd, thumb, type, PageOfHosts, MOVIE
 		guest_stars = []
 		try:
 			try:
-				actors = IMDB_PAGE_HTML.xpath('//div[@itemprop="actors"]')[0].text_content().split('Stars:')[1].split('|')[0]
+				actors = IMDB_PAGE_HTML.xpath('//div[@itemprop="actors"]')[0].text_content().split(':')[1].split('|')[0]
 				guest_stars = StripArray(arraystrings=actors.split(','))
 
 			except:

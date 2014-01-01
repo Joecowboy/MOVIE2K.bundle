@@ -6,7 +6,9 @@ try:
 	path = os.getcwd().split("?\\")[1].split('Plug-in Support')[0]+"Plug-ins\MOVIE2K.bundle\Contents\Services\URL\MOVIE2K\Modules"
 except:
 	path = os.getcwd().split("Plug-in Support")[0]+"Plug-ins/MOVIE2K.bundle/Contents/Services/URL/MOVIE2K/Modules"
-sys.path.append(path)
+	
+if path not in sys.path:
+    sys.path.append(path)
 
 try:
 	import requests

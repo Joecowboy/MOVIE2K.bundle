@@ -3,8 +3,8 @@
 		"id": "version",
 		"type": "enum",
 		"label": "Version",
-		"values": ["1.7.21"],
-		"default": "1.7.21"
+		"values": ["1.7.22"],
+		"default": "1.7.22"
 	},
 	{
 		"id": "video_resolution",
@@ -103,6 +103,16 @@
 			"Enabled"
 		],
 		"default": "Enabled" 
+	},
+	{
+		"id": "autopatcher",
+		"type": "enum",
+		"label": "Autopatch Runtime.py",
+		"values": [
+			"Disabled",
+			"Enabled"
+		],
+		"default": "Disabled" 
 	},
 	{
 		"id": "videoerror",

@@ -19,7 +19,9 @@ try:
 except:
 	path = os.getcwd().split("Plug-in Support")[0]+"Plug-ins/MOVIE2K.bundle/Contents/Services/URL/MOVIE2K/Modules"
 	DownloadPath = '/'
-sys.path.append(path)
+	
+if path not in sys.path:
+	sys.path.append(path)
 
 try:
 	import requests
@@ -33,6 +35,7 @@ ResumePath        = None
 MyDownloadPath    = None
 MyDownloadRequest = None
 stopAutoResume    = None
+stopAutoPatcher   = None
 stopStitching     = None
 stop              = None
 isAwake           = False
@@ -87,6 +90,72 @@ def StitchFilesTogether():
 		ResumePath = None
 		stopStitching.set() # stop the timer loop
 		stopStitching = None
+		
+####################################################################################################
+@setInterval(10)
+def CheckforRuntimeUpdate():
+	if sys.platform.startswith('win'):
+		runtime = Core.storage.join_path(Core.app_support_path, Core.config.bundles_dir_name) + "\Framework.bundle\Contents\Resources\Versions\\2\Python\Framework\components\\runtime.py"
+		LocalFrameworkPath = Core.storage.join_path(Core.app_support_path, Core.config.bundles_dir_name) + "\Framework.bundle\Contents\Resources\Versions\\2\Python\Framework\components"
+		docutils = os.environ['PYTHONPATH'].split('DLLs')[0] + "Resources\Plug-ins\Framework.bundle\Contents\Resources\Versions\\2\Python\Framework\docutils.py"
+		AppFramworkPath = os.environ['PYTHONPATH'].split('DLLs')[0] + "Resources\Plug-ins\Framework.bundle\Contents\Resources\Versions\\2\Python\Framework"
+		runtimePatchedFile = Core.storage.join_path(Core.app_support_path, Core.config.bundles_dir_name) + "\MOVIE2K.bundle\Contents\Services\URL\MOVIE2K\Modules\Patched\\runtime.py"
+		docutilsPatchedFile = Core.storage.join_path(Core.app_support_path, Core.config.bundles_dir_name) + "\MOVIE2K.bundle\Contents\Services\URL\MOVIE2K\Modules\Patched\\docutils.py"
+	else:
+		if sys.platform.find('linux'):
+			DictName = 'LD_LIBRARY_PATH'
+		else:
+			DictName = 'DYLD_LIBRARY_PATH'		
+		runtime = Core.storage.join_path(Core.app_support_path, Core.config.bundles_dir_name) + "/Framework.bundle/Contents/Resources/Versions/2/Python/Framework/components/runtime.py"
+		LocalFrameworkPath = Core.storage.join_path(Core.app_support_path, Core.config.bundles_dir_name) + "/Framework.bundle/Contents/Resources/Versions/2/Python/Framework/components"
+		docutils = os.environ[DictName].split('Contents')[0] + "Contents/Resources/Plug-ins/Framework.bundle/Contents/Resources/Versions/2/Python/Framework/docutils.py"
+		AppFramworkPath = os.environ[DictName].split('Contents')[0] + "Contents/Resources/Plug-ins/Framework.bundle/Contents/Resources/Versions/2/Python/Framework"
+		runtimePatchedFile = Core.storage.join_path(Core.app_support_path, Core.config.bundles_dir_name) + "/MOVIE2K.bundle/Contents/Services/URL/MOVIE2K/Modules/Patched/runtime.py"
+		docutilsPatchedFile = Core.storage.join_path(Core.app_support_path, Core.config.bundles_dir_name) + "/MOVIE2K.bundle/Contents/Services/URL/MOVIE2K/Modules/Patched/docutils.py"
+		
+	localHash = [Hash.SHA1(Core.storage.load(runtime)), Hash.SHA1(Core.storage.load(docutils))]
+	patchedHash = [Hash.SHA1(Core.storage.load(runtimePatchedFile)), Hash.SHA1(Core.storage.load(docutilsPatchedFile))]
+	PatchedFile = [runtimePatchedFile, docutilsPatchedFile]
+	FrameworkPath = [LocalFrameworkPath, AppFramworkPath]
+	ResetCore = False
+	i = 0
+	
+	while i <= 1:
+		if localHash[i] != patchedHash[i]:
+			ResetCore = True
+			Log("File runtime.py has changed - copying patched version.")
+			Core.storage.copy(PatchedFile[i], FrameworkPath[i])
+		i += 1
+		
+	if ResetCore == True:
+		# Reload system services
+		Core.services.load()
+		Log("Reloaded system services")
+
+
+####################################################################################################
+@setInterval(10)
+def CheckPrefsEnabled():
+	global stopAutoResume
+	global stopAutoPatcher
+	
+	# Check to see if autoResume Enabled/Disabled for Downloads that have failed
+	if Prefs['autoresume'] == "Enabled":
+		if stopAutoResume == None:
+			stopAutoResume = AutoCheckMyDownload()
+	elif Prefs['autoresume'] == "Disabled":
+		if stopAutoResume != None:
+			stopAutoResume.set()
+			stopAutoResume = None
+			
+	# Check to see if autoPatcher Enabled/Disabled for runtime.py update
+	if Prefs['autopatcher'] == "Enabled":
+		if stopAutoPatcher == None:
+			stopAutoPatcher = CheckforRuntimeUpdate()
+	elif Prefs['autopatcher'] == "Disabled":
+		if stopAutoPatcher != None:
+			stopAutoPatcher.set()
+			stopAutoPatcher = None
 
 ####################################################################################################
 @setInterval(300)
@@ -407,3 +476,150 @@ def GetHostVideo(title, date, DateAdded, Quality, thumb, type, summary, director
 		JsonWrite(fp=WATCHIT_DATA, jsondata=hosts)
 
 	return (path, request, NoError)
+
+		
+####################################################################################################
+def CheckFailedFileDeletions():
+
+	hosts = LoadData(fp=WATCHIT_DATA, GetJson=3)
+	i = 1
+	for gethost in hosts:
+		try:
+			path = gethost[i]['FailedFileDeletion']
+		except:
+			gethost[i].update({'FailedFileDeletion': ''})
+			path = ""
+
+		if path != "":
+			if os.path.isfile(path):
+				try:
+					os.remove(path)
+					gethost[i]['FailedFileDeletion'] = ""
+				except OSError:
+            				Log("Unable to remove file: %s" % path)
+			else:
+				Log("Error: %s file not found to remove." % path)
+
+		#Fix any patch issues between plugin updates if dictionary has changed.
+		try:
+			gethost[i]['Type']
+		except:
+			gethost[i].update({'Type': ''})
+		try:
+			gethost[i]['DateAdded']
+		except:
+			gethost[i].update({'DateAdded': ''})
+		try:
+			gethost[i]['Quality']
+		except:
+			gethost[i].update({'Quality': ''})
+		try:
+			gethost[i]['Path']
+		except:
+			gethost[i].update({'Path': ''})
+		try:
+			gethost[i]['Host']
+		except:
+			gethost[i].update({'Host': ''})
+		try:
+			gethost[i]['Title']
+		except:
+			gethost[i].update({'Title': ''})
+		try:
+			gethost[i]['Summary']
+		except:
+			gethost[i].update({'Summary': ''})
+		try:
+			gethost[i]['Genres']
+		except:
+			gethost[i].update({'Genres': ''})
+		try:
+			gethost[i]['Directors'] = ""
+		except:
+			gethost[i].update({'Directors': ''})
+		try:
+			gethost[i]['GuestStars']
+		except:
+			gethost[i].update({'GuestStars': ''})
+		try:
+			gethost[i]['Duration']
+		except:
+			gethost[i].update({'Duration': ''})
+		try:
+			gethost[i]['Rating']
+		except:
+			gethost[i].update({'Rating': '0.0'})
+		try:
+			gethost[i]['Index']
+		except:
+			gethost[i].update({'Index': '0'})
+		try:
+			gethost[i]['Season']
+		except:
+			gethost[i].update({'Season': '0'})
+		try:
+			gethost[i]['ContentRating']
+		except:
+			gethost[i].update({'ContentRating': ''})
+		try:
+			gethost[i]['SourceTitle']
+		except:
+			gethost[i].update({'SourceTitle': ''})
+		try:
+			gethost[i]['Date']
+		except:
+			gethost[i].update({'Date': ''})
+		try:
+			gethost[i]['ThumbURL']
+		except:
+			gethost[i].update({'ThumbURL': ''})
+		try:
+			gethost[i]['VideoType']
+		except:
+			gethost[i].update({'VideoType': ''})
+		try:
+			gethost[i]['VideoStreamLink']
+		except:
+			gethost[i].update({'VideoStreamLink': ''})
+		try:
+			gethost[i]['HostPage']
+		except:
+			gethost[i].update({'HostPage': ''})
+		try:
+			gethost[i]['URL']
+		except:
+			gethost[i].update({'URL': ''})
+		try:
+			gethost[i]['LinkType']
+		except:
+			gethost[i].update({'LinkType': ''})
+		try:
+			gethost[i]['ContentLength']
+		except:
+			gethost[i].update({'ContentLength': ''})
+		try:
+			gethost[i]['FileCheckSize']
+		except:
+			gethost[i].update({'FileCheckSize': '0'})
+		try:
+			if type(gethost[i]['ResumePath']) != type(list()):
+				ResumePath = gethost[i]['ResumePath']
+				gethost[i]['ResumePath'] = [ResumePath]
+		except:
+			gethost[i].update({'ResumePath': []})
+		try:
+			gethost[i]['ResumeContentLength']
+		except:
+			gethost[i].update({'ResumeContentLength': ''})
+		try:
+			gethost[i]['ResumeCount']
+		except:
+			gethost[i].update({'ResumeCount': '0'})
+		try:
+			gethost[i]['Thread']
+		except:
+			gethost[i].update({'Thread': ''})
+
+		i += 1
+
+	JsonWrite(fp=WATCHIT_DATA, jsondata=hosts)

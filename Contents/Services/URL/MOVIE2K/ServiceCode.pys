@@ -6,7 +6,9 @@ try:
 	path = os.getcwd().split("?\\")[1].split('Plug-in Support')[0]+"Plug-ins\MOVIE2K.bundle\Contents\Services\URL\MOVIE2K\Modules"
 except:
 	path = os.getcwd().split("Plug-in Support")[0]+"Plug-ins/MOVIE2K.bundle/Contents/Services/URL/MOVIE2K/Modules"
-sys.path.append(path)
+
+if path not in sys.path:
+    sys.path.append(path)
 
 try:
 	import requests
@@ -31,19 +33,19 @@ Version = Prefs['version']
 VideoError = Prefs["videoerror"]
 
 # Set up Host Services
-HostServices.R = R
-HostServices.Log = Log
-HostServices.HTML = HTML
-HostServices.String = String
-HostServices.Version = Version
+HostServices.R          = R
+HostServices.Log        = Log
+HostServices.HTML       = HTML
+HostServices.String     = String
+HostServices.Version    = Version
 HostServices.VideoError = VideoError
-HostServices.UserAgent = UserAgent[UserAgentNum]
-HostSites.Log = Log
-HostSites.XML = XML
-HostSites.HTML = HTML
-HostSites.String = String
-HostSites.Version = Version
-HostSites.UserAgent = UserAgent[UserAgentNum]
+HostServices.UserAgent  = UserAgent[UserAgentNum]
+HostSites.Log           = Log
+HostSites.XML           = XML
+HostSites.HTML          = HTML
+HostSites.String        = String
+HostSites.Version       = Version
+HostSites.UserAgent     = UserAgent[UserAgentNum]
 
 # Default Icon
 ICON = 'icon-default.png'

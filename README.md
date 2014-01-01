@@ -32,6 +32,18 @@ Currently there are eleven URLs in the list:
 
 -**Main Site for Movie2k.tv:** IP address
 
+###Plex/Web Search Site URL:
+
+Plex/Web Search Site URL allows you to choose the URL you want Plex/Web to search your Movie and TV Shows from. This has no effect on the search feature displayed on other client devices such as the Roku.  All the Main sites have a little bit different content with different Host line ups for the movies and tv shows. If you change from the default Site URL may require Plex Media Server to be restarted. Proxy servers can be used if the www.movie4k.to site URL is being blocked.  This has no effect on Host site URLs only MOVIE4k.  Only proxy effects on Host sites will be using the Tor setup.
+
+Currently there are eleven URLs in the list:
+
+-**Main Site for Movie4k:** IP address
+
+-**Proxy sites for Movie4k:** www.movie.to, movie4k.co.in, movie4k.to.come.in, www.movie4kunblocked.co, www.movie2kproxy.org and www.movie2kproxy.com
+
+-**Main Site for Movie2k.tv:** IP address
+
 ###Number of Hosts Per Page:
 
 Allows you to change the number of Hosts per page to be displayed.  Default is 5 per page.
@@ -39,6 +51,18 @@ Allows you to change the number of Hosts per page to be displayed.  Default is 5
 ###Use Description as Title:
 
 For devices like the Apple TV PlexConnect or Plex/Web that only display the title for an item with no summary discription underneath.  This will enable you to tell what hosts are on the next page and information about the host once selected.
+
+###Autoresume Downloads:
+
+This is so you can disable and enable autoresume of downloads you have in your Watchit Later lineup.  It will check every 5 minutes for a failed download and try to autoresume the download.  This is so you can have more control if you don't want to poll for downloads while watching a show.
+
+###Manual Resume Downloads:
+
+What this does if you go to Watchit Later videos and a video download has failed it will try force the download where it left off.  If an error message displays other than video removed or host down you can try back later to see if autoresume was able to trigger the download or manually trigger it yourself.  If it's downloading it will display the status of the download.
+
+###Autopatch Runtime.py
+
+What this does is update the runtime.py and docutils.py files so Watchit Later will play your downloaded videos.  You will need to leave it enabled to continually update the files since Plex Media Server will write over them once a hour.
 
 ###Play Error Video:
 
@@ -71,13 +95,22 @@ Connect to Tor Network allows you to use the Tor network via socks5 connection i
 
 To use Tor proxy you will have to download and install Tor on your Plex Media Server machine (Should work for fine Windows, OSX, Linux).
 
-To get the Plex transcoder to use Tor proxy server on Windows use an app like Proxifier it forces all net traffic to Tor when set up.  For OSX and Linux not real sure at the moment for a redirect method for Plex transcoder to Tor
-proxy.
+To get the Plex transcoder to use Tor proxy server on Windows and Mac OSX use an app like Proxifier it forces all net traffic to Tor when set up.  For Linux not real sure at the moment for a redirect method for Plex transcoder to Tor proxy.
 
 -[Tor Link:][torlink] https://www.torproject.org/download/download-easy.html
 -[Proxifier Link:][proxifierlink] http://www.proxifier.com/
 
 Make sure you have Tor Proxy server running before you try to use the plugin if it's enabled.
+
+OK UPDATE YOU NEED TO GET Vidalia they ripped it out of the 3.5 tor package:  So gives you no control over who you connect to. NOT GOOD!!!!!
+-[Vadilia Link:][vidalialink] https://people.torproject.org/~erinn/vidalia-standalone-bundles/
+
+Make sure you have Tor Proxy server running before you try to use the plugin if it's enabled.
+
+Setting up Proxifier select from the menu Profile and then Proxy Servers.  Click the Add button, for the IP address put in 127.0.0.1 port 9150 type is SOCKS5
+
+Heres a Tutorial: How to change the IP address in TOR to a specific country’s IP
+-[Change IP Link:][changeiplink] http://www.bloomgeek.com/featured/how-to-change-the-ip-address-in-tor-to-a-specific-countrys-ip
 
 ###Get New Tor IP Address:
 
@@ -142,9 +175,23 @@ To enter My Favorite Movie4k URL, Parental Lock password or Captcha text, Roku u
 
 2.  Now MOVIE2K plugin will work with the iOS.
 
-3.  With the latest version of Plex Media Server.  Plexconnect now works with Apple TV with this RTMP channel.  You currently cannot search in any of the Channel plugins on Plexconnect, or set preferences for that matter. That input framework functionality has not been added yet. You have to do all that on another client/device.
+3.  With the latest version of Plex Media Server.  Plexconnect now works with Apple TV with this RTMP channel.  Also, for timeout issues in Movie2k Plugin Preferences change Number of Hosts Per Page from the default of 5 to 1.  You currently cannot search in any of the Channel plugins on Plexconnect, or set preferences for that matter. That input functionality has not been added. You have to do all that on another client/device.
+
+4. LG TV needs the file Info.plist edited found in MOVIE2k.bundle/content folder (This will impact the RTMP Host sites):
+	<key>PlexFrameworkFlags</key>
+	<array>
+		<string>UseRealRTMP</string>
+	</array>
+
+  Changed to:
+	<key>PlexFrameworkFlags</key>
+	<array>
+		<string>*</string>
+	</array>
 
 [dashboard-thumbnail]: https://raw.github.com/Joecowboy/MOVIE2K.bundle/master/Contents/Resources/icon-default.png
 [plexforum]: http://forums.plexapp.com/index.php/topic/75524-new-channel-movie2k-plugin-for-movie4kto-website/
 [torlink]: https://www.torproject.org/download/download-easy.html
 [proxifierlink]: http://www.proxifier.com/
+[vidalialink]: https://people.torproject.org/~erinn/vidalia-standalone-bundles/
+[changeiplink]: http://www.bloomgeek.com/featured/how-to-change-the-ip-address-in-tor-to-a-specific-countrys-ip
