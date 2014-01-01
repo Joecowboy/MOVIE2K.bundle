@@ -1,5 +1,5 @@
 [B]Version 1.7.22[/B]
-- Added Autopatcher now for updateing runtime.py and docutils.py for local playback of vidieos for Watchit Later.
+- Added Autopatcher now for updating runtime.py and docutils.py for local playback of videos for Watchit Later.
 [B]Version 1.7.21[/B]
 - Fixed issue with Title and Summary and updated one host code.
 [B]Version 1.7.20[/B]

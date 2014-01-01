@@ -60,9 +60,9 @@ This is so you can disable and enable autoresume of downloads you have in your W
 
 What this does if you go to Watchit Later videos and a video download has failed it will try force the download where it left off.  If an error message displays other than video removed or host down you can try back later to see if autoresume was able to trigger the download or manually trigger it yourself.  If it's downloading it will display the status of the download.
 
-###Autopatch Runtime.py
+###Autopatch Runtime.py:
 
-What this does is update the runtime.py and docutils.py files so Watchit Later will play your downloaded videos.  You will need to leave it enabled to continually update the files since Plex Media Server will write over them once a hour.
+What this does is update the runtime.py and docutils.py files so Watchit Later will play your downloaded videos.  You will need to leave it enabled to continually update the files since Plex Media Server will write over them once a hour.  You do not need to restart the Plex Media Server with the auto patcher it resets the Cor Services in the background on update.
 
 ###Play Error Video:
 
