@@ -20,7 +20,6 @@ except:
 import urllib
 import re
 import time
-import socket
 import httplib
 import random
 import subprocess
@@ -28,10 +27,7 @@ import HostServices
 import HostSites
 import HostVideoDownload
 
-# Import SocksiPy
-import sockschain as socks
-socks.DEBUG = Log
-
+from TorConnect import EnableTorConnect
 from HostServices import StripArray
 from HostServices import LoadData
 from HostServices import JsonWrite
@@ -41,7 +37,6 @@ from HostVideoDownload import GetHostVideo
 from HostVideoDownload import CheckForDownload
 from HostVideoDownload import KillMyDownloadThread
 from HostVideoDownload import ResumeMyDownload
-from HostVideoDownload import AutoCheckMyDownload
 from HostVideoDownload import StitchFilesTogether
 from HostVideoDownload import CheckFailedFileDeletions
 from HostVideoDownload import CheckPrefsEnabled
@@ -57,25 +52,25 @@ Version = Prefs['version']
 VideoError = Prefs["videoerror"]
 
 # Set up Host Services
-HostServices.R              = R
-HostServices.Log            = Log
-HostServices.HTML           = HTML
-HostServices.String         = String
-HostServices.Version        = Version
-HostServices.VideoError     = VideoError
-HostServices.UserAgent      = UserAgent[UserAgentNum]
-HostSites.Log               = Log
-HostSites.XML               = XML
-HostSites.HTML              = HTML
-HostSites.String            = String
-HostSites.Version           = Version
-HostSites.UserAgent         = UserAgent[UserAgentNum]
-HostVideoDownload.Log       = Log
-HostVideoDownload.String    = String
-HostVideoDownload.UserAgent = UserAgent[UserAgentNum]
-HostVideoDownload.Prefs     = Prefs
-HostVideoDownload.Hash      = Hash
-HostVideoDownload.Core      = Core
+HostServices.R                     = R
+HostServices.Log                   = Log
+HostServices.HTML                  = HTML
+HostServices.String                = String
+HostServices.Version               = Version
+HostServices.VideoError            = VideoError
+HostServices.UserAgent             = UserAgent[UserAgentNum]
+HostSites.Log                      = Log
+HostSites.XML                      = XML
+HostSites.HTML                     = HTML
+HostSites.String                   = String
+HostSites.Version                  = Version
+HostSites.UserAgent                = UserAgent[UserAgentNum]
+HostVideoDownload.Log              = Log
+HostVideoDownload.String           = String
+HostVideoDownload.UserAgent        = UserAgent[UserAgentNum]
+HostVideoDownload.Prefs            = Prefs
+HostVideoDownload.Hash             = Hash
+HostVideoDownload.Core             = Core
 
 PREFIX            = "/video/movie2k"
 NAME              = "Movie2k"
@@ -97,7 +92,6 @@ def Start():
 	# Setup the default attributes for the ObjectContainer
 	ObjectContainer.art = R(ART)
 	ObjectContainer.title1 = NAME
-	#ObjectContainer.view_group = "InfoList"
 
 	# Setup the default attributes for the other objects
 	DirectoryObject.thumb = R(ICON)
@@ -106,6 +100,15 @@ def Start():
 	# Set the default cache time
 	HTTP.CacheTime = CACHE_1HOUR
 	HTTP.Headers['User-Agent'] = UserAgent[UserAgentNum]
+	
+	# Enable Tor Proxy
+	EnableTorConnect()
+
+	# Clean Up Any Failed File Deletions of Video Downloads
+	CheckFailedFileDeletions()
+	
+	# Check to see if autoResume and autoPatcher Enabled/Disabled
+	CheckPrefsEnabled()
 
         
 ####################################################################################################
@@ -132,15 +135,6 @@ def GetLanguage():
 def MainMenu():
 
 	oc = ObjectContainer()
-
-	# Enable Tor Proxy
-	EnableTorConnect()
-
-	# Clean Up Any Failed File Deletions of Video Downloads
-	CheckFailedFileDeletions()
-	
-	# Check to see if autoResume and autoPatcher Enabled/Disabled
-	CheckPrefsEnabled()
 
 	#Add Movie4k.to site
 	ICON_MOVIES4k_TO  = "icon-movie4k-to.png"
@@ -205,7 +199,7 @@ def MainMenu():
 ###################################################################################################
 @route(PREFIX + '/SubMainMenu')
 def SubMainMenu(title, MOVIE2K_URL):
-
+	#HTTP.Request('http://127.0.0.1:32400/:/plugins/com.plexapp.plugins.movie2k/reloadServices', cacheTime=0, immediate=True)
 	# INitialize My Movie2k Login
 	loginResult = Movie2kLogin(MOVIE2K_URL=MOVIE2K_URL)
 	Log("Login success: " + str(loginResult))
@@ -564,7 +558,9 @@ def MyFavoriteURL(title, MOVIE2K_URL):
 	
 	if len(oc) < 1:
 		oc = ObjectContainer(header="We Apologize", message="This section does not contain any My Favorite videos.  Please add a video to view.")
-
+	else:
+		oc.objects.sort(key = lambda obj: obj.title)
+		
 	return oc
 
 ####################################################################################################
@@ -668,6 +664,8 @@ def DeleteFavoriteURL(title):
 
 	if len(oc) < 1:
 		oc = ObjectContainer(header="We Apologize", message="This section does not contain any My Favorite videos to delete.")
+	else:
+		oc.objects.sort(key = lambda obj: obj.title)
 
 	return oc
 
@@ -702,7 +700,13 @@ def PlaybackDownloads(title):
 	oc = ObjectContainer(title2=L(title), no_cache = True)
 
 	hosts = LoadData(fp=WATCHIT_DATA, GetJson=3)
-	i = 1
+
+	if HostVideoDownload.isAwake == True:
+		IamAwake = True
+	else:
+		HostVideoDownload.isAwake = True
+		IamAwake = False
+	i = 1	
 	for gethost in hosts:
 		type = String.Unquote(gethost[i]['Type'], usePlus=True)
 		dateadded = String.Unquote(gethost[i]['DateAdded'], usePlus=True)
@@ -733,6 +737,7 @@ def PlaybackDownloads(title):
 		resumepath.extend(gethost[i]['ResumePath'])
 		resumecontentlength = gethost[i]['ResumeContentLength']
 		resumecount = gethost[i]['ResumeCount']
+		isStitchingFiles = gethost[i]['isStitchingFiles']
 		show = "ADDED: "+ dateadded + " | HOST: " + host + " | QUALITY: " + quality
 
 		if duration != "None" and duration != "":
@@ -742,7 +747,14 @@ def PlaybackDownloads(title):
 
 		if path != "":
 			try:
-				if resumecontentlength == "":
+				if isStitchingFiles == "True":
+					part = os.stat(path).st_size
+					percent = 100 * float(part)/float(contentlength)
+					
+					if percent == 100.00:
+							gethost[i]['isStitchingFiles'] = "False"
+							isStitchingFiles = "False"
+				elif resumecontentlength == "":
 					part = os.stat(path).st_size
 					percent = 100 * float(part)/float(contentlength)
 
@@ -756,9 +768,10 @@ def PlaybackDownloads(title):
 					percent = 100 * float(part)/float(contentlength)
 
 					if percent == 100.0:
+						gethost[i]['isStitchingFiles'] = "True"
+						isStitchingFiles = "True"
 						if HostVideoDownload.stopStitching == None:
 							HostVideoDownload.stopStitching = StitchFilesTogether()
-						HostVideoDownload.isStitchingFiles = True
 						HostVideoDownload.ResumeParts = [path]+resumepath
 						HostVideoDownload.ResumePath = path.replace('Part1.', '')
 						gethost[i]['Path'] = path.replace('Part1.', '')
@@ -774,9 +787,13 @@ def PlaybackDownloads(title):
 				FileCheckSize = 0
 				percent = 0.0
 				ElapseTime = 120.0
-
-			if HostVideoDownload.isStitchingFiles == True:
-				oc.add(DirectoryObject(key=Callback(WatchitDownloadInfo, title=title, percent=percent), title=title, summary=show, thumb=Callback(GetThumb, url=thumb)))
+				isStitchingFiles = "False"
+				gethost[i]['isStitchingFiles'] = "False"
+				gethost[i]['ResumePath'] = []
+				gethost[i]['ResumeContentLength'] = ""
+				
+			if isStitchingFiles == "True":
+				oc.add(DirectoryObject(key=Callback(WatchitDownloadInfo, title=title, isStitchingFiles=isStitchingFiles), title=title, summary=show, thumb=Callback(GetThumb, url=thumb)))
 			elif percent == 100.0:
 				path = os.path.abspath(path)
 				if type == "TV Shows":
@@ -812,9 +829,7 @@ def PlaybackDownloads(title):
 							originally_available_at = originally_available_at,
 							thumb = Callback(GetThumb, url=thumb),
 							items = MediaObjectsForURL(path, videotype)))
-			elif ElapseTime >= 120.0 and int(FileCheckSize) == part and HostVideoDownload.isAwake == False:
-				HostVideoDownload.isAwake = True
-
+			elif ElapseTime >= 120.0 and int(FileCheckSize) == part and IamAwake == False:
 				#Check for Manual Resume Downloads that have failed
 				if Prefs['manualresume'] == "Enabled":
 					if HostVideoDownload.stop == None:
@@ -854,10 +869,12 @@ def PlaybackDownloads(title):
 				oc.add(DirectoryObject(key=Callback(WatchitDownloadInfo, title=title, percent=percent), title=title, summary=show, thumb=Callback(GetThumb, url=thumb)))
 
 		i += 1
-
-	HostVideoDownload.isAwake = False
+	if IamAwake == False:
+		HostVideoDownload.isAwake = False
 	if len(oc) < 1:
 		oc = ObjectContainer(header="We Apologize", message="This section does not contain any Watchit Later videos.  Please add a video to view.")
+	else:
+		oc.objects.sort(key = lambda obj: obj.title)
 
 	return oc
 
@@ -991,19 +1008,19 @@ def CreateLocalURL(path, *argparams, **kwparams):
 
 ####################################################################################################
 @route(PREFIX + '/WatchitDownloadInfo')
-def WatchitDownloadInfo(title, percent=None, GoodLink=True, ManualResume=False, ResumeCount="1"):
-	if HostVideoDownload.isStitchingFiles == True:
-		oc = ObjectContainer(header=title+" Finished Downloading", message="Your video download has finished downloading.  However, the video file is being processed.  Please check back later.  DOWNLOAD PERCENTAGE: %.2f %%" % float(percent))
+def WatchitDownloadInfo(title, percent=None, GoodLink=True, ManualResume=False, ResumeCount="1", isStitchingFiles=False):
+	if isStitchingFiles == "True":
+		oc = ObjectContainer(header=title+" Finished Downloading", message="Your video "+title+" download has finished downloading.  However, the video file is being processed.  Please check back later.  DOWNLOAD PERCENTAGE: %.2f %%" % float(percent))
 	elif percent != None:
 		oc = ObjectContainer(header=title+" Still Downloading", message="Your video download is still in progress.  Please check back later.  DOWNLOAD PERCENTAGE: %.2f %%" % float(percent))
 	elif GoodLink != True:
 		oc = ObjectContainer(header="We Apologize", message="There was a problem with the Host video resuming download.  Host video errored do to "+GoodLink+".  Please try again later to resume download.")
 	elif ManualResume != False:
 		if Prefs['manualresume'] == "Enabled":
-			AutoResumeMessage = "However, autoresume is enabled and your video will try to resume within five minutes."
+			AutoResumeMessage = "However, autoresume is enabled and your video will try to resume download within one minute."
 		else:
 			AutoResumeMessage = "Autoresume is also disabled and your video download will not resume at any time.  Please enable Autoresume Download or Manual Resume Download in plugin preferences."
-		oc = ObjectContainer(header="Manual Resume Diabled", message="Your video "+title+" stopped downloading.  Cannot manually resume the video.  "+AutoResumeMessage)
+		oc = ObjectContainer(header="Manual Resume Disabled", message="Your video "+title+" stopped downloading.  Cannot manually resume the video.  "+AutoResumeMessage)
 	else:
 		oc = ObjectContainer(header=title+" Resuming Download", message="Your video stopped downloading and now resuming your video download.  Please check back later.  NUMBER OF RETRIES: "+ResumeCount)
 
@@ -1035,7 +1052,9 @@ def DeleteWatchitLaterVideo(title):
 
 	if len(oc) < 1:
 		oc = ObjectContainer(header="We Apologize", message="This section does not contain any My Watchit Later videos to delete.")
-
+	else:
+		oc.objects.sort(key = lambda obj: obj.title)
+		
 	return oc
 
 
@@ -1080,6 +1099,7 @@ def DeleteVideo(title, path, resumepath=[]):
 			gethost[i]['ResumeCount'] = "0"
 			KillMyDownloadThread(MyThread=gethost[i]['Thread'])
 			gethost[i]['Thread'] = ""
+			gethost[i]['isStitchingFiles'] = "False"
 			break
 		else:
 			i += 1
@@ -2058,6 +2078,53 @@ def FeaturedMoviePageAdd(title, page, type, MOVIE2K_URL):
 
 	return oc
 
+	
+####################################################################################################
+@route(PREFIX + '/RecomendedPageAdd')
+def RecomendedPageAdd(title, page, type, MOVIE2K_URL):
+
+	oc = ObjectContainer(title2=title)
+	
+	if page.split('/')[0] != "http:":
+		CURRENT_MOVIE2K_URL = MOVIE2K_URL
+		page = "http://"+MOVIE2K_URL+"/"+page
+	else:
+		CURRENT_MOVIE2K_URL = page.split('/')[2]
+	
+	if CURRENT_MOVIE2K_URL == "www.movie2k.sx":
+		elm = "http://www.movie2k.sx"
+	else:
+		elm = ""
+		
+	cookies = Dict['_movie2k_uid']
+	headers = {"Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8", "Accept-Charset": "ISO-8859-1,utf-8;q=0.7,*;q=0.3", "Accept-Encoding": "gzip,deflate,sdch", "Accept-Language": "en-US,en;q=0.8", "Connection": "keep-alive", "Host": CURRENT_MOVIE2K_URL, "Referer": "http://"+CURRENT_MOVIE2K_URL, "User-Agent": UserAgent[UserAgentNum]}
+	req = requests.get(page, headers=headers, cookies=cookies)
+	RECOMMENDED_PAGE = HTML.ElementFromString(req.content)
+	dateadd = 'N/A'
+	try:
+		if "502 Bad Gateway" in RECOMMENDED_PAGE.xpath('//body/center/h1')[0].text.strip():
+			return ObjectContainer(header="We Apologize", message="A connection  error has occurred.  502 Bad Gateway was returned when accessing the site.  Please try again to get your Host listing.")
+	except:
+		pass
+		
+	for Movie in RECOMMENDED_PAGE.xpath('//div[@class="SM_similarmovies"]/div[@class="SM_schatten SM_fleft"]'):
+		RECOMMENDED_TD = Movie.xpath('./div')[0]
+		RECOMMENDED_TITLE = RECOMMENDED_TD.xpath("./a/img")[0].get('title').strip()
+		RECOMMENDED_PAGE = RECOMMENDED_TD.xpath("./a")[0].get('href')
+		RECOMMENDED_THUMB = elm + RECOMMENDED_TD.xpath("./a/img")[0].get('src')
+		RECOMMENDED_YEAR = "N/A"
+		RECOMMENDED_LANG = "N/A"
+		RECOMMENDED_SUMMARY = "Year: "+RECOMMENDED_YEAR+" | Lang: "+RECOMMENDED_LANG+" | Part of the recommended "+type+" from Movie2k."
+		if type == "TV Shows":
+			oc.add(DirectoryObject(key=Callback(TVShowSeasons, title=RECOMMENDED_TITLE, page=RECOMMENDED_PAGE, genre="Recommended", type=type, MOVIE2K_URL=MOVIE2K_URL, thumb=RECOMMENDED_THUMB, MOVIES_LANG=RECOMMENDED_LANG), title=RECOMMENDED_TITLE, summary=RECOMMENDED_SUMMARY, thumb=Callback(GetThumb, url=RECOMMENDED_THUMB)))
+		else:
+			oc.add(DirectoryObject(key=Callback(SubGroupMoviePageAdd, title=RECOMMENDED_TITLE, page=RECOMMENDED_PAGE, date=RECOMMENDED_YEAR, dateadd=dateadd, thumbck=RECOMMENDED_THUMB, type=type, summary=RECOMMENDED_SUMMARY, MOVIE2K_URL=MOVIE2K_URL), title=RECOMMENDED_TITLE, summary=RECOMMENDED_SUMMARY, thumb=Callback(GetThumb, url=RECOMMENDED_THUMB)))
+			
+	if len(oc) < 1:
+		oc = ObjectContainer(header="We Apologize", message=title + " does not have any recommended "+type+".")		
+		
+	return oc
+	
 
 ####################################################################################################
 @route(PREFIX + '/MovieGenrePage')
@@ -2192,6 +2259,13 @@ def SubGroupMoviePageAdd(title, page, date, dateadd, thumbck, type, summary, MOV
 	summary = "Add \""+title+"\" as a watchit later video download from a Movie2k Host!"
 	WATCHIT_TITLE = "Add to My Watchit Later Videos"
 	oc.add(DirectoryObject(key=Callback(SubMoviePageAdd, title=title, page=page, date=date, dateadd=dateadd, thumbck=thumbck, type=type, MOVIE2K_URL=MOVIE2K_URL, watchitlater=True), title=WATCHIT_TITLE, summary=summary, thumb=WATCHIT_THUMB))
+	
+	# Recommended movies for Playback
+	ICON_RECOMMENDED = "icon-recommended.png"
+	RECOMMENDED_THUMB = R(ICON_RECOMMENDED)
+	summary = "You might also like these recommended "+type+" from the Movie2k database!"
+	RECOMMENDED_TITLE = "Recommended "+type
+	oc.add(DirectoryObject(key=Callback(RecomendedPageAdd, title=title, page=page, type=type, MOVIE2K_URL=MOVIE2K_URL), title=RECOMMENDED_TITLE, summary=summary, thumb=RECOMMENDED_THUMB))
 
 	return oc
 
@@ -2286,7 +2360,7 @@ def SubMoviePageAdd(title, page, date, dateadd, thumbck, type, MOVIE2K_URL, watc
 
 			MOVIES_SUMMARY = "Page - " + str(i) + " | Host: " + Hosts
 			MOVIES_TITLE = title
-			if Prefs['swaptitle'] == "Enabled":
+			if Client.Product == "Web Client" or Client.Platform in ('iOS', ) and not (Client.Platform == 'Safari' and Platform.OS == 'MacOSX'):
 				MOVIES_SUMMARY = title
 				MOVIES_TITLE = str(i) + ": " + Hosts
 			if Host == "Urmediazone":
@@ -2345,7 +2419,7 @@ def SubMoviePageAdd(title, page, date, dateadd, thumbck, type, MOVIE2K_URL, watc
 
 			MOVIES_SUMMARY = "Page - " + str(i) + " | Host"+pl+": " + Hosts[:-2]
 			MOVIES_TITLE = title
-			if Prefs['swaptitle'] == "Enabled":
+			if Client.Product == "Web Client" or Client.Platform in ('iOS', ) and not (Client.Platform == 'Safari' and Platform.OS == 'MacOSX'):
 				MOVIES_SUMMARY = title
 				MOVIES_TITLE = str(i) + ": " + Hosts[:-2]
 			oc.add(DirectoryObject(key=Callback(TheMovieListings, title=title, page=page, date=date, dateadd=dateadd, thumb=thumb, type=type, PageOfHosts=i, MOVIE2K_URL=MOVIE2K_URL, watchitlater=watchitlater), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=Callback(GetThumb, url=thumb)))
@@ -2615,7 +2689,7 @@ def TheMovieListings(title, page, date, dateadd, thumb, type, PageOfHosts, MOVIE
 
 						show = "ADDED: "+ DateAdded + " | HOST: " + Host + " | QUALITY: " + Quality
 						show_title = title
-						if Prefs['swaptitle'] == "Enabled":
+						if Client.Product == "Web Client" or Client.Platform in ('iOS', ) and not (Client.Platform == 'Safari' and Platform.OS == 'MacOSX'):
 							show = title
 							show_title = "QUALITY: " + Quality +" | HOST: " + Host + " | ADDED: " + DateAdded
 
@@ -3060,117 +3134,3 @@ def TrailerResults(page, title, website):
 			originally_available_at = date,
 			thumb = Callback(GetThumb, url=thumb)))
 	return oc
-
-
-####################################################################################################
-# Set Up Tor Network Proxy
-# This will be be used for Hosting sites that Block Countries - StreamCloud.eu & TheFile.me
-# Or use it to hide your tracks...
-####################################################################################################
-def create_connection(address, timeout=None, source_address=None):
-	sock = socks.socksocket()
-	sock.connect(address)
-	return sock
-
-
-####################################################################################################
-def connectTor():
-	socks.usesystemdefaults()
-	socks.setdefaultproxy(socks.PROXY_TYPE_SOCKS5, "127.0.0.1", 9150, True)
-	# patch the socket module
-	socket.socket = socks.socksocket
-	socket.create_connection = create_connection
-
-
-####################################################################################################
-def newIdentity(password):
-	try:
-		socks.setdefaultproxy()
-		s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-		s.connect(("127.0.0.1", 9151))
-		s.send('AUTHENTICATE "' + password + '"\r\n')
-		response = s.recv(128)
-		if response.startswith("250"):
-			s.send("SIGNAL NEWNYM\r\n")
-		else:
-			Log("Error: Could not Change Tor IP - "+response)
-		s.close()
-		connectTor()
-	except:
-		Log("Error: Enable Tor Network Proxy - No connection could be made because the target machine actively refused it")
-
-
-####################################################################################################
-def EnableTorConnect():
-	# Connect to Tor Proxy Network
-
-	CheckProxy = Prefs['disabledTorProxy']
-	ChangeIP = Prefs['disabledgetTorIP']
-	CheckHash = Prefs['GenerateHashedPassword']
-	password = Prefs['HashedControlPassword']
-
-	if CheckProxy != 'Disabled':
-		if CheckHash != 'Disabled':
-			GenerateTorHashPassword(secret=password)
-		if ChangeIP != 'Disabled':
-			newIdentity(password=password)
-		else:
-			connectTor()
-		try:
-			conn = httplib.HTTPConnection("my-ip.heroku.com")
-			conn.request("GET", "/")
-			response = conn.getresponse()
-			Log("MY Tor Proxy IP Address: " + response.read())
-		except:
-			Log("Error: Enable Tor Network Proxy - No connection could be made because the target machine actively refused it")
-
-
-####################################################################################################
-def GenerateTorHashPassword(secret):
-	import os, binascii, hashlib
- 
-	#supply password
-	#secret = 'foo'
- 
-	#static 'count' value later referenced as "c"
-	indicator = chr(96)
- 
-	#used to generate salt
-	rng = os.urandom
- 
-	#generate salt and append indicator value so that it
-	salt = "%s%s" % (rng(8), indicator)
- 
-	#That's just the way it is. It's always prefixed with 16
-	prefix = '16:'
- 
-	# swap variables just so I can make it look exactly like the RFC example
-	c = ord(salt[8])
- 
-	# generate an even number that can be divided in subsequent sections. (Thanks Roman)
-	EXPBIAS = 6
-	count = (16+(c&15)) << ((c>>4) + EXPBIAS)
- 
-	d = hashlib.sha1()
- 
-	#take the salt and append the password
-	tmp = salt[:8]+secret
- 
-	#hash the salty password as many times as the length of
-	# the password divides into the count value
-	slen = len(tmp)
-	while count:
-		if count > slen:
-			d.update(tmp)
-			count = count - slen
-		else:
-			d.update(tmp[:count])
-			count = 0
-	hashed = d.digest()
-	#Convert to hex
-	salt = binascii.b2a_hex(salt[:8]).upper()
-	indicator = binascii.b2a_hex(indicator)
-	torhash = binascii.b2a_hex(hashed).upper()
- 
-	#Put it all together into the proprietary Tor format.
-	Log("Your Hashed Password and put this line in the torrc file: HashedControlPassword " + prefix + salt + indicator + torhash)

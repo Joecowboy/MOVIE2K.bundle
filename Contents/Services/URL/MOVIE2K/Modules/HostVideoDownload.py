@@ -39,7 +39,6 @@ stopAutoPatcher   = None
 stopStitching     = None
 stop              = None
 isAwake           = False
-isStitchingFiles  = False
 
 WATCHIT_DATA      = "watchit.data.json"
 
@@ -131,7 +130,7 @@ def CheckforRuntimeUpdate():
 		# Reload system services
 		Core.services.load()
 		Log("Reloaded system services")
-
+		
 
 ####################################################################################################
 @setInterval(10)
@@ -142,27 +141,30 @@ def CheckPrefsEnabled():
 	# Check to see if autoResume Enabled/Disabled for Downloads that have failed
 	if Prefs['autoresume'] == "Enabled":
 		if stopAutoResume == None:
+			Log("Autoresume Download Enabled!!!")
 			stopAutoResume = AutoCheckMyDownload()
 	elif Prefs['autoresume'] == "Disabled":
 		if stopAutoResume != None:
+			Log("Autoresume Download Disabled!!!")
 			stopAutoResume.set()
 			stopAutoResume = None
 			
 	# Check to see if autoPatcher Enabled/Disabled for runtime.py update
 	if Prefs['autopatcher'] == "Enabled":
 		if stopAutoPatcher == None:
+			Log("Autopatcher Enabled!!!")
 			stopAutoPatcher = CheckforRuntimeUpdate()
 	elif Prefs['autopatcher'] == "Disabled":
 		if stopAutoPatcher != None:
+			Log("Autopatcher Disabled!!!")
 			stopAutoPatcher.set()
 			stopAutoPatcher = None
 
 ####################################################################################################
-@setInterval(300)
+@setInterval(60)
 def AutoCheckMyDownload():
 	global MyDownloadPath
 	global MyDownloadRequest
-	global isStitchingFiles
 	global stopStitching
 	global ResumeParts
 	global ResumePath
@@ -171,13 +173,17 @@ def AutoCheckMyDownload():
 	i = 1
 
 	hosts = LoadData(fp=WATCHIT_DATA, GetJson=3)
+	
+	if isAwake == True:
+		IamAwake = True
+	else:
+		isAwake = True
+		IamAwake = False
 
 	for gethost in hosts:
-		if isAwake == True:
+		if IamAwake == True:
 			break
-		else:
-			isAwake = True
-
+			
 		path = gethost[i]['Path']
 		host = gethost[i]['Host']
 		videostreamlink = gethost[i]['VideoStreamLink']
@@ -190,10 +196,18 @@ def AutoCheckMyDownload():
 		resumepath.extend(gethost[i]['ResumePath'])
 		resumecontentlength = gethost[i]['ResumeContentLength']
 		resumecount = gethost[i]['ResumeCount']
+		isStitchingFiles = gethost[i]['isStitchingFiles']
 
 		if path != "":
 			try:
-				if resumecontentlength == "":
+				if isStitchingFiles == "True":
+					part = os.stat(path).st_size
+					percent = 100 * float(part)/float(contentlength)
+					
+					if percent == 100.00:
+							gethost[i]['isStitchingFiles'] = "False"
+							isStitchingFiles = "False"
+				elif resumecontentlength == "":
 					part = os.stat(path).st_size
 					percent = 100 * float(part)/float(contentlength)
 
@@ -207,9 +221,10 @@ def AutoCheckMyDownload():
 					percent = 100 * float(part)/float(contentlength)
 
 					if percent == 100.0:
+						gethost[i]['isStitchingFiles'] = "True"
+						isStitchingFiles = "True"
 						if stopStitching == None:
 							stopStitching = StitchFilesTogether()
-						isStitchingFiles = True
 						ResumeParts = [path]+resumepath
 						ResumePath = path.replace('Part1.', '')
 						gethost[i]['Path'] = path.replace('Part1.', '')
@@ -225,8 +240,12 @@ def AutoCheckMyDownload():
 				FileCheckSize = 0
 				percent = 0.0
 				ElapseTime = 120.0
+				isStitchingFiles = "False"
+				gethost[i]['isStitchingFiles'] = "False"
+				gethost[i]['ResumePath'] = []
+				gethost[i]['ResumeContentLength'] = ""
 
-			if percent == 100.0:
+			if percent == 100.0 or isStitchingFiles == "True":
 				pass
 			elif ElapseTime >= 120.0 and int(FileCheckSize) == part:
 				if stop == None:
@@ -262,13 +281,12 @@ def AutoCheckMyDownload():
 				JsonWrite(fp=WATCHIT_DATA, jsondata=hosts)
 
 		i += 1
-	isAwake = False
+	if IamAwake == False:
+		isAwake = False
 
 
 ####################################################################################################
 def combine_files(parts, path):
-	global isStitchingFiles
-
 	'''
 	Function combines file parts.
 	@param parts: List of file paths.
@@ -279,8 +297,6 @@ def combine_files(parts, path):
 			with open(part,'rb') as f:
 				output.writelines(f.readlines())
 			os.remove(part)
-
-	isStitchingFiles = False
 
 
 ####################################################################################################
@@ -294,7 +310,7 @@ def downloads(VideoStreamLink, startByte="0", endByte=""):
 		headers['Connection'] = 'keep-alive'
 	except:
 		video_url = VideoStreamLink
-		headers = {'User-Agent': UserAgent, 'Connection': 'keep-alive'}
+		headers = {'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8', 'Accept-Encoding': 'gzip, deflate, sdch', 'User-Agent': UserAgent, 'Connection': 'keep-alive'}
 		cookies = {}
 
 	if startByte != "0":
@@ -324,7 +340,10 @@ def downloads(VideoStreamLink, startByte="0", endByte=""):
 	elif str(request.status_code) == "403":
 		NoError = "Wrong IP was returned"
 		request = None
-	elif int(ContentLength) == 8 or int(ContentLength) == 15:
+	elif str(request.status_code) == "503":
+		NoError = "the server is temporarily unavailable"
+		request = None
+	elif int(ContentLength) == 8 or int(ContentLength) == 15 or int(ContentLength) == 113244:
 		NoError = "failed to start downloading"
 		request = None
 	else:
@@ -470,7 +489,7 @@ def GetHostVideo(title, date, DateAdded, Quality, thumb, type, summary, director
 					i += 1
 					jj += 1
 			except:
-				hosts.append({i : {'Type': type, 'Path': path, 'Host': Host, 'DateAdded': DateAdded, 'Quality': Quality, 'ThumbURL': thumb, 'Title': title, 'Summary':summary, 'Genres': genres, 'Directors': directors, 'GuestStars':guest_stars, 'Duration': duration, 'Rating': rating, 'Index': index, 'Season': season, 'ContentRating': content_rating, 'SourceTitle': source_title, 'Date': date, 'VideoType': videotype, 'VideoStreamLink': VideoStreamLink, 'HostPage': HostPage, 'URL': url, 'LinkType': LinkType, 'ContentLength': ContentLength, 'FileCheckSize': '0', 'ResumePath': [], 'ResumeContentLength': '', 'ResumeCount': '0', 'Thread': '', 'FailedFileDeletion': ''}})
+				hosts.append({i : {'Type': type, 'Path': path, 'Host': Host, 'DateAdded': DateAdded, 'Quality': Quality, 'ThumbURL': thumb, 'Title': title, 'Summary':summary, 'Genres': genres, 'Directors': directors, 'GuestStars':guest_stars, 'Duration': duration, 'Rating': rating, 'Index': index, 'Season': season, 'ContentRating': content_rating, 'SourceTitle': source_title, 'Date': date, 'VideoType': videotype, 'VideoStreamLink': VideoStreamLink, 'HostPage': HostPage, 'URL': url, 'LinkType': LinkType, 'ContentLength': ContentLength, 'FileCheckSize': '0', 'ResumePath': [], 'ResumeContentLength': '', 'ResumeCount': '0', 'Thread': '', 'FailedFileDeletion': '', 'isStitchingFiles': 'False'}})
 				break
 
 		JsonWrite(fp=WATCHIT_DATA, jsondata=hosts)
@@ -619,7 +638,11 @@ def CheckFailedFileDeletions():
 			gethost[i]['Thread']
 		except:
 			gethost[i].update({'Thread': ''})
-
+		try:			
+			gethost[i]['isStitchingFiles']
+		except:
+			gethost[i].update({'isStitchingFiles': 'False'})
+			
 		i += 1
 
 	JsonWrite(fp=WATCHIT_DATA, jsondata=hosts)

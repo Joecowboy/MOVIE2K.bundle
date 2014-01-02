@@ -48,10 +48,6 @@ Currently there are eleven URLs in the list:
 
 Allows you to change the number of Hosts per page to be displayed.  Default is 5 per page.
 
-###Use Description as Title:
-
-For devices like the Apple TV PlexConnect or Plex/Web that only display the title for an item with no summary discription underneath.  This will enable you to tell what hosts are on the next page and information about the host once selected.
-
 ###Autoresume Downloads:
 
 This is so you can disable and enable autoresume of downloads you have in your Watchit Later lineup.  It will check every 5 minutes for a failed download and try to autoresume the download.  This is so you can have more control if you don't want to poll for downloads while watching a show.

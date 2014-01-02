@@ -1,3 +1,5 @@
+[B]Version 1.7.23[/B]
+- Fixed some logic issues with autoresume downloads.  Also added Recommended section now when you select a movie or TV Show to watch.
 [B]Version 1.7.22[/B]
 - Added Autopatcher now for updating runtime.py and docutils.py for local playback of videos for Watchit Later.
 [B]Version 1.7.21[/B]

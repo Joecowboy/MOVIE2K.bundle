@@ -3,8 +3,8 @@
 		"id": "version",
 		"type": "enum",
 		"label": "Version",
-		"values": ["1.7.22"],
-		"default": "1.7.22"
+		"values": ["1.7.23"],
+		"default": "1.7.23"
 	},
 	{
 		"id": "video_resolution",
@@ -73,16 +73,6 @@
 			"12"
 		],
 		"default": "1"
-	},
-	{
-		"id": "swaptitle",
-		"type": "enum",
-		"label": "Use Description as Title",
-		"values": [
-			"Disabled",
-			"Enabled"
-		],
-		"default": "Disabled" 
 	},
 	{
 		"id": "autoresume",
