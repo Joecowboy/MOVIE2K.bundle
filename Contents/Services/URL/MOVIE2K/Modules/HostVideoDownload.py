@@ -537,7 +537,7 @@ def CheckFailedFileDeletions():
 		except:
 			gethost[i].update({'Genres': ''})
 		try:
-			gethost[i]['Directors'] = ""
+			gethost[i]['Directors']
 		except:
 			gethost[i].update({'Directors': ''})
 		try:
