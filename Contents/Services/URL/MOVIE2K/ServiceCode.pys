@@ -19,6 +19,7 @@ import random
 import HostServices
 import HostSites
 from HostServices import StripArray
+from HostServices import run_proxifier
 from HostServices import GetHostPageURL
 from HostSites import GetMovie
 
@@ -200,7 +201,9 @@ def GetItemInfo(url, itemInfo):
 				duration = duration,
 				audio_channels = audio_channels,
 				optimized_for_streaming = optimized_for_streaming)]
-
+				
+		#run_proxifier()
+		
 	return obj
 
 
@@ -233,14 +236,14 @@ def PlayVideo(url):
 	oc = ObjectContainer()
 
 	try:
-		video_url = url.split("?cookies=")[0]
+		video_url = url.split("?cookies=")[0].replace('?start=0', '')
 		http_cookies = String.Unquote(url.split("cookies=")[1].split("&")[0], usePlus=True).replace('{', '').replace('}', '').replace("'", "").replace(': ', '=').replace(',', ';')
 		http_headers = ast.literal_eval(String.Unquote(url.split("headers=")[1], usePlus=True))
 		#user_agent = UserAgent[UserAgentNum]
 	except:
-		video_url = url
+		video_url = url.replace('?start=0', '')
 		http_cookies = ""
-		http_headers = {'User-Agent': UserAgent[UserAgentNum]}
+		http_headers = {'User-Agent': UserAgent[UserAgentNum], 'Connection': 'keep-alive'}
 		#user_agent = UserAgent[UserAgentNum]
 
 	oc.http_headers = http_headers
@@ -367,5 +370,5 @@ def GetMovieDebugger(Host, HostPage, url, LinkType):
 	import base64
 
 
-
+	
 	return VideoStream

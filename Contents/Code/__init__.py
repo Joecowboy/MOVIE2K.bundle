@@ -22,7 +22,6 @@ import re
 import time
 import httplib
 import random
-import subprocess
 import HostServices
 import HostSites
 import HostVideoDownload
@@ -79,7 +78,6 @@ ICON              = "icon-default.png"
 CAPTCHA_DATA      = "captcha.data.json"
 FAVORITES_DATA    = "favorites.data.json"
 WATCHIT_DATA      = "watchit.data.json"
-PROXIFIER_PROCESS = None
 GoodLink          = None
 
 
@@ -133,6 +131,9 @@ def GetLanguage():
 ####################################################################################################
 @handler(PREFIX, NAME, art = ART, thumb = ICON)
 def MainMenu():
+	
+	# Enable Tor Proxy
+	EnableTorConnect()
 
 	oc = ObjectContainer()
 
@@ -770,13 +771,14 @@ def PlaybackDownloads(title):
 					if percent == 100.0:
 						gethost[i]['isStitchingFiles'] = "True"
 						isStitchingFiles = "True"
-						if HostVideoDownload.stopStitching == None:
-							HostVideoDownload.stopStitching = StitchFilesTogether()
-						HostVideoDownload.ResumeParts = [path]+resumepath
-						HostVideoDownload.ResumePath = path.replace('Part1.', '')
 						gethost[i]['Path'] = path.replace('Part1.', '')
 						gethost[i]['ResumePath'] = []
 						gethost[i]['ResumeContentLength'] = ""
+						JsonWrite(fp=WATCHIT_DATA, jsondata=hosts)
+						HostVideoDownload.ResumeParts = [path]+resumepath
+						HostVideoDownload.ResumePath = path.replace('Part1.', '')
+						if HostVideoDownload.stopStitching == None:
+							HostVideoDownload.stopStitching = StitchFilesTogether()
 					else:
 						LastTimeFileWrite = os.path.getmtime(resumepath[-1])
 						LocalTime = time.time()
@@ -793,7 +795,7 @@ def PlaybackDownloads(title):
 				gethost[i]['ResumeContentLength'] = ""
 				
 			if isStitchingFiles == "True":
-				oc.add(DirectoryObject(key=Callback(WatchitDownloadInfo, title=title, isStitchingFiles=isStitchingFiles), title=title, summary=show, thumb=Callback(GetThumb, url=thumb)))
+				oc.add(DirectoryObject(key=Callback(WatchitDownloadInfo, title=title, percent=percent, isStitchingFiles=isStitchingFiles), title=title, summary=show, thumb=Callback(GetThumb, url=thumb)))
 			elif percent == 100.0:
 				path = os.path.abspath(path)
 				if type == "TV Shows":
@@ -2755,33 +2757,7 @@ def TheMovieListings(title, page, date, dateadd, thumb, type, PageOfHosts, MOVIE
 
 	return oc
 
-
-####################################################################################################
-def run_proxifier():
-	global PROXIFIER_PROCESS
-
-	try:
-		Log("1 - I am here now!!!!!")
-		Log(PROXIFIER_PROCESS)
-		stdout = PROXIFIER_PROCESS.stdout.read()
-		stderr = PROXIFIER_PROCESS.stderr.read()
-		Log(stdout)
-		Log(stderr)
-		Log("2 - I am here now!!!!!")
-	except:
-		pass
-
-	cmd = "C:\\Program Files\\Proxifier\\Proxifier.exe"
-	PROXIFIER_PROCESS = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-
-	code = PROXIFIER_PROCESS.wait()
-
-	#PROXIFIER_PROCESS.terminate()
-	stdoutdata, stderrdata = PROXIFIER_PROCESS.communicate()
-
-	return code
-
-
+	
 #####################################################################################################
 # This is the section for Host sites using Captcha
 @route(PREFIX + '/CaptchaSection')

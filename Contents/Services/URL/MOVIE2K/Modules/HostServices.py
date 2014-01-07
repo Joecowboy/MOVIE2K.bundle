@@ -21,11 +21,15 @@ import urllib
 import urllib2
 import time
 import re
+import threading
+import subprocess
 
 from OCR import GetImgValue
 from ordereddict import OrderedDict
 
-CAPTCHA_DATA = 'captcha.data.json'
+PROXIFIER_PROCESS = None
+stopProxifier     = None
+CAPTCHA_DATA      = 'captcha.data.json'
 
 
 ####################################################################################################
@@ -840,3 +844,86 @@ def GetHostPageURL(Host=None, url=None, HostPageInfo=None):
 				LinkType = 0
 
 	return (HostPage, LinkType)
+
+
+####################################################################################################
+def setInterval(interval):
+	def decorator(function):
+		def wrapper(*args, **kwargs):
+			stopped = threading.Event()
+
+			def loop(): # executed in another thread
+				while not stopped.wait(interval): # until stopped
+					function(*args, **kwargs)
+
+			t = threading.Thread(target=loop)
+			#t.daemon = True # stop if the program exits
+			t.start()
+			return stopped
+		return wrapper
+	return decorator
+	
+
+#####################################################################################################
+def run_proxifier():
+	global PROXIFIER_PROCESS
+	global stopProxifier
+	
+	try:
+		Log("1 - I am here now!!!!!")
+		Log(PROXIFIER_PROCESS)
+		stdout = PROXIFIER_PROCESS.stdout.read()
+		stderr = PROXIFIER_PROCESS.stderr.read()
+		Log(stdout)
+		Log(stderr)
+		Log("2 - I am here now!!!!!")
+	except:
+		pass
+		
+	cmd = "C:\\Program Files\\Proxifier\\Proxifier.exe"
+	PROXIFIER_PROCESS = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+	code = PROXIFIER_PROCESS.wait()
+	stdoutdata, stderrdata = PROXIFIER_PROCESS.communicate()
+	if stderrdata:
+		Log(stderrdata)
+		
+	if stopProxifier == None:
+		stopProxifier = Transcoder_process_exists()
+		
+	return
+
+
+#####################################################################################################
+@setInterval(.5)
+def Transcoder_process_exists():
+	global PROXIFIER_PROCESS
+	global stopProxifier
+
+	TranscoderRunning = False
+	#name = "Transcoder"
+	name = "Proxifier"
+
+	if sys.platform.startswith('win'):
+		cmd = 'WMIC PROCESS get Commandline,Processid'
+	else:
+		cmd = 'ps -e'
+		
+	proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
+	for line in proc.stdout:
+		Log(line)
+		try:
+			if name in str(line):
+				Log(str(line))
+				TranscoderRunning = True
+		except:
+			pass
+			
+	if	TranscoderRunning == True:
+		pass
+	elif TranscoderRunning == False:
+		#os.kill(pid, 0)
+		PROXIFIER_PROCESS.terminate()
+		stopProxifier.set() # stop the timer loop
+		stopProxifier = None
+		
+	return TranscoderRunning

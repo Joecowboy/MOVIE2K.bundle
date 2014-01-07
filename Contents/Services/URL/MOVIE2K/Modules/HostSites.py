@@ -140,7 +140,7 @@ def GetMovie(Host, HostPage, url, LinkType):
 			video_url2 = "http://barbavid.com/smonker.php"
 			VideoKEY = session.post(video_url2, data=payload, headers=headers, cookies=cookies)
 			VideoURL = "http://"+VideoID.content.split('server=')[1].split('&')[0]+".barbavid.com/play?video="+VideoID.content.split('file_md5=')[1].split('&')[0]+"&chunk="+VideoID.content.split('chunk_1=')[1].split('&')[0]+"&key="+VideoKEY.content.split('var1=')[1].split('&')[0]
-			headers = {'User-Agent': UserAgent, 'Host': VideoURL.split('/')[2], 'Referer': 'http://barbavid.com/player.swf'}
+			headers = {'User-Agent': UserAgent, 'Host': VideoURL.split('/')[2], 'Referer': 'http://barbavid.com/player.swf', 'Connection': 'keep-alive'}
 			VideoStream = VideoURL + "?cookies="+String.Quote(str(cookies), usePlus=True)+"&headers="+String.Quote(str(headers), usePlus=True)
 		except:
 			VideoStream = ErrorMessage(Host=Host, LogError=5)
@@ -405,7 +405,7 @@ def GetMovie(Host, HostPage, url, LinkType):
 				VideoID = HTML.ElementFromString(VideoInfo.content).xpath('//div[@id="player_code"]/script')[0].text
 				VideoURL = ScriptConvert(script=VideoID)
 				cookies = {'ref_url': urllib.quote_plus(HostPage)}
-				headers = {'User-Agent': UserAgent, 'Host': VideoURL.split('/')[2], 'Referer': 'http://videozed.net/player/player.swf'}
+				headers = {'User-Agent': UserAgent, 'Host': VideoURL.split('/')[2], 'Referer': 'http://videozed.net/player/player.swf', 'Connection': 'keep-alive'}
 				VideoStream = VideoURL + "?cookies="+String.Quote(str(cookies), usePlus=True)+"&headers="+String.Quote(str(headers), usePlus=True)
 			except:
 				InputError = HTML.ElementFromString(VideoPage.content).xpath('//div[@class="content_area"]/h2')[0].text + " - File Not Found"
@@ -452,7 +452,7 @@ def GetMovie(Host, HostPage, url, LinkType):
 			VideoPage = SecondButtonPress(url=url, HostPage=HostPage, cookies=cookies, addkey={"referer": url})
 			VideoID = VideoPage.content.split('<div id="player_code">')[1].split("<script type='text/javascript'>")[1].split('</script>')[0]
 			VideoURL = ScriptConvert(script=VideoID)
-			headers = {'User-Agent': UserAgent, 'Host': VideoURL.split('/')[2], 'Referer': HostPage}
+			headers = {'User-Agent': UserAgent, 'Host': VideoURL.split('/')[2], 'Referer': HostPage, 'Connection': 'keep-alive'}
 			VideoStream = VideoURL + "?cookies="+String.Quote(str(cookies), usePlus=True)+"&headers="+String.Quote(str(headers), usePlus=True)
 		except:
 			VideoStream = ErrorMessage(Host=Host, LogError=3, ErrorType="HostDown")
@@ -518,7 +518,7 @@ def GetMovie(Host, HostPage, url, LinkType):
 					VideoInfo = HTML.ElementFromString(VideoPage.content).xpath('//div[@id="player_code"]/script')[0].text
 				VideoURL = ScriptConvert(script=VideoInfo)
 				cookies = {'cf_use_ob': '0', 'lang': 'english', 'ref_ur': urllib.quote_plus(url)}
-				headers = {'User-Agent': UserAgent, 'Host': VideoURL.split('/')[2], 'Referer': 'http://filenuke.com/player/player.swf'}
+				headers = {'User-Agent': UserAgent, 'Host': VideoURL.split('/')[2], 'Referer': 'http://filenuke.com/player/player.swf', 'Connection': 'keep-alive'}
 				VideoStream = VideoURL + "?cookies="+String.Quote(str(cookies), usePlus=True)+"&headers="+String.Quote(str(headers), usePlus=True)
 			except:
 				InputError = HTML.ElementFromString(VideoPage.content).xpath('//center[@id="cent"]/div')[0].text.strip()
@@ -607,9 +607,14 @@ def GetMovie(Host, HostPage, url, LinkType):
 	elif Host == "Gigabyteupload":
 		try:
 			VideoPage = SecondButtonPress(url=url, HostPage=HostPage, addkey={'submit': 'watch'})
-			VideoStream = HTML.ElementFromString(VideoPage.content).xpath('//div[@id="video-player"]/div/video/source')[0].get('src')
+			VideoInfo = HTML.ElementFromString(VideoPage.content)
+			try:
+				VideoStream = VideoInfo.xpath('//div[@id="video-player"]/div/video/source')[0].get('src')
+			except:
+				InputError = VideoInfo.xpath('//blockquote[@class="download-link"]/h4')[0].text.strip()
+				VideoStream = ErrorMessage(Host=Host, InputError=InputError, ErrorType="VideoRemoved")
 		except:
-			VideoStream = ErrorMessage(Host=Host, LogError=1)
+			VideoStream = ErrorMessage(Host=Host, LogError=1, ErrorType="HostDown")
 	elif Host == "Ginbig":
 		#Host is not around any more
 		VideoStream = ErrorMessage(Host=Host, LogError=3, ErrorType="HostDown")
@@ -714,7 +719,7 @@ def GetMovie(Host, HostPage, url, LinkType):
 				VideoInfo = HTML.ElementFromString(VideoPage.content).xpath('//div[@id="player_code"]/script')[0].text
 				VideoURL = ScriptConvert(script=VideoInfo)
 				cookies = {'ref_url': urllib.quote_plus(url), 'domain': '.hugefiles.net'}
-				headers = {'User-Agent': UserAgent, 'Host': VideoURL.split('/')[2], 'Referer': HostPage}
+				headers = {'User-Agent': UserAgent, 'Host': VideoURL.split('/')[2], 'Referer': HostPage, 'Connection': 'keep-alive'}
 				VideoStream = VideoURL + "?cookies="+String.Quote(str(cookies), usePlus=True)+"&headers="+String.Quote(str(headers), usePlus=True)
 			except:
 				InputError = HTML.ElementFromString(VideoPage.content).xpath('//div[@id="header"]/b')[0].text
@@ -766,7 +771,7 @@ def GetMovie(Host, HostPage, url, LinkType):
 				VideoID = VideoInfo.content.split('<div id="player_code">')[1].split("<script type='text/javascript'>")[1].split('</script>')[0]
 				VideoURL = ScriptConvert(script=VideoID)
 				cookies = {'ref_url': urllib.quote_plus(HostPage)}
-				headers = {'User-Agent': UserAgent, 'Host': VideoURL.split('/')[2], 'Referer': 'http://videozed.net/player/player.swf'}
+				headers = {'User-Agent': UserAgent, 'Host': VideoURL.split('/')[2], 'Referer': 'http://videozed.net/player/player.swf', 'Connection': 'keep-alive'}
 				VideoStream = VideoURL + "?cookies="+String.Quote(str(cookies), usePlus=True)+"&headers="+String.Quote(str(headers), usePlus=True)
 			except:			
 					InputError = HTML.ElementFromString(VideoPage.content).xpath('//div[@class="page wbox"]//font')[0].text.strip()
@@ -840,7 +845,7 @@ def GetMovie(Host, HostPage, url, LinkType):
 			VideoStream = ErrorMessage(Host=Host, LogError=1, ErrorType="HostDown")
 	elif Host == "Mightyupload":
 		try:
-			headers = {'User-Agent': UserAgent, 'Host': 'mightyupload.com', 'Referer': 'http://mightyupload.com/player510/player.swf'}
+			headers = {'User-Agent': UserAgent, 'Host': 'mightyupload.com', 'Referer': 'http://mightyupload.com/player510/player.swf', 'Connection': 'keep-alive'}
 			VideoPage = SecondButtonPress(url=url, HostPage=HostPage, addkey={"method_premium": "", "down_direct": "1", "referer": url})
 			cookies = CookieDict(cookies=VideoPage.cookies)
 			try:
@@ -957,7 +962,7 @@ def GetMovie(Host, HostPage, url, LinkType):
 			VideoStream = ErrorMessage(Host=Host, LogError=1, ErrorType="HostDown")
 	elif Host == "Movshare":
 		try:
-			VideoInfo = HTML.ElementFromURL(HostPage).xpath('//div[@id="mainContent"]/table//script[@type="text/javascript"]')[5].text
+			VideoInfo = HTML.ElementFromURL(HostPage).xpath('//div[@id="content_block"]/table/tr/td/script[@type="text/javascript"]')[-1].text
 			try:
 				CodeString = VideoInfo.split("eval")[1].split(";}('")[1].split("'));")[0]
 				CharSrc = CharConvert(w=CodeString.split("','")[0],i=CodeString.split("','")[1],s=CodeString.split("','")[2],e=CodeString.split("','")[3])
@@ -1177,7 +1182,7 @@ def GetMovie(Host, HostPage, url, LinkType):
 			VideoID = VideoInfo.content.split('<div id="player_code">')[1].split("<script type='text/javascript'>")[1].split("</script>")[0]
 			VideoURL = ScriptConvert(script=VideoID)
 			cookies = {'ref_url': urllib.quote_plus(HostPage)}
-			headers = {'User-Agent': UserAgent, 'Host': VideoURL.split('/')[2], 'Referer': 'http://putme.org/player6/StrobeMediaPlayback.swf'}
+			headers = {'User-Agent': UserAgent, 'Host': VideoURL.split('/')[2], 'Referer': 'http://putme.org/player6/StrobeMediaPlayback.swf', 'Connection': 'keep-alive'}
 			VideoStream = VideoURL + "?cookies="+String.Quote(str(cookies), usePlus=True)+"&headers="+String.Quote(str(headers), usePlus=True)
 		except:
 			VideoStream = ErrorMessage(Host=Host, LogError=3, ErrorType="HostDown")
@@ -1209,7 +1214,7 @@ def GetMovie(Host, HostPage, url, LinkType):
 			VideoStream = ErrorMessage(Host=Host, LogError=1, ErrorType="HostDown")
 	elif Host == "Safecloud":
 		try:
-			headers = {'User-Agent': UserAgent, 'Referer': url}
+			headers = {'User-Agent': UserAgent, 'Referer': url, 'Connection': 'keep-alive'}
 			session = requests.session()
 			VideoPage = session.get(HostPage, headers=headers)
 			VideoID = HTML.ElementFromString(VideoPage.content).xpath('//div[@id="download"]/script')[1].text
@@ -1312,7 +1317,7 @@ def GetMovie(Host, HostPage, url, LinkType):
 	elif Host == "Stream2k.eu":
 		try:
 			session = requests.session()
-			headers = {'User-Agent': UserAgent, 'Referer': url}
+			headers = {'User-Agent': UserAgent, 'Referer': url, 'Connection': 'keep-alive'}
 			s = session.get(HostPage, headers=headers)
 			cookies = CookieDict(cookies=session.cookies)
 			VideoID = "http://stream2k.eu/ajax.php?p=video&do=getplayer&vid="+HostPage.split('_')[1].split('.')[0]+"&aid=1&player=detail"
@@ -1339,7 +1344,7 @@ def GetMovie(Host, HostPage, url, LinkType):
 			VideoPage = SecondButtonPress(url=url, HostPage=HostPage, cookies=cookies, wait=10, addkey={'referer': url})
 			try:
 				VideoURL = HTML.ElementFromString(VideoPage.content).xpath('//div[@id="player_code"]/script')[1].text.split('file: "')[1].split('"')[0]
-				headers = {'User-Agent': UserAgent, 'Host': VideoURL.split('/')[2], 'Referer': 'http://streamcloud.eu/player/player.swf'}
+				headers = {'User-Agent': UserAgent, 'Host': VideoURL.split('/')[2], 'Referer': 'http://streamcloud.eu/player/player.swf', 'Connection': 'keep-alive'}
 				VideoStream = VideoURL + "?cookies="+String.Quote(str(cookies), usePlus=True)+"&headers="+String.Quote(str(headers), usePlus=True)
 			except:
 				try:
@@ -1354,7 +1359,7 @@ def GetMovie(Host, HostPage, url, LinkType):
 		#StreamVids forwards you to stream2k.eu
 		try:
 			session = requests.session()
-			headers = {'User-Agent': UserAgent, 'Referer': url}
+			headers = {'User-Agent': UserAgent, 'Referer': url, 'Connection': 'keep-alive'}
 			s = session.get(HostPage, headers=headers)
 			cookies = CookieDict(cookies=session.cookies)
 			VideoID = "http://streamvids.eu/ajax.php?p=video&do=getplayer&vid="+HostPage.split('_')[1].split('.')[0]+"&aid=1&player=detail"
@@ -1496,7 +1501,7 @@ def GetMovie(Host, HostPage, url, LinkType):
 			VideoStream = ErrorMessage(Host=Host, LogError=1, ErrorType="HostDown")
 	elif Host == "Veevr":
 		try:
-			headers = {'User-Agent': UserAgent, 'Host': 'veevr.com'}
+			headers = {'User-Agent': UserAgent, 'Host': 'veevr.com', 'Connection': 'keep-alive'}
 			session = requests.session()
 			VideoPage = session.get(HostPage, headers=headers)
 			try:
@@ -1677,7 +1682,7 @@ def GetMovie(Host, HostPage, url, LinkType):
 			VideoPage = SecondButtonPress(url=url, HostPage=HostPage)
 			try:
 				VideoInfo = "http://www.videoslasher.com" + HTML.ElementFromString(VideoPage.content).xpath('//div[@class="wrapper"]/div/script')[1].text.split("playlist: '")[1].split("'")[0]
-				headers = {'User-Agent': UserAgent, 'Referer': HostPage}
+				headers = {'User-Agent': UserAgent, 'Referer': HostPage, 'Connection': 'keep-alive'}
 				session = requests.session()
 				session.cookies = VideoPage.cookies
 				VideoID = session.get(VideoInfo, headers=headers)
@@ -1739,7 +1744,7 @@ def GetMovie(Host, HostPage, url, LinkType):
 				VideoID = HTML.ElementFromString(VideoInfo.content).xpath('//div[@id="player_code"]/script')[0].text
 				VideoURL = ScriptConvert(script=VideoID)
 				cookies = {'ref_url': urllib.quote_plus(HostPage)}
-				headers = {'User-Agent': UserAgent, 'Host': VideoURL.split('/')[2], 'Referer': 'http://videozed.net/player/player.swf'}
+				headers = {'User-Agent': UserAgent, 'Host': VideoURL.split('/')[2], 'Referer': 'http://videozed.net/player/player.swf', 'Connection': 'keep-alive'}
 				VideoStream = VideoURL + "?cookies="+String.Quote(str(cookies), usePlus=True)+"&headers="+String.Quote(str(headers), usePlus=True)
 			except:
 				InputError = HTML.ElementFromString(VideoPage.content).xpath('//div[@class="content_mdl"]/div/h3')[0].text.strip() + " - Video has been removed"
@@ -1843,7 +1848,7 @@ def GetMovie(Host, HostPage, url, LinkType):
 				VideoInfo = HTML.ElementFromString(VideoPage.content).xpath('//div[@id="player_code"]/script')[1].text
 				VideoURL = VideoInfo.split('file: "')[1].split('"')[0]
 				cookies = {'ref_url': url}
-				headers = {'User-Agent': UserAgent, 'Host': VideoURL.split('/')[2], 'Referer': url}
+				headers = {'User-Agent': UserAgent, 'Host': VideoURL.split('/')[2], 'Referer': url, 'Connection': 'keep-alive'}
 				VideoStream = VideoURL + "?cookies="+String.Quote(str(cookies), usePlus=True)+"&headers="+String.Quote(str(headers), usePlus=True)
 			except:
 				try:

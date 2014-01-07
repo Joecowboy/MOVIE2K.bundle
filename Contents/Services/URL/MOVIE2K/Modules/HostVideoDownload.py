@@ -12,6 +12,7 @@ from HostSites import GetMovie
 from HostServices import GetHostPageURL
 from HostServices import LoadData
 from HostServices import JsonWrite
+from HostServices import setInterval
 
 try:
 	path = os.getcwd().split("?\\")[1].split('Plug-in Support')[0]+"Plug-ins\MOVIE2K.bundle\Contents\Services\URL\MOVIE2K\Modules"
@@ -41,24 +42,6 @@ stop              = None
 isAwake           = False
 
 WATCHIT_DATA      = "watchit.data.json"
-
-
-####################################################################################################
-def setInterval(interval):
-	def decorator(function):
-		def wrapper(*args, **kwargs):
-			stopped = threading.Event()
-
-			def loop(): # executed in another thread
-				while not stopped.wait(interval): # until stopped
-					function(*args, **kwargs)
-
-			t = threading.Thread(target=loop)
-			#t.daemon = True # stop if the program exits
-			t.start()
-			return stopped
-		return wrapper
-	return decorator
 
 
 ####################################################################################################
@@ -223,13 +206,14 @@ def AutoCheckMyDownload():
 					if percent == 100.0:
 						gethost[i]['isStitchingFiles'] = "True"
 						isStitchingFiles = "True"
-						if stopStitching == None:
-							stopStitching = StitchFilesTogether()
-						ResumeParts = [path]+resumepath
-						ResumePath = path.replace('Part1.', '')
 						gethost[i]['Path'] = path.replace('Part1.', '')
 						gethost[i]['ResumePath'] = []
 						gethost[i]['ResumeContentLength'] = ""
+						JsonWrite(fp=WATCHIT_DATA, jsondata=hosts)
+						ResumeParts = [path]+resumepath
+						ResumePath = path.replace('Part1.', '')
+						if stopStitching == None:
+							stopStitching = StitchFilesTogether()
 					else:
 						LastTimeFileWrite = os.path.getmtime(resumepath[-1])
 						LocalTime = time.time()
