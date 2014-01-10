@@ -41,9 +41,18 @@ from HostServices import CookieDict
 def GetMovie(Host, HostPage, url, LinkType):
 
 	#################################
+	#RealDebrid Host Video Get
+	#################################
+	Error = -1
+	if Prefs["realdebridusername"] != None:
+		(Error, VideoStream) = RealDebrid(Host=Host, HostPage=HostPage)
+	if int(Error) == 0:
+		pass
+		
+	#################################
 	#Trailer Addict
 	#################################
-	if Host == 'TrailerAddict':
+	elif Host == 'TrailerAddict':
 		headers = {'User-Agent': UserAgent, 'Referer': HostPage}
 		session = requests.session()
 		req = session.get(HostPage, headers=headers)
@@ -2051,3 +2060,64 @@ def GetMovie(Host, HostPage, url, LinkType):
 		VideoStream = ErrorMessage(Host=Host, LogError=7, ErrorType="HostDown")
 
 	return VideoStream
+
+
+####################################################################################################
+from requests.adapters import HTTPAdapter
+from requests.packages.urllib3.poolmanager import PoolManager
+import ssl
+
+class MyAdapter(HTTPAdapter):
+    def init_poolmanager(self, connections, maxsize, block=False):
+        self.poolmanager = PoolManager(num_pools=connections,
+                                       maxsize=maxsize,
+                                       block=block,
+                                       ssl_version=ssl.PROTOCOL_TLSv1)
+
+
+####################################################################################################
+def RealDebrid(Host, HostPage):
+	import hashlib
+	
+	VideoStream = None
+	username = Prefs["realdebridusername"]
+	password = Prefs["realdebridpassword"]
+	pin = Prefs["realdebridemailpin"]
+	headers = {'User-Agent': UserAgent, 'Host': 'www.real-debrid.com', 'Referer': 'https://www.real-debrid.com/'}
+	login_data = urllib.urlencode({'user': username, 'pass': hashlib.md5(password).hexdigest()})
+	url = 'https://www.real-debrid.com/ajax/login.php?' + login_data
+	session = requests.session()
+	session.mount('https://', MyAdapter())
+
+	LoginResults = session.get(url, headers=headers)
+	json_obj = JSON.ObjectFromString(LoginResults.content)
+
+	if int(json_obj['error']) == 6 and pin != None:
+		login_data = urllib.urlencode({'user': username, 'pass': hashlib.md5(password).hexdigest(), 'pin_challenge': json_obj['token'], 'pin_answer': pin, 'time': str(time.time())})
+		url = 'https://www.real-debrid.com/ajax/login.php?' + login_data
+		LoginResults = session.get(url, headers=headers)
+		json_obj = JSON.ObjectFromString(LoginResults.content)
+
+	if int(json_obj['error']) == 0:
+		cookie = json_obj['cookie'].split('=')
+		requests.utils.add_dict_to_cookiejar(session.cookies, {cookie[0]: cookie[1]})
+		AllHostersURL = 'https://www.real-debrid.com/api/regex.php?type=all'
+		HostList = session.get(AllHostersURL, headers=headers)
+	
+		if Host.lower() in HostList.content:
+			url = 'https://www.real-debrid.com/ajax/unrestrict.php?link=' + HostPage
+			VideoInfo = session.get(url, headers=headers)
+			json_obj = JSON.ObjectFromString(VideoInfo.content)
+			if int(json_obj['error']) == 0:
+				VideoStream = json_obj['main_link'].replace("\\", "")
+			else:
+				Log("RealDebrid Host Error: "+json_obj['message'])
+				Error = json_obj['error']
+		else:
+			Log(Host+" not found in RealDebrid Host List")
+			Error = -1
+	else:
+		Log("RealDebrid Login Error: "+json_obj['message'])
+		Error = json_obj['error']
+
+	return (Error, VideoStream)

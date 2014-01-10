@@ -488,7 +488,6 @@ def SecondButtonPress(url, HostPage, page=None, elm="", elm2="", wform=0, addkey
 	session = requests.session()
 	requests.utils.add_dict_to_cookiejar(session.cookies, cookies)
 
-
 	if page != None:
 		s = page
 	else:
@@ -837,7 +836,7 @@ def GetHostPageURL(Host=None, url=None, HostPageInfo=None):
 				LinkType = 4
 		except:
 			try:
-				HostPage = HostPageElm.xpath('./object/param')[0].get('value')
+				HostPage = HostPageElm.xpath('./object/param[@name="src"]')[0].get('value')
 				LinkType = 5
 			except:
 				HostPage = None

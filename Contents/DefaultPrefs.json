@@ -3,8 +3,8 @@
 		"id": "version",
 		"type": "enum",
 		"label": "Version",
-		"values": ["1.7.24"],
-		"default": "1.7.24"
+		"values": ["1.7.25"],
+		"default": "1.7.25"
 	},
 	{
 		"id": "video_resolution",
@@ -177,6 +177,25 @@
 		"label": "Password",
 		"default": "",
 		"option": "hidden"
+	},
+	{
+		"id": "realdebridusername",
+		"type": "text",
+		"label": "RealDebrid Username",
+		"default": ""
+	},
+	{
+		"id": "realdebridpassword",
+		"type": "text",
+		"label": "RealDebrid Password",
+		"default": "",
+		"option": "hidden"
+	},
+	{
+		"id": "realdebridemailpin",
+		"type": "text",
+		"label": "RealDebrid Email Pin",
+		"default": ""
 	},
 	{
 		"id": "disabledTorProxy",

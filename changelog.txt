@@ -1,3 +1,5 @@
+[B]Version 1.7.25[/B]
+- Added RealDebrid host site to host line up
 [B]Version 1.7.24[/B]
 - Fixed forgotten write to file telling autoresume/manualresume finished downloading. Updated one host site code. 
 [B]Version 1.7.23[/B]
