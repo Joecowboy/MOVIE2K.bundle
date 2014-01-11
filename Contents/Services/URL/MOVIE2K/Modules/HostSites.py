@@ -35,6 +35,8 @@ from HostServices import GoogleCaptcha
 from HostServices import ErrorMessage
 from HostServices import IncapsulaScript
 from HostServices import CookieDict
+from HostServices import LoadData
+from HostServices import JsonWrite
 
 
 ####################################################################################################
@@ -44,7 +46,7 @@ def GetMovie(Host, HostPage, url, LinkType):
 	#RealDebrid Host Video Get
 	#################################
 	Error = -1
-	if Prefs["realdebridusername"] != None:
+	if (Prefs["realdebridusername"] != None) and (Prefs["realdebridpassword"] != None):
 		(Error, VideoStream) = RealDebrid(Host=Host, HostPage=HostPage)
 	if int(Error) == 0:
 		pass
@@ -2070,40 +2072,70 @@ def RealDebrid(Host, HostPage):
 	username = Prefs["realdebridusername"]
 	password = Prefs["realdebridpassword"]
 	pin = Prefs["realdebridemailpin"]
-	headers = {'User-Agent': UserAgent, 'Host': 'www.real-debrid.com', 'Referer': 'https://www.real-debrid.com/'}
-	login_data = urllib.urlencode({'user': username, 'pass': hashlib.md5(password).hexdigest()})
-	url = 'https://www.real-debrid.com/ajax/login.php?' + login_data
+	CAPTCHA_DATA = "captcha.data.json"
+	headers = {'Host': 'www.real-debrid.com', 'Referer': 'https://www.real-debrid.com/'}
 	session = requests.session()
-
-	LoginResults = session.get(url, headers=headers, verify=False)
-	json_obj = JSON.ObjectFromString(LoginResults.content)
-
-	if int(json_obj['error']) == 6 and pin != None:
-		login_data = urllib.urlencode({'user': username, 'pass': hashlib.md5(password).hexdigest(), 'pin_challenge': json_obj['token'], 'pin_answer': pin, 'time': str(time.time())})
-		url = 'https://www.real-debrid.com/ajax/login.php?' + login_data
-		LoginResults = session.get(url, headers=headers, verify=False)
-		json_obj = JSON.ObjectFromString(LoginResults.content)
-
-	if int(json_obj['error']) == 0:
-		cookie = json_obj['cookie'].split('=')
-		requests.utils.add_dict_to_cookiejar(session.cookies, {cookie[0]: cookie[1]})
-		AllHostersURL = 'https://www.real-debrid.com/api/regex.php?type=all'
-		HostList = session.get(AllHostersURL, headers=headers, verify=False)
-	
-		if Host.lower() in HostList.content:
-			url = 'https://www.real-debrid.com/ajax/unrestrict.php?link=' + HostPage
-			VideoInfo = session.get(url, headers=headers, verify=False)
-			json_obj = JSON.ObjectFromString(VideoInfo.content)
-			if int(json_obj['error']) == 0:
-				VideoStream = json_obj['main_link'].replace("\\", "")
-			else:
-				Log("RealDebrid Host Error: "+json_obj['message'])
-				Error = json_obj['error']
+	hosts = LoadData(fp=CAPTCHA_DATA)
+	i = 1
+	for gethost in hosts:
+		if gethost[i]['host'] == 'Realdebrid':
+			requests.utils.add_dict_to_cookiejar(session.cookies, gethost[i]['cookie'])
+			break
 		else:
-			Log(Host+" not found in RealDebrid Host List")
-			Error = -1
-	else:
-		Log("RealDebrid Login Error: "+json_obj['message'])
-		Error = json_obj['error']
+			i += 1
+
+	try:
+		url = 'https://real-debrid.com/api/account.php'
+		CheckLogin = session.get(url, headers=headers, verify=False)
+	
+		if 'expiration' not in CheckLogin.content:
+			login_data = urllib.urlencode({'user': username, 'pass': hashlib.md5(password).hexdigest()})
+			url = 'https://www.real-debrid.com/ajax/login.php?' + login_data
+			LoginResults = session.get(url, headers=headers, verify=False)
+			json_obj = JSON.ObjectFromString(LoginResults.content)
+
+			if int(json_obj['error']) == 6 and pin != None:
+				login_data = urllib.urlencode({'user': username, 'pass': hashlib.md5(password).hexdigest(), 'pin_challenge': json_obj['token'], 'pin_answer': pin, 'time': str(time.time())})
+				url = 'https://www.real-debrid.com/ajax/login.php?' + login_data
+				LoginResults = session.get(url, headers=headers, verify=False)
+				json_obj = JSON.ObjectFromString(LoginResults.content)
+		
+			Error = int(json_obj['error'])
+			if Error == 0:
+				cookie = json_obj['cookie'].split('=')
+				requests.utils.add_dict_to_cookiejar(session.cookies, {cookie[0]: cookie[1].replace(';', '').strip()})
+				hosts = LoadData(fp=CAPTCHA_DATA)
+				i = 1
+				for gethost in hosts:
+					if gethost[i]['host'] == 'Realdebrid':
+						gethost[i]['cookie'] = {cookie[0]: cookie[1].replace(';', '').strip()}
+						break
+					else:
+						i += 1
+				JsonWrite(fp=CAPTCHA_DATA, jsondata=hosts)
+				Log("RealDebrid Login: "+json_obj['message'])
+			else:
+				Log("RealDebrid Login Error: "+json_obj['message'])
+		else:
+			Error = 0
+			
+		if Error == 0:
+			AllHostersURL = 'https://www.real-debrid.com/api/regex.php?type=all'
+			HostList = session.get(AllHostersURL, headers=headers, verify=False)
+	
+			if Host.lower() in HostList.content:
+				url = 'https://www.real-debrid.com/ajax/unrestrict.php?link=' + HostPage
+				VideoInfo = session.get(url, headers=headers, verify=False)
+				json_obj = JSON.ObjectFromString(VideoInfo.content)
+				if int(json_obj['error']) == 0:
+					VideoStream = json_obj['main_link'].replace("\\", "")
+				else:
+					Log("RealDebrid Host Error: "+json_obj['message'])
+					Error = json_obj['error']
+			else:
+				Log(Host+" not found in RealDebrid Host List")
+				Error = -1
+	except:
+		Log("RealDebrid SSL Connect to Site Error")
 
 	return (Error, VideoStream)

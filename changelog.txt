@@ -1,3 +1,5 @@
+[B]Version 1.7.27[/B]
+- Added login to ReadDebrid when Movie2k plugin starts to help prevent multiple logins.
 [B]Version 1.7.26[/B]
 - Added My Host Link to My Movie2k and fixed issue with SSL and RealDebrid
 [B]Version 1.7.25[/B]

@@ -109,6 +109,9 @@ def Start():
 	
 	# Check to see if autoResume and autoPatcher Enabled/Disabled
 	CheckPrefsEnabled()
+	
+	# Login RealDebrid Site
+	RealDebridLogin()
 
         
 ####################################################################################################
@@ -137,6 +140,9 @@ def MainMenu():
 	# Enable Tor Proxy
 	EnableTorConnect()
 
+	# Login RealDebrid Site
+	RealDebridLogin()
+	
 	oc = ObjectContainer()
 
 	#Add Movie4k.to site
@@ -299,6 +305,47 @@ def Movie2kLogin(MOVIE2K_URL):
 		return False
 
 
+####################################################################################################  
+def RealDebridLogin():
+	import hashlib
+
+	username = Prefs["realdebridusername"]
+	password = Prefs["realdebridpassword"]
+	pin = Prefs["realdebridemailpin"]
+	headers = {'Host': 'www.real-debrid.com', 'Referer': 'https://www.real-debrid.com/'}
+	login_data = urllib.urlencode({'user': username, 'pass': hashlib.md5(password).hexdigest()})
+	url = 'https://www.real-debrid.com/ajax/login.php?' + login_data
+	session = requests.session()
+	
+	if (username != None) and (password != None):
+		try:
+			LoginResults = session.get(url, headers=headers, verify=False)
+			json_obj = JSON.ObjectFromString(LoginResults.content)
+
+			if (int(json_obj['error']) == 6) and (pin != None):
+				login_data = urllib.urlencode({'user': username, 'pass': hashlib.md5(password).hexdigest(), 'pin_challenge': json_obj['token'], 'pin_answer': pin, 'time': str(time.time())})
+				url = 'https://www.real-debrid.com/ajax/login.php?' + login_data
+				LoginResults = session.get(url, headers=headers, verify=False)
+				json_obj = JSON.ObjectFromString(LoginResults.content)
+		
+			if int(json_obj['error']) == 0:
+				cookie = json_obj['cookie'].split('=')
+				hosts = LoadData(fp=CAPTCHA_DATA)
+				i = 1
+				for gethost in hosts:
+					if gethost[i]['host'] == 'Realdebrid':
+						gethost[i]['cookie'] = {cookie[0]: cookie[1].replace(';', '').strip()}
+						break
+					else:
+						i += 1
+				JsonWrite(fp=CAPTCHA_DATA, jsondata=hosts)
+				Log("RealDebrid Login: "+json_obj['message'])
+			else:
+				Log("RealDebrid Login Error: "+json_obj['message'])
+		except:
+			Log("RealDebrid SSL Connect to Site Error")
+		
+		
 ################################################################################
 @route(PREFIX + '/Search')
 def Search(title, MOVIE2K_URL, query):
@@ -2562,7 +2609,10 @@ def TheMovieListings(title, page, date, dateadd, thumb, type, PageOfHosts, MOVIE
 			
 		if summary == None or summary == "":
 			try:
-				summary = IMDB_PAGE_HTML.xpath('//td[@id="overview-top"]/p')[1].text.strip()
+				try:
+					summary = IMDB_PAGE_HTML.xpath('//td[@id="overview-top"]/p')[1].text.strip()
+				except:
+					summary = re.sub('\t\r\0', '',IMDB_PAGE_HTML.xpath('//div[@id="titleStoryLine"]/div[@class="txt-block"]')[0].text_content()).replace('Taglines:', '').strip()
 			except:
 				summary = "Description not given..."
 
