@@ -1,3 +1,5 @@
+[B]Version 1.7.26[/B]
+- Added My Host Link to My Movie2k and fixed issue with SSL and RealDebrid
 [B]Version 1.7.25[/B]
 - Added RealDebrid host site to host line up
 [B]Version 1.7.24[/B]

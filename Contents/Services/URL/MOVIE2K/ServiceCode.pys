@@ -124,6 +124,15 @@ def GetItemInfo(url, itemInfo):
 		if Host == 'TrailerAddict':
 			VideoStream_URL = []
 			VideoStream_URL.append(GetMovie(Host=Host, HostPage=Movie2k_url, url=Movie2k_url, LinkType=0))
+		elif Host == 'MyHostLink':
+			HostPage = title
+			FindHost = HostPage.split('/')[2].split('.')
+			if len(FindHost) == 2:
+				Host = FindHost[0].capitalize()
+			elif len(FindHost) == 3:
+				Host = FindHost[1].capitalize()
+			VideoStream_URL = []
+			VideoStream_URL.append(GetMovie(Host=Host, HostPage=HostPage, url=Movie2k_url, LinkType=4))
 		else:
 			VideoStream_URL = CheckforMultiPart(Host=Host, url=Movie2k_url, type=type)
 		FileType = None

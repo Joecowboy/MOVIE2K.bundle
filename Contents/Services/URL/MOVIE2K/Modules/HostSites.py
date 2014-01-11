@@ -2063,19 +2063,6 @@ def GetMovie(Host, HostPage, url, LinkType):
 
 
 ####################################################################################################
-from requests.adapters import HTTPAdapter
-from requests.packages.urllib3.poolmanager import PoolManager
-import ssl
-
-class MyAdapter(HTTPAdapter):
-    def init_poolmanager(self, connections, maxsize, block=False):
-        self.poolmanager = PoolManager(num_pools=connections,
-                                       maxsize=maxsize,
-                                       block=block,
-                                       ssl_version=ssl.PROTOCOL_TLSv1)
-
-
-####################################################################################################
 def RealDebrid(Host, HostPage):
 	import hashlib
 	
@@ -2087,26 +2074,25 @@ def RealDebrid(Host, HostPage):
 	login_data = urllib.urlencode({'user': username, 'pass': hashlib.md5(password).hexdigest()})
 	url = 'https://www.real-debrid.com/ajax/login.php?' + login_data
 	session = requests.session()
-	session.mount('https://', MyAdapter())
 
-	LoginResults = session.get(url, headers=headers)
+	LoginResults = session.get(url, headers=headers, verify=False)
 	json_obj = JSON.ObjectFromString(LoginResults.content)
 
 	if int(json_obj['error']) == 6 and pin != None:
 		login_data = urllib.urlencode({'user': username, 'pass': hashlib.md5(password).hexdigest(), 'pin_challenge': json_obj['token'], 'pin_answer': pin, 'time': str(time.time())})
 		url = 'https://www.real-debrid.com/ajax/login.php?' + login_data
-		LoginResults = session.get(url, headers=headers)
+		LoginResults = session.get(url, headers=headers, verify=False)
 		json_obj = JSON.ObjectFromString(LoginResults.content)
 
 	if int(json_obj['error']) == 0:
 		cookie = json_obj['cookie'].split('=')
 		requests.utils.add_dict_to_cookiejar(session.cookies, {cookie[0]: cookie[1]})
 		AllHostersURL = 'https://www.real-debrid.com/api/regex.php?type=all'
-		HostList = session.get(AllHostersURL, headers=headers)
+		HostList = session.get(AllHostersURL, headers=headers, verify=False)
 	
 		if Host.lower() in HostList.content:
 			url = 'https://www.real-debrid.com/ajax/unrestrict.php?link=' + HostPage
-			VideoInfo = session.get(url, headers=headers)
+			VideoInfo = session.get(url, headers=headers, verify=False)
 			json_obj = JSON.ObjectFromString(VideoInfo.content)
 			if int(json_obj['error']) == 0:
 				VideoStream = json_obj['main_link'].replace("\\", "")

@@ -455,7 +455,15 @@ def MyMovie2k(title, MOVIE2K_URL):
 	summary = "Playback Local Downloads from Movie2k Blockbuster and TV Shows database!"
 	WhichSection = "MyWatchitLater"
 	oc.add(DirectoryObject(key = Callback(SubMyMovie2k, title=title, MOVIE2K_URL=MOVIE2K_URL, WhichSection=WhichSection), title=title, summary=summary, thumb=MYWATCHITLATER_THUMB))
-
+	
+	# My Host Link Input
+	ICON_MYHOSTLINK = "icon-my-host-link.png"
+	MYHOSTLINK_THUMB = R(ICON_MYHOSTLINK)
+	title = "My Host Link Input"
+	summary = "Input and watch alternative Host links not included in Movie4k.to, Movie2k.tv, Movie2k.sx and Movie2k.tl!"
+	WhichSection = "MyHostLink"
+	oc.add(DirectoryObject(key = Callback(SubMyMovie2k, title=title, MOVIE2K_URL=MOVIE2K_URL, WhichSection=WhichSection), title=title, summary=summary, thumb=MYHOSTLINK_THUMB))
+	
 	return oc
 
 ####################################################################################################
@@ -527,6 +535,23 @@ def SubMyMovie2k(title, MOVIE2K_URL, WhichSection):
 		title = "Delete Watchit Later Videos"
 		summary = "Delete my wathit later videos from Movie2k Hosts!"
 		oc.add(DirectoryObject(key = Callback(DeleteWatchitLaterVideo, title=title), title=title, summary=summary, thumb=DELETEWATCHITLATER_THUMB))
+		
+	elif WhichSection == "MyHostLink":
+		# User input instructions
+		ICON_INSTRUCTIONS = "icon-instructions.png"
+		INSTRUCTIONS_THUMB = R(ICON_INSTRUCTIONS)
+		title = "Special Instructions for Roku Users"
+		summary = "Click here to see special instructions necessary for Roku Users for Host Link Input."
+		oc.add(DirectoryObject(key=Callback(RokuUsersMyHostLink, title=title), title=title, summary=summary, thumb=INSTRUCTIONS_THUMB))
+
+		# My Host Link Input
+		ICON_MYHOSTLINK = "icon-my-host-link.png"
+		MYHOSTLINK_THUMB = R(ICON_MYHOSTLINK)
+		title = "My Host Link Input"
+		summary = "Input and watch alternative Host links not included in Movie4k.to, Movie2k.tv, Movie2k.sx and Movie2k.tl!"
+		prompt = "Input and watch alternative host link!"
+		oc.add(InputDirectoryObject(key = Callback(InputHostURL, title=title, MOVIE2K_URL=MOVIE2K_URL), title=title, summary=summary, thumb=MYHOSTLINK_THUMB, prompt=prompt))
+
 
 	return oc
 
@@ -536,8 +561,59 @@ def SubMyMovie2k(title, MOVIE2K_URL, WhichSection):
 def RokuUsersMyFavorites(title):
 
 	return ObjectContainer(header="Special Instructions for Roku Users", message="Inputting Movie4k URL, Roku users must be using version 2.6.7 or later of the Plex Roku Channel. If you do not want to input the Movie4k URL via the Roku input screen you can use the online Rokue remote control.  It can be found at:  http://www.remoku.tv   WARNING: DO NOT DIRECTLY TYPE OR PASTE THE TEXT IN THE INPUT CAPTCHA SECTION USING ROKU PLEX CHANNELS 2.6.4. THAT VERSION USES A SEARCH INSTEAD OF ENTRY SCREEN AND EVERY LETTER OF THE TEXT YOU ENTER WILL PRODUCE A SUBMIT FORM ON EACH LETTER.")
+	
+	
+####################################################################################################
+@route(PREFIX + '/RokuUsersMyHostLink')
+def RokuUsersMyHostLink(title):
 
+	return ObjectContainer(header="Special Instructions for Roku Users", message="Inputting Host URL, Roku users must be using version 2.6.7 or later of the Plex Roku Channel. If you do not want to input the Movie4k URL via the Roku input screen you can use the online Rokue remote control.  It can be found at:  http://www.remoku.tv   WARNING: DO NOT DIRECTLY TYPE OR PASTE THE TEXT IN THE INPUT CAPTCHA SECTION USING ROKU PLEX CHANNELS 2.6.4. THAT VERSION USES A SEARCH INSTEAD OF ENTRY SCREEN AND EVERY LETTER OF THE TEXT YOU ENTER WILL PRODUCE A SUBMIT FORM ON EACH LETTER.")
+	
+	
+####################################################################################################
+@route(PREFIX + '/InputHostURL')
+def InputHostURL(title, MOVIE2K_URL, query):
 
+	oc = ObjectContainer(title2=title)
+	
+	if query.split('/')[0] == "http:":
+		Host = "MyHostLink"
+		summary = "Description not given..."
+		show = "My Host Link"
+		rating = 0.0
+		season = 0
+		index = 0
+		type = 'Movies'
+		date =  "0001"
+		date = Datetime.ParseDate(date[:4], "%Y")
+		duration = None
+		genre = ""
+		genres = [genre]
+		director = 'Not Available'
+		directors = [director]
+		actors = 'Actors Not Available'
+		content_rating = 'NR'
+		thumb = ""
+		url = "http://www.movie4k.to/index.php?title="+String.Quote(query, usePlus=True)+"&summary="+String.Quote(summary, usePlus=True)+"&show="+String.Quote(show, usePlus=True)+"&date="+String.Quote(str(date), usePlus=True)+"&thumb="+String.Quote(thumb, usePlus=True)+"&host="+Host+"&season="+str(season)+"&index="+str(index)+"&type="+String.Quote(type, usePlus=True)+"&genres="+String.Quote(genre, usePlus=True)+"&director="+String.Quote(director, usePlus=True)+"&actors="+String.Quote(actors, usePlus=True)+"&duration="+str(duration)+"&rating="+str(rating)+"&content_rating="+content_rating
+	
+		oc.add(MovieObject(
+						url = url,
+						title = query,
+						summary = summary,
+						directors = directors,
+						genres = genres,
+						duration = duration,
+						rating = rating,
+						content_rating = content_rating,
+						source_title = show,
+						originally_available_at = date,
+						thumb = Callback(GetThumb, url=thumb)))
+	else:
+		oc = ObjectContainer(header="We Apologize", message="Host link submitted is not a valid URL. Example Host Link: http://www.putlocker.com/file/ABCDEFGHIJKLMN")
+
+	return oc
+	
+	
 ####################################################################################################
 @route(PREFIX + '/MyFavoriteURL')
 def MyFavoriteURL(title, MOVIE2K_URL):
