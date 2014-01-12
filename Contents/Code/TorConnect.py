@@ -53,9 +53,9 @@ def EnableTorConnect():
 	password = Prefs['HashedControlPassword']
 
 	if CheckProxy != 'Disabled':
-		if CheckHash != 'Disabled':
+		if CheckHash != 'Disabled' and password != None:
 			GenerateTorHashPassword(secret=password)
-		if ChangeIP != 'Disabled':
+		if ChangeIP != 'Disabled' and password != None:
 			newIdentity(password=password)
 		else:
 			connectTor()

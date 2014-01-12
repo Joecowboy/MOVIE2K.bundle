@@ -2124,6 +2124,10 @@ def RealDebrid(Host, HostPage):
 			HostList = session.get(AllHostersURL, headers=headers, verify=False)
 	
 			if Host.lower() in HostList.content:
+				if 'embed' in HostPage and Host == 'Nowvideo':
+					HostPage = 'http://www.nowvideo.sx/video/'+ HostPage.split('=')[1].split('&')[0]
+				elif 'embed' in HostPage and Host == 'Putlocker':
+					HostPage = HostPage.replace('embed', 'video')
 				url = 'https://www.real-debrid.com/ajax/unrestrict.php?link=' + HostPage
 				VideoInfo = session.get(url, headers=headers, verify=False)
 				json_obj = JSON.ObjectFromString(VideoInfo.content)
