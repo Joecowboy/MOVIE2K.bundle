@@ -312,13 +312,13 @@ def RealDebridLogin():
 	username = Prefs["realdebridusername"]
 	password = Prefs["realdebridpassword"]
 	pin = Prefs["realdebridemailpin"]
-	headers = {'Host': 'www.real-debrid.com', 'Referer': 'https://www.real-debrid.com/'}
-	login_data = urllib.urlencode({'user': username, 'pass': hashlib.md5(password).hexdigest()})
-	url = 'https://www.real-debrid.com/ajax/login.php?' + login_data
-	session = requests.session()
 	
 	if (username != None) and (password != None):
 		try:
+			headers = {'Host': 'www.real-debrid.com', 'Referer': 'https://www.real-debrid.com/'}
+			login_data = urllib.urlencode({'user': username, 'pass': hashlib.md5(password).hexdigest()})
+			url = 'https://www.real-debrid.com/ajax/login.php?' + login_data
+			session = requests.session()
 			LoginResults = session.get(url, headers=headers, verify=False)
 			json_obj = JSON.ObjectFromString(LoginResults.content)
 
