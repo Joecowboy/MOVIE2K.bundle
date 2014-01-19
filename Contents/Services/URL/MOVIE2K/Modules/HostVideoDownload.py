@@ -2,6 +2,7 @@
 # Setting up imports
 
 import os
+import stat
 import sys
 import ast
 import time
@@ -79,8 +80,8 @@ def CheckforRuntimeUpdate():
 	if sys.platform.startswith('win'):
 		runtime = Core.storage.join_path(Core.app_support_path, Core.config.bundles_dir_name) + "\Framework.bundle\Contents\Resources\Versions\\2\Python\Framework\components\\runtime.py"
 		LocalFrameworkPath = Core.storage.join_path(Core.app_support_path, Core.config.bundles_dir_name) + "\Framework.bundle\Contents\Resources\Versions\\2\Python\Framework\components"
-		docutils = os.environ['PYTHONPATH'].split('DLLs')[0] + "Resources\Plug-ins\Framework.bundle\Contents\Resources\Versions\\2\Python\Framework\docutils.py"
-		AppFramworkPath = os.environ['PYTHONPATH'].split('DLLs')[0] + "Resources\Plug-ins\Framework.bundle\Contents\Resources\Versions\\2\Python\Framework"
+		docutils = os.environ['PYTHONPATH'].split('DLLs')[0] + "Resources\\Plug-ins\\Framework.bundle\\Contents\\Resources\\Versions\\2\\Python\\Framework\\docutils.py"
+		AppFramworkPath = os.environ['PYTHONPATH'].split('DLLs')[0] + "Resources\\Plug-ins\\Framework.bundle\\Contents\\Resources\\Versions\\2\\Python\\Framework"
 		runtimePatchedFile = Core.storage.join_path(Core.app_support_path, Core.config.bundles_dir_name) + "\MOVIE2K.bundle\Contents\Services\URL\MOVIE2K\Modules\Patched\\runtime.py"
 		docutilsPatchedFile = Core.storage.join_path(Core.app_support_path, Core.config.bundles_dir_name) + "\MOVIE2K.bundle\Contents\Services\URL\MOVIE2K\Modules\Patched\\docutils.py"
 	else:
@@ -96,19 +97,33 @@ def CheckforRuntimeUpdate():
 		docutilsPatchedFile = Core.storage.join_path(Core.app_support_path, Core.config.bundles_dir_name) + "/MOVIE2K.bundle/Contents/Services/URL/MOVIE2K/Modules/Patched/docutils.py"
 		
 	localHash = [Hash.SHA1(Core.storage.load(runtime)), Hash.SHA1(Core.storage.load(docutils))]
+	NonPatchedFile = [runtime, docutils]
 	patchedHash = [Hash.SHA1(Core.storage.load(runtimePatchedFile)), Hash.SHA1(Core.storage.load(docutilsPatchedFile))]
 	PatchedFile = [runtimePatchedFile, docutilsPatchedFile]
 	FrameworkPath = [LocalFrameworkPath, AppFramworkPath]
 	ResetCore = False
 	i = 0
-	
+        
 	while i <= 1:
 		if localHash[i] != patchedHash[i]:
 			ResetCore = True
 			Log("File runtime.py has changed - copying patched version.")
-			Core.storage.copy(PatchedFile[i], FrameworkPath[i])
+			try:
+				Core.storage.copy(PatchedFile[i], FrameworkPath[i])
+			except IOError as e:
+				if sys.platform.startswith('win'):
+					import subprocess
+					subprocess.call(['runas', '/user:Administrator', 'attrib -R -S -A -H %s' % NonPatchedFile[i]], shell=True) 
+					subprocess.call(['runas', '/user:Administrator', 'xcopy /Y /R %s %s' % (PatchedFile[i], FrameworkPath[i])], shell=True) 
+					#os.system('attrib -R -S -A -H %s' % NonPatchedFile[i])
+					#os.system('xcopy /Y /R %s %s' % (PatchedFile[i], FrameworkPath[i]))
+					Log("Error Occured Windows Platform trying to copy patched file version.  Using alternative method.")
+				else:
+					os.chmod(NonPatchedFile[i], stat.S_IWRITE)
+					Core.storage.copy(PatchedFile[i], FrameworkPath[i])
+					Log("Error Occured trying to copy patched file version.  Using alternative method.")
 		i += 1
-		
+                
 	if ResetCore == True:
 		# Reload system services
 		Core.services.load()
@@ -169,9 +184,9 @@ def AutoCheckMyDownload():
 			
 		path = gethost[i]['Path']
 		host = gethost[i]['Host']
-		videostreamlink = gethost[i]['VideoStreamLink']
-		HostPage = gethost[i]['HostPage']
-		url = gethost[i]['URL']
+		videostreamlink = String.Unquote(gethost[i]['VideoStreamLink'], usePlus=True)
+		HostPage = String.Unquote(gethost[i]['HostPage'], usePlus=True)
+		url = String.Unquote(gethost[i]['URL'], usePlus=True)
 		LinkType = gethost[i]['LinkType']
 		contentlength = gethost[i]['ContentLength']
 		FileCheckSize = gethost[i]['FileCheckSize']
@@ -298,7 +313,7 @@ def downloads(VideoStreamLink, startByte="0", endByte=""):
 		cookies = {}
 
 	if startByte != "0":
-		headers['Range'] = 'bytes=%s-%s' % (startByte,endByte)
+		headers['Range'] = 'bytes=%s-%s' % (startByte, endByte)
 
 	session = requests.session()
 	requests.utils.add_dict_to_cookiejar(session.cookies, cookies)
@@ -324,10 +339,13 @@ def downloads(VideoStreamLink, startByte="0", endByte=""):
 	elif str(request.status_code) == "403":
 		NoError = "Wrong IP was returned"
 		request = None
+	elif str(request.status_code) == "404":
+		NoError = "file temporarily unavailable"
+		request = None
 	elif str(request.status_code) == "503":
 		NoError = "the server is temporarily unavailable"
 		request = None
-	elif int(ContentLength) == 8 or int(ContentLength) == 15 or int(ContentLength) == 113244:
+	elif int(ContentLength) == -1 or int(ContentLength) == 8 or int(ContentLength) == 15 or int(ContentLength) == 113244:
 		NoError = "failed to start downloading"
 		request = None
 	else:
@@ -429,7 +447,7 @@ def GetHostVideo(title, date, DateAdded, Quality, thumb, type, summary, director
 
 	#Check For Real Host
 	Host = HostPage.split('http://')[1].split('.')[0].capitalize()
-	if Host == 'Www' or Host == 'Embed' or Host == 'Beta' or Host == 'Movie':
+	if Host == 'Www' or Host == 'Embed' or Host == 'Beta' or Host == 'Movie' or Host == 'Video':
 		Host = HostPage.split('http://')[1].split('.')[1].capitalize()
 
 	(path, request, ContentLength, NoError, VideoStreamLink) = ResumeMyDownload(Host=Host, HostPage=HostPage, url=url, LinkType=LinkType, title=title)
@@ -463,9 +481,9 @@ def GetHostVideo(title, date, DateAdded, Quality, thumb, type, summary, director
 					hosts[jj][i]['Date'] = date
 					hosts[jj][i]['ThumbURL'] = thumb
 					hosts[jj][i]['VideoType'] = videotype
-					hosts[jj][i]['VideoStreamLink'] = VideoStreamLink
-					hosts[jj][i]['HostPage'] = HostPage
-					hosts[jj][i]['URL'] = url
+					hosts[jj][i]['VideoStreamLink'] = String.Quote(VideoStreamLink, usePlus=True)
+					hosts[jj][i]['HostPage'] = String.Quote(HostPage, usePlus=True)
+					hosts[jj][i]['URL'] = String.Quote(url, usePlus=True)
 					hosts[jj][i]['LinkType'] = LinkType
 					hosts[jj][i]['ContentLength'] = ContentLength
 					break

@@ -1,3 +1,5 @@
+[B]Version 1.7.29[/B]
+- Added IO error catch for moving files.  Added Quality back in for Movie4k.to
 [B]Version 1.7.28[/B]
 - Fixed issue with Tor and no Tor hash password given.  Checked for embed file links for RealDebrid
 [B]Version 1.7.27[/B]

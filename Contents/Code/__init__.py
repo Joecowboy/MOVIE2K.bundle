@@ -853,9 +853,9 @@ def PlaybackDownloads(title):
 		originally_available_at = Datetime.ParseDate(String.Unquote(gethost[i]['Date'], usePlus=True), "%Y")
 		thumb = String.Unquote(gethost[i]['ThumbURL'], usePlus=True)
 		videotype = gethost[i]['VideoType']
-		videostreamlink = gethost[i]['VideoStreamLink']
-		HostPage = gethost[i]['HostPage']
-		url = gethost[i]['URL']
+		videostreamlink = String.Unquote(gethost[i]['VideoStreamLink'], usePlus=True)
+		HostPage = String.Unquote(gethost[i]['HostPage'], usePlus=True)
+		url = String.Unquote(gethost[i]['URL'], usePlus=True)
 		LinkType = gethost[i]['LinkType']
 		contentlength = gethost[i]['ContentLength']
 		FileCheckSize = gethost[i]['FileCheckSize']
@@ -1302,7 +1302,7 @@ def Queue(title, loginResult, MOVIE2K_URL):
 
 				TempMovie = Movie
 
-				oc.add(DirectoryObject(key = Callback(TheMovieListings, title=title, page=page, date='N/A', dateadd='N/A', thumb=thumb, type=type, PageOfHosts=0, Host=Host), title = title, summary=summary, thumb=thumb))
+				oc.add(DirectoryObject(key = Callback(TheMovieListings, title=title, page=page, date='N/A', dateadd='N/A', thumb=thumb, type=type, PageOfHosts=0, MOVIE2K_URL=MOVIE2K_URL, Host=Host), title = title, summary=summary, thumb=thumb))
 				i += 1
 		except:
 			oc = ObjectContainer(header="User Login Error", message="Your user login and password are correct but there has been an error connecting to the website user account.  Please click ok to exit this screen and the back button to refresh login data. (MAY TAKE SEVERAL TRIES)")
@@ -2504,7 +2504,10 @@ def SubMoviePageAdd(title, page, date, dateadd, thumbck, type, MOVIE2K_URL, watc
 						Host = Listing[Num1].xpath("./td/a/img")[0].get('title').split(' ')[0].partition('.')[0].capitalize()
 						if type == "Movies":
 							try:
-								Quality = Listing[Num1].xpath("./td/img")[0].get('title').split(' ')[2]
+								if MOVIE2K_URL == "www.movie4k.to":
+									Quality = GetQuality(imageNum=Listing[Num1].xpath("./td/img")[0].get('src').split('/')[-1].split('.')[0])
+								else:
+									Quality = Listing[Num1].xpath("./td/img")[0].get('title').split(' ')[2]
 							except:
 								Quality = "N/A"
 					except:
@@ -2527,8 +2530,11 @@ def SubMoviePageAdd(title, page, date, dateadd, thumbck, type, MOVIE2K_URL, watc
 					ScriptListing = StringListing[k].text.split('links[')
 					NumHosts = len(ScriptListing) - 2	
 					Host = ScriptListing[sll].split('title=\\"')[1].split('\\"')[0].split(' ')[0].partition('.')[0].capitalize()
-					#if type == "Movies":
-					#	Quality = ScriptListing[sll].split('title=\\"')[2].split('\\"')[0].split(' ')[2]
+					if type == "Movies":
+						if MOVIE2K_URL == "www.movie4k.to":
+							Quality = GetQuality(imageNum=ScriptListing[sll].split('src=\\"')[2].split('\\"')[0].split('/')[-1].split('.')[0])
+						else:
+							Quality = ScriptListing[sll].split('title=\\"')[2].split('\\"')[0].split(' ')[2]
 					if sll == NumHosts:
 						k += 1
 						sll = 1
@@ -2777,7 +2783,10 @@ def TheMovieListings(title, page, date, dateadd, thumb, type, PageOfHosts, MOVIE
 						Quality = "DVDRip/BDRip"
 					else:
 						DateAdded = Listing[num].xpath("./td/a")[0].text
-						Quality = Listing[num].xpath("./td/img")[0].get('title').split(' ')[2]
+						if MOVIE2K_URL == "www.movie4k.to":
+							Quality = GetQuality(imageNum=Listing[num].xpath("./td/img")[0].get('src').split('/')[-1].split('.')[0])
+						else:
+							Quality = Listing[num].xpath("./td/img")[0].get('title').split(' ')[2]
 				elif num2 < NumHostListing2:
 					ScriptListing = StringListing[out['k']].text.split('links[')
 					NumHosts = len(ScriptListing) - 2	
@@ -2790,7 +2799,10 @@ def TheMovieListings(title, page, date, dateadd, thumb, type, PageOfHosts, MOVIE
 						Quality = "DVDRip/BDRip"
 					else:
 						DateAdded = ScriptListing[out['sll']].split('href=\\"')[1].split('\\">')[1].split(' <')[0]
-						Quality = ScriptListing[out['sll']].split('title=\\"')[2].split('\\"')[0].split(' ')[2]
+						if MOVIE2K_URL == "www.movie4k.to":
+							Quality = GetQuality(imageNum=ScriptListing[out['sll']].split('src=\\"')[2].split('\\"')[0].split('/')[-1].split('.')[0])
+						else:
+							Quality = ScriptListing[out['sll']].split('title=\\"')[2].split('\\"')[0].split(' ')[2]
 
 					if out['sll'] == NumHosts:
 						out['k'] = out['k'] + 1
@@ -3043,10 +3055,28 @@ def GetHost(Host=None, url=None, HostPageInfo=None):
 	#
 	(HostPage, LinkType) = GetHostPageURL(Host=Host, url=url, HostPageInfo=HostPageInfo)
 	Host = HostPage.split('http://')[1].split('.')[0].capitalize()
-	if Host == 'Www' or Host == 'Embed' or Host == 'Beta' or Host == 'Movie':
+	if Host == 'Www' or Host == 'Embed' or Host == 'Beta' or Host == 'Movie' or Host == 'Video':
 		Host = HostPage.split('http://')[1].split('.')[1].capitalize()
 
 	return Host
+
+
+####################################################################################################
+def GetQuality(imageNum):
+	if imageNum == "5":
+		quality = "DVDRip/BDRip"
+	elif imageNum == "4":
+		quality = "Screener"	
+	elif imageNum == "3":
+		quality = "TC"
+	elif imageNum == "2":
+		quality = "CAM"
+	elif imageNum == "1":
+		quality = "CAM"
+	elif imageNum == "0":
+		quality = "CAM"
+
+	return quality
 
 
 ####################################################################################################
