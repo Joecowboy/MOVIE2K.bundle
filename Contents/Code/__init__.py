@@ -1240,8 +1240,8 @@ def DeleteVideo(title, path, resumepath=[]):
 	else:
 		Log("Error: %s file not found to remove." % path)
 
-	if len(resumepath) != 0:
-		for getPaths in resumepath:
+	if len([resumepath]) != 0:
+		for getPaths in [resumepath]:
 			if os.path.isfile(getPaths):
 				try:
 					os.remove(getPaths)

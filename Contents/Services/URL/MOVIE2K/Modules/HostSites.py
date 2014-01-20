@@ -490,6 +490,27 @@ def GetMovie(Host, HostPage, url, LinkType):
 			VideoStream = VideoURL[7].split("'")[0]
 		except:
 			VideoStream = ErrorMessage(Host=Host, LogError=1)
+	elif Host == "Fileflare":
+		try:
+			headers = {'User-Agent': UserAgent, 'Referer': HostPage}
+			session = requests.session()
+			VideoPage = session.get(HostPage, headers=headers)
+			try:
+				VideoInfo = HTML.ElementFromString(VideoPage.content).xpath('//div[@class="bodyBar"]/script')[0].text.split("href='")[1].split("'")[0]
+				time.sleep(10)
+				VideoID = session.get(VideoInfo, headers=headers)
+				cookies = CookieDict(cookies=session.cookies)
+				try:
+					VideoURL = HTML.ElementFromString(VideoID.content).xpath('//object/param[@name="src"]')[0].get('value')
+					VideoStream = VideoURL + "?cookies="+String.Quote(str(cookies), usePlus=True)+"&headers="+String.Quote(str(headers), usePlus=True)
+				except:
+					InputError = HTML.ElementFromString(VideoID.content).xpath("//ul[@class='pageErrors']/li")[0].text.strip()
+					VideoStream = ErrorMessage(Host=Host, InputError=InputError, ErrorType="VideoRemoved")
+			except:
+				InputError = HTML.ElementFromString(VideoPage.content).xpath("//ul[@class='pageErrors']/li")[0].text.strip()
+				VideoStream = ErrorMessage(Host=Host, InputError=InputError, ErrorType="VideoRemoved")
+		except:
+			VideoStream = ErrorMessage(Host=Host, LogError=1, ErrorType="HostDown")
 	elif Host == "Fileloby" or Host == "Fileloby_2":
 		try:
 			if Host == "Fileloby":

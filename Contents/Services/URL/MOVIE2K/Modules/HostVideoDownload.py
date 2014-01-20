@@ -299,7 +299,7 @@ def combine_files(parts, path):
 
 
 ####################################################################################################
-def downloads(VideoStreamLink, startByte="0", endByte=""):
+def downloads(VideoStreamLink, startByte="0", endByte="", extension=None):
 
 	Log("DOWNLOAD URL: "+VideoStreamLink)
 	try:
@@ -323,6 +323,9 @@ def downloads(VideoStreamLink, startByte="0", endByte=""):
 		ContentLength = int(request.headers['Content-Length'].strip())
 	except:
 		ContentLength = -1
+
+	if extension == None:
+		extension = request.headers['Content-Disposition'].split('filename="')[1].split('"')[0].split('.')[1]
 
 	Log("####################################################################################################")
 	Log(request.headers)
@@ -351,7 +354,7 @@ def downloads(VideoStreamLink, startByte="0", endByte=""):
 	else:
 		NoError = True
 
-	return (request, ContentLength, NoError)
+	return (request, ContentLength, NoError, extension)
 
 
 ####################################################################################################
@@ -372,14 +375,20 @@ def StartMyDownload(path, request):
 def MyDownload(VideoStreamLink, title=None, startByte="0", OldContentLength="0"):
 	endByte = ""
 	path = ""
+	extension = "ext"
 
 	if startByte == "0":
-		path = "Videos%s%s_%s.%s" % (DownloadPath, re.sub('\W', '_', str(title), flags=re.UNICODE), str(time.time()), VideoStreamLink.split('/')[-1].split('.')[1].partition('?')[0])
+		try:
+			extension = VideoStreamLink.split('/')[-1].split('.')[1].partition('?')[0]
+		except:
+			extension = None
 
+	(request, ContentLength, NoError, extension) = downloads(VideoStreamLink, startByte, endByte, extension)
 
-	(request, ContentLength, NoError) = downloads(VideoStreamLink, startByte, endByte)
+	if startByte == "0":
+		path = "Videos%s%s_%s.%s" % (DownloadPath, re.sub('\W', '_', str(title), flags=re.UNICODE), str(time.time()), extension)
 
-	return (path, request, ContentLength, NoError)
+	return (path, request, ContentLength, NoError, extension)
 
 
 ####################################################################################################
@@ -424,8 +433,10 @@ def KillMyDownloadThread(MyThread):
 def ResumeMyDownload(Host, HostPage, url, LinkType, title=None, startByte="0", ContentLength="0"):
 	request = None
 	path = ""
- 
+	extension = "ext"
+
 	VideoStreamLink = GetMovie(Host=Host, HostPage=HostPage, url=url, LinkType=LinkType)
+
 	if "Wrong_IP" in VideoStreamLink:
 		NoError = "Wrong IP was returned"
 	elif "Host_Down" in VideoStreamLink:
@@ -435,7 +446,12 @@ def ResumeMyDownload(Host, HostPage, url, LinkType, title=None, startByte="0", C
 	elif "Geolocation_Lockout" in VideoStreamLink:
 		NoError = "Geolocation Lockout was returned"
 	else:
-		(path, request, ContentLength, NoError) = MyDownload(VideoStreamLink=VideoStreamLink, title=title, startByte=startByte, OldContentLength=ContentLength)
+		(path, request, ContentLength, NoError, extension) = MyDownload(VideoStreamLink=VideoStreamLink, title=title, startByte=startByte, OldContentLength=ContentLength)
+
+	if Prefs['flvdownloadskip'] == "Enabled" and extension == "flv" and NoError == True:
+		NoError = "FLV Download Skip is enabled and FLV file type was returned"
+		request = None
+		path = ""
 
 	return (path, request, ContentLength, NoError, VideoStreamLink)
 

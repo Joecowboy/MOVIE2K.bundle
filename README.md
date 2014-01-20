@@ -60,6 +60,10 @@ What this does if you go to Watchit Later videos and a video download has failed
 
 What this does is update the runtime.py and docutils.py files so Watchit Later will play your downloaded videos.  You will need to leave it enabled to continually update the files since Plex Media Server will write over them once a hour.  You do not need to restart the Plex Media Server with the auto patcher it resets the Cor Services in the background on update.
 
+###FLV Download Skip:
+
+If enabled it will prompt you if you are trying to download an FLV file from a Host site and tell you to choose another Host.
+
 ###Play Error Video:
 
 Play Error Video is to play error video instead of the the default ERROR screen when a video file can't be played.
@@ -84,6 +88,10 @@ Preferred Language allows you to filter and display only the language selected o
 ###Username and Password Fields:
 
 Username and Password for My Movie4k login and this allows you to get your messages and see your current uploads.  If the uploads are accepted you can watch them.  Make sure if you create accounts on Movie4k.to, Movie2k.tv and Movie2k.tl all three sites use the same username and password.
+
+###RealDebrid Username, Password and Email Pin Fields:
+
+This allows you to log into and use your RealDebrid account if you have one to access the premium video streams if the Host site you select is in their Host list.   The Email Pin field is if you use Tor network or your IP address changes a lot they may require you to log into your email account associated with your RealDebrid account and get a pin number to access their site.
 
 ###Connect to Tor Network:
 
