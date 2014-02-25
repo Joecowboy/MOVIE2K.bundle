@@ -324,7 +324,7 @@ def downloads(VideoStreamLink, startByte="0", endByte="", extension=None):
 	except:
 		ContentLength = -1
 
-	if extension == None:
+	if request.headers.has_key('Content-Disposition'):
 		extension = request.headers['Content-Disposition'].split('filename="')[1].split('"')[0].split('.')[1]
 
 	Log("####################################################################################################")

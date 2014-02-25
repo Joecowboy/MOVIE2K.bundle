@@ -17,6 +17,7 @@ except:
 
 import urllib
 import urllib2
+import hashlib
 import re
 import time
 import random
@@ -58,11 +59,11 @@ def GetMovie(Host, HostPage, url, LinkType):
 		headers = {'User-Agent': UserAgent, 'Referer': HostPage}
 		session = requests.session()
 		req = session.get(HostPage, headers=headers)
-		cookies = CookieDict(cookies=session.cookies)
-		trailerurlID = req.content.split('name="movie" value="')[1].split('"')[0].split('/')[4]
-		trailerurlCFG = 'http://www.traileraddict.com/fvar.php?tid=' + trailerurlID
-		trailer_url = requests.get(trailerurlCFG, headers=headers).content.split('fileurl=')[1].split('&')[0]
-		VideoStream = trailer_url + "?cookies="+String.Quote(str(cookies), usePlus=True)+"&headers="+String.Quote(str(headers), usePlus=True)
+		trailerurlID = req.content.split('videojs.options.flash.swf="')[1].split('"')[0].split('=')[1]
+		token = hashlib.md5(trailerurlID).hexdigest()
+		trailerurlCFG = 'http://beta.traileraddict.com/js/flash/fv-secure.php?tid='+trailerurlID+'&token='+token[2:7]
+		trailer_url = session.get(trailerurlCFG, headers=headers).content.split('fileurl=')[1].split('&')[0]
+		VideoStream = trailer_url.replace("%3F", "?")
 
 	#################################
 	#Select Movide2k Video Hoster
@@ -1187,22 +1188,24 @@ def GetMovie(Host, HostPage, url, LinkType):
 				VideoStream = ErrorMessage(Host=Host, InputError=InputError, ErrorType="VideoRemoved")
 		except:
 			VideoStream = ErrorMessage(Host=Host, LogError=1, ErrorType="HostDown")
-	elif Host == "Putlocker":
+	elif Host == "Putlocker" or Host == 'Firedrive':
 		try:
-			NS = {'media':'http://search.yahoo.com/mrss/'}
-			VideoPage = SecondButtonPress(url=url, HostPage=HostPage, addkey={'confirm': 'Continue as Free User'})
+			if Host == 'Putlocker':
+				HostPage = HostPage.replace('putlocker', 'firedrive')
+			HostPage = HostPage.replace('embed', 'file')
+			VideoPage = SecondButtonPress(url=url, HostPage=HostPage, wform=1)
 			try:
-				VideoPageXML = "http://www.putlocker.com" + VideoPage.content.split("playlist: '")[1].split("'")[0]
-				VideoInfo = XML.ElementFromURL(VideoPageXML)
-				try:
-					VideoStream = VideoInfo.xpath('//item/media:content', namespaces=NS)[1].get('url').replace('&amp;', '&')
-				except:
-					VideoStream = VideoInfo.xpath('//item/media:content', namespaces=NS)[0].get('url').replace('&amp;', '&')
+				VideoPageXML = HTML.ElementFromString(VideoPage.content).xpath("//a[@id='external_download']")[0].get('href')
+				session = requests.session()
+				cookies = CookieDict(cookies=VideoPage.cookies)
+				requests.utils.add_dict_to_cookiejar(session.cookies, cookies)
+				headers = {'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8', 'Accept-Encoding': 'gzip, deflate', 'Accept-Language': 'en-US,en;q=0.5', 'Connection': 'keep-alive', 'User-Agent': UserAgent[UserAgentNum], 'Connection': 'keep-alive', 'Referer': HostPage, 'Host': 'dl.firedrive.com'}
+				VideoInfo = session.head(VideoPageXML.replace('key', 'stream')+"&em=1", headers=headers)
+				VideoID = VideoInfo.headers['Location']
+				cookies = CookieDict(cookies=session.cookies)
+				VideoStream = VideoID + "?cookies="+String.Quote(str(cookies), usePlus=True)+"&headers="+String.Quote(str(headers), usePlus=True)
 			except:
-				try:
-					InputError = HTML.ElementFromString(VideoPage.content).xpath("//div[@class='message t_0']")[0].text.strip()
-				except:
-					InputError = HTML.ElementFromString(VideoPage.content).xpath('//div[@id="deleted"]')[0].text.strip()
+				InputError = HTML.ElementFromString(VideoPage.content).xpath('//div[@class="file_error_container"]')[0].text_content().strip()
 				VideoStream = ErrorMessage(Host=Host, InputError=InputError, ErrorType="VideoRemoved")
 		except:
 			VideoStream = ErrorMessage(Host=Host, LogError=1, ErrorType="HostDown")

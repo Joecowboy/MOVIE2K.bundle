@@ -282,7 +282,7 @@ def CheckforMultiPart(Host, url, type):
 
 	CURRENT_MOVIE2K_URL = url.split('/')[2]
 
-	if CURRENT_MOVIE2K_URL == "www.movie2k.tl" and type != "TV Shows":
+	if (CURRENT_MOVIE2K_URL == "www.movie8k.to" or CURRENT_MOVIE2K_URL == "www.movie8k.me" or CURRENT_MOVIE2K_URL == "www.movie2k.tl") and type != "TV Shows":
 		i = 1
 		jj = 1
 		PartNext = HostPageInfo.xpath('//div[@id="maincontent5"]/div')
@@ -379,7 +379,29 @@ def GetMovieDebugger(Host, HostPage, url, LinkType):
 	import random
 	import urllib
 	import base64
+	import hashlib
 
+	if Host == "Putlocker" or Host == 'Firedrive':
+		try:
+			if Host == 'Putlocker':
+				HostPage = HostPage.replace('putlocker', 'firedrive')
+			HostPage = HostPage.replace('embed', 'file')
+			VideoPage = SecondButtonPress(url=url, HostPage=HostPage, wform=1)
+			try:
+				VideoPageXML = HTML.ElementFromString(VideoPage.content).xpath("//a[@id='external_download']")[0].get('href')
+				session = requests.session()
+				cookies = CookieDict(cookies=VideoPage.cookies)
+				requests.utils.add_dict_to_cookiejar(session.cookies, cookies)
+				headers = {'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8', 'Accept-Encoding': 'gzip, deflate', 'Accept-Language': 'en-US,en;q=0.5', 'Connection': 'keep-alive', 'User-Agent': UserAgent[UserAgentNum], 'Connection': 'keep-alive', 'Referer': HostPage, 'Host': 'dl.firedrive.com'}
+				VideoInfo = session.head(VideoPageXML.replace('key', 'stream')+"&em=1", headers=headers)
+				VideoID = VideoInfo.headers['Location']
+				cookies = CookieDict(cookies=session.cookies)
+				Log(VideoInfo.headers)
+				VideoStream = VideoID + "?cookies="+String.Quote(str(cookies), usePlus=True)+"&headers="+String.Quote(str(headers), usePlus=True)
+			except:
+				InputError = HTML.ElementFromString(VideoPage.content).xpath('//div[@class="file_error_container"]')[0].text_content().strip()
+				VideoStream = ErrorMessage(Host=Host, InputError=InputError, ErrorType="VideoRemoved")
+		except:
+			VideoStream = ErrorMessage(Host=Host, LogError=1, ErrorType="HostDown")
 
-	
 	return VideoStream

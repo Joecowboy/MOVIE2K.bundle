@@ -8,8 +8,7 @@
 		<dict>
 			<key>URLPatterns</key>
 			<array>
-				<string>http://media31\.traileraddict\.com/+</string>
-				<string>http://www\.traileraddict\.com/clip+</string>
+				<string>http://www\.traileraddict\.com/+</string>
 				<string>http://www\.movie4k\.to/movies-all+</string>
 				<string>http://www\.movie4k\.to/movies-updates+</string>
 				<string>http://www\.movie4k\.to/movies-top+</string>
@@ -221,6 +220,42 @@
 				<string>http://www\.movie2k\.tl/tvshows-genre+</string>
 				<string>http://www\.movie2k\.tl/tvshows-season+</string>
 				<string>http://www\.movie2k\.tl/+</string>
+				<string>http://www\.movie8k\.to/movies-all+</string>
+				<string>http://www\.movie8k\.to/movies-updates+</string>
+				<string>http://www\.movie8k\.to/movies-top+</string>
+				<string>http://www\.movie8k\.to/genre-movies+</string>
+				<string>http://www\.movie8k\.to/movies-genre+</string>
+				<string>http://www\.movie8k\.to/xxx-all+</string>
+				<string>http://www\.movie8k\.to/xxx-updates+</string>
+				<string>http://www\.movie8k\.to/xxx-top+</string>
+				<string>http://www\.movie8k\.to/genre-xxx+</string>
+				<string>http://www\.movie8k\.to/xxx-genre-+</string>
+				<string>http://www\.movie8k\.to/tvshows-all+</string>
+				<string>http://www\.movie8k\.to/tvshows_featured+</string>
+				<string>http://www\.movie8k\.to/tvshows-updates+</string>
+				<string>http://www\.movie8k\.to/tvshows-top+</string>
+				<string>http://www\.movie8k\.to/genre-tvshows+</string>
+				<string>http://www\.movie8k\.to/tvshows-genre+</string>
+				<string>http://www\.movie8k\.to/tvshows-season+</string>
+				<string>http://www\.movie8k\.to/+</string>
+				<string>http://www\.movie8k\.me/movies-all+</string>
+				<string>http://www\.movie8k\.me/movies-updates+</string>
+				<string>http://www\.movie8k\.me/movies-top+</string>
+				<string>http://www\.movie8k\.me/genre-movies+</string>
+				<string>http://www\.movie8k\.me/movies-genre+</string>
+				<string>http://www\.movie8k\.me/xxx-all+</string>
+				<string>http://www\.movie8k\.me/xxx-updates+</string>
+				<string>http://www\.movie8k\.me/xxx-top+</string>
+				<string>http://www\.movie8k\.me/genre-xxx+</string>
+				<string>http://www\.movie8k\.me/xxx-genre-+</string>
+				<string>http://www\.movie8k\.me/tvshows-all+</string>
+				<string>http://www\.movie8k\.me/tvshows_featured+</string>
+				<string>http://www\.movie8k\.me/tvshows-updates+</string>
+				<string>http://www\.movie8k\.me/tvshows-top+</string>
+				<string>http://www\.movie8k\.me/genre-tvshows+</string>
+				<string>http://www\.movie8k\.me/tvshows-genre+</string>
+				<string>http://www\.movie8k\.me/tvshows-season+</string>
+				<string>http://www\.movie8k\.me/+</string>
 			</array>
 		</dict>
 	</dict>

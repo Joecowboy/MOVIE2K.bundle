@@ -1,3 +1,5 @@
+[B]Version 1.7.31[/B]
+- Added Movie8k.to to the lineup of sites.  Fixed Trailer Addict Search.  Updated Putlocker to Firedrive.
 [B]Version 1.7.30[/B]
 - Added FLV Download Skip to the Movie2k Plugin Preferences and added new host.
 [B]Version 1.7.29[/B]
