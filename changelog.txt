@@ -1,3 +1,5 @@
+[B]Version 1.7.32[/B]
+- Fix couple issues with Logic errors.
 [B]Version 1.7.31[/B]
 - Added Movie8k.to to the lineup of sites.  Fixed Trailer Addict Search.  Updated Putlocker to Firedrive.
 [B]Version 1.7.30[/B]

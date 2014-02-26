@@ -2165,5 +2165,6 @@ def RealDebrid(Host, HostPage):
 				Error = -1
 	except:
 		Log("RealDebrid SSL Connect to Site Error")
+		Error = -2
 
 	return (Error, VideoStream)
