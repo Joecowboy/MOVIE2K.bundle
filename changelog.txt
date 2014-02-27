@@ -1,3 +1,5 @@
+[B]Version 1.7.33[/B]
+- Fix issue with My Watchit Later deleting an item
 [B]Version 1.7.32[/B]
 - Fix couple issues with Logic errors.
 [B]Version 1.7.31[/B]

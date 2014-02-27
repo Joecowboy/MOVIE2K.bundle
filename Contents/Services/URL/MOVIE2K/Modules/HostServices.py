@@ -131,7 +131,7 @@ def JsonWatchLaterStruct(fp):
 #The JSON file is saved in the data cache for this plugin setup by Plex
 def JsonWrite(fp, jsondata):
 	f = open(fp, "w+")
-	f.write(str(jsondata).replace(", u'", ", '").replace(": u'", ": '").replace("{u'", "{'").replace("}},", "}},\n").replace("[", "[\n ").replace("]", "\n]").replace("[\n u'", "['").replace("[\n '", "['").replace("'\n]", "']"))
+	f.write(str(jsondata).replace(", u'", ", '").replace(": u'", ": '").replace("{u'", "{'").replace("}},", "}},\n").replace("[", "[\n ").replace("]", "\n]").replace("[\n \n]", "[]").replace("[\n u'", "['").replace("[\n '", "['").replace("'\n]", "']"))
 	f.close()
 
 	return True
