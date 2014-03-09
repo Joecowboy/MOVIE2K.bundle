@@ -612,9 +612,9 @@ def GetMovie(Host, HostPage, url, LinkType):
 			if Removed == False:
 				v = SecondButtonPress(url=url, HostPage=VideoInfo, elm='span[@class="auto-style6"]/', cookies=cookies)
 				try:
-					VideoLink = HTML.ElementFromString(v.content).xpath('//head/script')[0].text.split('config=')[1].split('"')[0]
+					VideoLink = HTML.ElementFromString(v.content).xpath('//head/script')[2].text.split('config=')[1].split('"')[0]
 					headers['Host'] = 'play.flashx.tv'
-					headers['Referer'] = HTML.ElementFromString(v.content).xpath('//head/script')[0].text.split('data="')[1].split('"')[0]
+					headers['Referer'] = HTML.ElementFromString(v.content).xpath('//head/script')[2].text.split('data="')[1].split('"')[0]
 					xmlreq = session.get(VideoLink, headers=headers)
 					if xmlreq.content.split('<config>')[1].strip() == "wrong user/ip 1":
 						InputError = xmlreq.content.split('<config>')[1].strip()

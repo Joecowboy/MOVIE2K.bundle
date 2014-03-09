@@ -62,7 +62,7 @@ What this does is update the runtime.py and docutils.py files so Watchit Later w
 
 ###FLV Download Skip:
 
-If enabled it will prompt you if you are trying to download an FLV file from a Host site and tell you to choose another Host.
+If enabled it will prompt you if you are trying to download an FLV file from a Host site and tell you to choose another Host.  Also, supports selecting MP4, AVI or MKV for download only.
 
 ###Play Error Video:
 

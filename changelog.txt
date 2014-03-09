@@ -1,3 +1,5 @@
+[B]Version 1.7.34[/B]
+- Fix few logic issues for Movie2k.tl and updated host.  Added to FLV skip to select MP4, AVI or MKV only.
 [B]Version 1.7.33[/B]
 - Fix issue with My Watchit Later deleting an item
 [B]Version 1.7.32[/B]

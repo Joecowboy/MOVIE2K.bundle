@@ -453,6 +453,18 @@ def ResumeMyDownload(Host, HostPage, url, LinkType, title=None, startByte="0", C
 		NoError = "FLV Download Skip is enabled and FLV file type was returned"
 		request = None
 		path = ""
+	elif Prefs['flvdownloadskip'] == "MP4" and extension != "mp4" and NoError == True:
+		NoError = "FLV Download Skip is set to MP4 files only and "+extension.upper()+" file type was returned"
+		request = None
+		path = ""
+	elif Prefs['flvdownloadskip'] == "AVI" and extension != "avi" and NoError == True:
+		NoError = "FLV Download Skip is set to AVI files only and "+extension.upper()+" file type was returned"
+		request = None
+		path = ""
+	elif Prefs['flvdownloadskip'] == "MKV" and extension != "mkv" and NoError == True:
+		NoError = "FLV Download Skip set to MKV files only and "+extension.upper()+" file type was returned"
+		request = None
+		path = ""
 
 	return (path, request, ContentLength, NoError, VideoStreamLink)
 

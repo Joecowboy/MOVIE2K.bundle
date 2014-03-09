@@ -1597,7 +1597,10 @@ def FeaturedTVShowsPageAdd(title, page, type, MOVIE2K_URL):
 		else:
 			TVSHOW_PAGE = TVSHOWS_DIV[i].xpath('./div[@class="beschreibung"]/table[@id="tablemoviesindex"]//a')[0].get('href')
 		TVSHOW_YEAR_SUB = TVSHOWS_DIV[i].xpath('./div[@class="beschreibung"]/span')[0]
-		TVSHOW_YEAR = re.sub('[^0-9]', '', TVSHOW_YEAR_SUB.text_content().split('Year:')[1])
+		try:
+			TVSHOW_YEAR = re.sub('[^0-9]', '', TVSHOW_YEAR_SUB.text_content().split('Year:')[1])
+		except:
+			TVSHOW_YEAR = re.sub('[^0-9]', '', TVSHOW_YEAR_SUB.text_content().split('Land/Jahr:')[1])
 		LANGUAGE_URL = TVSHOWS_DIV[i].xpath("./h2//img")[0].get('src')
 		try:
 			try:
@@ -2674,14 +2677,18 @@ def TheMovieListings(title, page, date, dateadd, thumb, type, PageOfHosts, MOVIE
 			subtitle = MOVIE_PAGE_HTML.xpath('//div[@id="maincontent5"]/div/div')[1]
 			try:
 				try:
-					season = int(subtitle.xpath('./span/h1/a/span')[0].text.split('Season ')[1].split(',')[0].replace(' ', ''))
-					index = int(subtitle.xpath('./span/h1/a/span')[0].text.split('Episode ')[1].replace(' ', ''))
+					season = int(re.sub('[^0-9]', '', subtitle.xpath('./span/h1/a/span')[0].text.split('Season ')[1].split(',')[0]))
+					index = int(re.sub('[^0-9]', '', subtitle.xpath('./span/h1/a/span')[0].text.split('Episode ')[1]))
 				except:
-					season = int(subtitle.xpath('./h1/span/a')[0].text.split('Season ')[1].split(',')[0].replace(' ', ''))
-					index = int(subtitle.xpath('./h1/span/a')[0].text.split('Episode ')[1].replace(' ', ''))
+					season = int(re.sub('[^0-9]', '', subtitle.xpath('./h1/span/a')[0].text.split('Season ')[1].split(',')[0]))
+					index = int(re.sub('[^0-9]', '', subtitle.xpath('./h1/span/a')[0].text.split('Episode ')[1]))
 			except:
-				season = int(subtitle.xpath('./span/h1/a')[0].text.split('Staffel ')[1].split(',')[0].replace(' ', ''))
-				index = int(subtitle.xpath('./span/h1/a')[0].text.split('Episode ')[1].replace(' ', ''))
+				try:
+					season = int(re.sub('[^0-9]', '', subtitle.xpath('./span/h1/a')[0].text.split('Staffel')[1].split(',')[0]))
+					index = int(re.sub('[^0-9]', '', subtitle.xpath('./span/h1/a')[0].text.split('Episode')[1]))
+				except:
+					season = int(re.sub('[^0-9]', '', subtitle.xpath('./h1/span/a')[0].text.split('Staffel')[1].split(',')[0]))
+					index = int(re.sub('[^0-9]', '', subtitle.xpath('./h1/span/a')[0].text.split('Episode')[1]))
 			if type == 'N/A':
 				type = 'TV Shows'
 		except:
@@ -2713,12 +2720,12 @@ def TheMovieListings(title, page, date, dateadd, thumb, type, PageOfHosts, MOVIE
 			try:
 				duration = int(float(re.sub('[^0-9]', '', MOVIE_INFO.split('Length:')[1].split('min')[0]))*60*1000)
 			except:
-				duration = int(float(re.sub('[^0-9]', '', MOVIE_INFO.split('nge:')[1].split('Min')[0]))*60*1000)
+				try:
+					duration = int(float(re.sub('[^0-9]', '', MOVIE_INFO.split('nge:')[1].split('min')[0]))*60*1000)
+				except:
+					duration = int(float(re.sub('[^0-9]', '', MOVIE_INFO.split('nge:')[1].split('Min')[0]))*60*1000)
 		except:
-			try:
-				duration = int(float(re.sub('[^0-9]', '', MOVIE_INFO.split('Länge:')[1].split('Min')[0]))*60*1000)
-			except:
-				duration = None
+			duration = None
 
 		genres = []
 		genre = MOVIE_INFO.split('Genre:')[1].split('|')[0]
