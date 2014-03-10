@@ -347,7 +347,7 @@ def GetMovie(Host, HostPage, url, LinkType):
 	elif Host == "Divxhosted":
 		try:
 			VideoID = HostPage.split('/')[4]
-			VideoPageXML = "http://divxhosted.com/Xajax/saveaction/?xjxfun=load_player_eng&xjxr="+str(time.time())+"&xjxargs[]="+VideoID+"&xjxargs[]=N2"
+			VideoPageXML = "http://divxhosted.com/Xajax/saveaction/?xjxfun=load_player_eng&xjxr="+str(time.time())+"&xjxargs[]=S"+VideoID+"&xjxargs[]=N2&xjxargs[]=Sip"
 			VideoInfo = XML.ElementFromURL(VideoPageXML)
 			try:
 				VideoStream = VideoInfo.xpath('//cmd')[0].text.split('&file=')[1].split('"')[0]
@@ -395,7 +395,10 @@ def GetMovie(Host, HostPage, url, LinkType):
 				VideoKey = urllib.quote(CharSrc.split('flashvars.filekey=')[1].split('"')[1])
 			except:
 				VideoID = VideoInfo.split('flashvars.file="')[1].split('"')[0]
-				VideoKey = VideoInfo.split('flashvars.filekey="')[1].split('"')[0]
+				try:
+					VideoKey = VideoInfo.split('fkz="')[1].split('"')[0]
+				except:
+					VideoKey = VideoInfo.split('flashvars.filekey="')[1].split('"')[0]
 			url = "http://www.divxstage.eu/api/player.api.php?numOfErrors=0&file="+VideoID+"&user=undefined&key="+VideoKey+"&cid=undefined&pass=undefined&cid2=undefined&cid3=undefined"
 			headers = {'User-Agent': UserAgent, 'Host': 'www.divxstage.eu', 'Referer': 'http://embed.divxstage.eu/player/divxstage-v5.swf'}
 			session = requests.session()
@@ -763,7 +766,10 @@ def GetMovie(Host, HostPage, url, LinkType):
 		try:
 			VideoPage = HTML.ElementFromURL(HostPage)
 			if LinkType == 4:
-				VideoInfo = VideoPage.xpath('//body/script')[2].text
+				try:
+					VideoInfo = VideoPage.xpath('//body/script')[2].text
+				except:
+					VideoInfo = VideoPage.xpath('//body/script')[0].text
 			elif LinkType == 1:
 				VideoInfo = VideoPage.xpath('//body/script')[0].text
 			VideoStream = VideoInfo.split('path:"')[1].split('"')[0]
@@ -889,8 +895,12 @@ def GetMovie(Host, HostPage, url, LinkType):
 					VideoInfo = HTML.ElementFromString(VideoPage.content).xpath('//div[@id="player_code"]/script')[0].text
 					VideoStream = ScriptConvert(script=VideoInfo) + "?cookies="+String.Quote(str(cookies), usePlus=True)+"&headers="+String.Quote(str(headers), usePlus=True)
 			except:
-				InputError = HTML.ElementFromString(VideoPage.content).xpath('//div[@class="extra"]/div[@class="main"]/b')[0].text.strip()
-				VideoStream = ErrorMessage(Host=Host, InputError=InputError, ErrorType="VideoRemoved")
+				try:
+					InputError = HTML.ElementFromString(VideoPage.content).xpath('//div[@class="err"]')[0].text.strip()
+					VideoStream = ErrorMessage(Host=Host, InputError=InputError, ErrorType="WrongIP")
+				except:
+					InputError = HTML.ElementFromString(VideoPage.content).xpath('//div[@class="extra"]/div[@class="main"]/b')[0].text.strip()
+					VideoStream = ErrorMessage(Host=Host, InputError=InputError, ErrorType="VideoRemoved")
 		except:
 			VideoStream = ErrorMessage(Host=Host, LogError=1, ErrorType="HostDown")
 	elif Host == "Miivideos":
@@ -906,7 +916,8 @@ def GetMovie(Host, HostPage, url, LinkType):
 		try:
 			VideoPage = SecondButtonPress(url=url, HostPage=HostPage, addkey={"submit": "watch"})
 			try:
-				VideoStream = HTML.ElementFromString(VideoPage.content).xpath('//div[@class="container content"]/div/div/video/source')[0].get('src')
+				VideoInfo = HTML.ElementFromString(VideoPage.content).xpath('//div[@class="container content"]/div/script')[0].text
+				VideoStream = VideoInfo.split('file: "')[1].split('"')[0]
 			except:
 				InputError = HTML.ElementFromString(VideoPage.content).xpath('//div[@class="alert alert-error"]')[0].text.strip()
 				VideoStream = ErrorMessage(Host=Host, InputError=InputError, ErrorType="VideoRemoved")
@@ -995,7 +1006,10 @@ def GetMovie(Host, HostPage, url, LinkType):
 			VideoStream = ErrorMessage(Host=Host, LogError=1, ErrorType="HostDown")
 	elif Host == "Movshare":
 		try:
-			VideoInfo = HTML.ElementFromURL(HostPage).xpath('//div[@id="content_block"]/table/tr/td/script[@type="text/javascript"]')[-1].text
+			if LinkType == 4:
+				VideoInfo = HTML.ElementFromURL(HostPage).xpath('//div[@id="content_block"]/table/tr/td/script[@type="text/javascript"]')[5].text
+			elif LinkType == 1:
+				VideoInfo = HTML.ElementFromURL(HostPage).xpath('//body/script[@type="text/javascript"]')[5].text
 			try:
 				CodeString = VideoInfo.split("eval")[1].split(";}('")[1].split("'));")[0]
 				CharSrc = CharConvert(w=CodeString.split("','")[0],i=CodeString.split("','")[1],s=CodeString.split("','")[2],e=CodeString.split("','")[3])
@@ -1007,7 +1021,10 @@ def GetMovie(Host, HostPage, url, LinkType):
 				VideoID = HostPage.split('/')[4]
 			except:
 				VideoID = VideoInfo.split('flashvars.file="')[1].split('"')[0]
-				VideoKey = VideoInfo.split('flashvars.filekey="')[1].split('"')[0]
+				try:
+					VideoKey = VideoInfo.split('fkzd="')[1].split('"')[0]
+				except:
+					VideoKey = VideoInfo.split('flashvars.filekey="')[1].split('"')[0]
 			url = "http://www.movshare.net/api/player.api.php?cid2=undefined&cid=1&key="+VideoKey+"&cid3=movie2k%2Etl&numOfErrors=0&file="+VideoID+"&user=undefined&pass=undefined"
 			headers = {'User-Agent': UserAgent, 'Host': 'www.movshare.net', 'Referer': 'http://www.movshare.net/player/movshare-v5.swf'}
 			session = requests.session()
@@ -1378,7 +1395,7 @@ def GetMovie(Host, HostPage, url, LinkType):
 			cookies = {'age_ver': '1'}
 			VideoPage = SecondButtonPress(url=url, HostPage=HostPage, cookies=cookies, wait=10, addkey={'referer': url})
 			try:
-				VideoURL = HTML.ElementFromString(VideoPage.content).xpath('//div[@id="player_code"]/script')[1].text.split('file: "')[1].split('"')[0]
+				VideoURL = HTML.ElementFromString(VideoPage.content).xpath('//div[@id="player_code"]/script')[2].text.split('file: "')[1].split('"')[0]
 				headers = {'User-Agent': UserAgent, 'Host': VideoURL.split('/')[2], 'Referer': 'http://streamcloud.eu/player/player.swf', 'Connection': 'keep-alive'}
 				VideoStream = VideoURL + "?cookies="+String.Quote(str(cookies), usePlus=True)+"&headers="+String.Quote(str(headers), usePlus=True)
 			except:
@@ -1987,7 +2004,7 @@ def GetMovie(Host, HostPage, url, LinkType):
 			VideoStream = ErrorMessage(Host=Host, LogError=3, ErrorType="HostDown")
 	elif Host == "Xvidstage":
 		try:
-			VideoPage = SecondButtonPress(url=url, HostPage=HostPage, addkey={"referer": url})
+			VideoPage = SecondButtonPress(url=url, HostPage=HostPage, wform=1, addkey={"referer": url})
 			try:
 				VideoInfo = VideoPage.content.split('<div id="player_code">')[1].split("<script type='text/javascript'>")[1].split('</script>')[0]
 				VideoStream = ScriptConvert(script=VideoInfo)

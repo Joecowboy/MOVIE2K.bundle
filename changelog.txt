@@ -1,3 +1,5 @@
+[B]Version 1.7.35[/B]
+- Fixed Trailer Addict Search and added to Trailer Addict if multiple pages are needed.  Updated several hosts. 
 [B]Version 1.7.34[/B]
 - Fix few logic issues for Movie2k.tl and updated host.  Added to FLV skip to select MP4, AVI or MKV only.
 [B]Version 1.7.33[/B]
