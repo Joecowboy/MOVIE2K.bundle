@@ -626,7 +626,7 @@ def RokuUsersMyFavorites(title):
 @route(PREFIX + '/RokuUsersMyHostLink')
 def RokuUsersMyHostLink(title):
 
-	return ObjectContainer(header="Special Instructions for Roku Users", message="Inputting Host URL, Roku users must be using version 2.6.7 or later of the Plex Roku Channel. If you do not want to input the Host URL via the Roku input screen you can use the online Rokue remote control.  It can be found at:  http://www.remoku.tv  Example Host Link: http://www.putlocker.com/file/ABCDEFGHIJKLMN or with IMDB number at the end. Example: http://www.putlocker.com/file/ABCDEFGHIJKLMN&imdb=tt1981115  WARNING: DO NOT DIRECTLY TYPE OR PASTE THE TEXT IN THE INPUT CAPTCHA SECTION USING ROKU PLEX CHANNELS 2.6.4. THAT VERSION USES A SEARCH INSTEAD OF ENTRY SCREEN AND EVERY LETTER OF THE TEXT YOU ENTER WILL PRODUCE A SUBMIT FORM ON EACH LETTER.")
+	return ObjectContainer(header="Special Instructions for Roku Users", message="Inputting Host URL, Roku users must be using version 2.6.7 or later of the Plex Roku Channel. If you do not want to input the Host URL via the Roku input screen you can use the online Rokue remote control.  It can be found at:  http://www.remoku.tv  Example Host Link: http://www.putlocker.com/file/ABCDEFGHIJKLMN or with IMDB number at the end. Example: http://www.putlocker.com/file/ABCDEFGHIJKLMN&imdb=tt1981115  Notice this added to the end of the link: &imdb=tt1981115  This is taken from the IMDB Link: http://www.imdb.com/title/tt1981115")
 
 	
 	
@@ -2618,7 +2618,7 @@ def SubMoviePageAdd(title, page, date, dateadd, thumbck, type, MOVIE2K_URL, watc
 
 			MOVIES_SUMMARY = "Page - " + str(i) + " | Host: " + Hosts
 			MOVIES_TITLE = title
-			if Client.Product == "Web Client" or Client.Platform in ('iOS', ) and not (Client.Platform == 'Safari' and Platform.OS == 'MacOSX'):
+			if Client.Platform == "Plex Home Theater" or Client.Product == "Android" or Client.Product == "Web Client" or Client.Platform in ('iOS', ) and not (Client.Platform == 'Safari' and Platform.OS == 'MacOSX'):
 				MOVIES_SUMMARY = title
 				MOVIES_TITLE = str(i) + ": " + Hosts
 			if Host == "Urmediazone":
@@ -2683,7 +2683,7 @@ def SubMoviePageAdd(title, page, date, dateadd, thumbck, type, MOVIE2K_URL, watc
 
 			MOVIES_SUMMARY = "Page - " + str(i) + " | Host"+pl+": " + Hosts[:-2]
 			MOVIES_TITLE = title
-			if Client.Product == "Android" or Client.Product == "Web Client" or Client.Platform in ('iOS', ) and not (Client.Platform == 'Safari' and Platform.OS == 'MacOSX'):
+			if Client.Platform == "Plex Home Theater" or Client.Product == "Android" or Client.Product == "Web Client" or Client.Platform in ('iOS', ) and not (Client.Platform == 'Safari' and Platform.OS == 'MacOSX'):
 				MOVIES_SUMMARY = title
 				MOVIES_TITLE = str(i) + ": " + Hosts[:-2]
 			oc.add(DirectoryObject(key=Callback(TheMovieListings, title=title, page=page, date=date, dateadd=dateadd, thumb=thumb, type=type, PageOfHosts=i, MOVIE2K_URL=MOVIE2K_URL, watchitlater=watchitlater), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=Callback(GetThumb, url=thumb)))
@@ -2966,7 +2966,7 @@ def TheMovieListings(title, page, date, dateadd, thumb, type, PageOfHosts, MOVIE
 
 						show = "ADDED: "+ DateAdded + " | HOST: " + Host + " | QUALITY: " + Quality
 						show_title = title
-						if Client.Product == "Android" or Client.Product == "Web Client" or Client.Platform in ('iOS', ) and not (Client.Platform == 'Safari' and Platform.OS == 'MacOSX'):
+						if Client.Platform == "Plex Home Theater" or Client.Product == "Android" or Client.Product == "Web Client" or Client.Platform in ('iOS', ) and not (Client.Platform == 'Safari' and Platform.OS == 'MacOSX'):
 							show = title
 							show_title = "QUALITY: " + Quality +" | HOST: " + Host + " | ADDED: " + DateAdded
 
@@ -3371,7 +3371,7 @@ def TrailerResults(page, title, website):
 	if numPages > 1:
 		for Page in TrailerPages:
 			TrailerDesc = 'N/A'
-			if Client.Product == "Android" or Client.Product == "Web Client" or Client.Platform in ('iOS', ) and not (Client.Platform == 'Safari' and Platform.OS == 'MacOSX'):
+			if Client.Platform == "Plex Home Theater" or Client.Product == "Android" or Client.Product == "Web Client" or Client.Platform in ('iOS', ) and not (Client.Platform == 'Safari' and Platform.OS == 'MacOSX'):
 				title = "Page " + str(i) + " : List of Trailers and Other Video Content"
 				summary1 = GetMovieTrailers.xpath('//div[@class="video_bar"]/h1')[0].text_content()
 			else:

@@ -1,3 +1,5 @@
+[B]Version 1.7.37[/B]
+- Tweak Host info display for Android and Plex Home Theatre
 [B]Version 1.7.36[/B]
 - Added Selection Watchit Later to My Host Link.  Added check for swap title summary for Plex for Android for Host quality.
 [B]Version 1.7.35[/B]
