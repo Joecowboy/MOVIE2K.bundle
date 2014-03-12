@@ -46,7 +46,7 @@ Currently there are eleven URLs in the list:
 
 ###Number of Hosts Per Page:
 
-Allows you to change the number of Hosts per page to be displayed.  Default is 5 per page.
+Allows you to change the number of Hosts per page to be displayed.  Default is 1 per page.
 
 ###Autoresume Downloads:
 
@@ -179,7 +179,7 @@ To enter My Favorite Movie4k URL, Parental Lock password or Captcha text, Roku u
 
 2.  Now MOVIE2K plugin will work with the iOS.
 
-3.  With the latest version of Plex Media Server.  Plexconnect now works with Apple TV with this RTMP channel.  Also, for timeout issues in Movie2k Plugin Preferences change Number of Hosts Per Page from the default of 5 to 1.  You currently cannot search in any of the Channel plugins on Plexconnect, or set preferences for that matter. That input functionality has not been added. You have to do all that on another client/device.
+3.  With the latest version of Plex Media Server.  Plexconnect now works with Apple TV with this RTMP channel and you can also search.  Also, for timeout issues in Movie2k Plugin Preferences change Number of Hosts Per Page from the default of 5 to 1.  You currently cannot set preferences in any of the Channel plugins on Plexconnect. That input functionality has not been added. You have to do all that on another client/device.
 
 4. LG TV needs the file Info.plist edited found in MOVIE2k.bundle/content folder (This will impact the RTMP Host sites):
 	<key>PlexFrameworkFlags</key>

@@ -1,3 +1,5 @@
+[B]Version 1.7.36[/B]
+- Added Selection Watchit Later to My Host Link.  Added check for swap title summary for Plex for Android for Host quality.
 [B]Version 1.7.35[/B]
 - Fixed Trailer Addict Search and added to Trailer Addict if multiple pages are needed.  Updated several hosts. 
 [B]Version 1.7.34[/B]

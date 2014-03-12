@@ -626,16 +626,83 @@ def RokuUsersMyFavorites(title):
 @route(PREFIX + '/RokuUsersMyHostLink')
 def RokuUsersMyHostLink(title):
 
-	return ObjectContainer(header="Special Instructions for Roku Users", message="Inputting Host URL, Roku users must be using version 2.6.7 or later of the Plex Roku Channel. If you do not want to input the Movie4k URL via the Roku input screen you can use the online Rokue remote control.  It can be found at:  http://www.remoku.tv   WARNING: DO NOT DIRECTLY TYPE OR PASTE THE TEXT IN THE INPUT CAPTCHA SECTION USING ROKU PLEX CHANNELS 2.6.4. THAT VERSION USES A SEARCH INSTEAD OF ENTRY SCREEN AND EVERY LETTER OF THE TEXT YOU ENTER WILL PRODUCE A SUBMIT FORM ON EACH LETTER.")
+	return ObjectContainer(header="Special Instructions for Roku Users", message="Inputting Host URL, Roku users must be using version 2.6.7 or later of the Plex Roku Channel. If you do not want to input the Host URL via the Roku input screen you can use the online Rokue remote control.  It can be found at:  http://www.remoku.tv  Example Host Link: http://www.putlocker.com/file/ABCDEFGHIJKLMN or with IMDB number at the end. Example: http://www.putlocker.com/file/ABCDEFGHIJKLMN&imdb=tt1981115  WARNING: DO NOT DIRECTLY TYPE OR PASTE THE TEXT IN THE INPUT CAPTCHA SECTION USING ROKU PLEX CHANNELS 2.6.4. THAT VERSION USES A SEARCH INSTEAD OF ENTRY SCREEN AND EVERY LETTER OF THE TEXT YOU ENTER WILL PRODUCE A SUBMIT FORM ON EACH LETTER.")
+
 	
 	
 ####################################################################################################
 @route(PREFIX + '/InputHostURL')
 def InputHostURL(title, MOVIE2K_URL, query):
-
 	oc = ObjectContainer(title2=title)
-	
+
 	if query.split('/')[0] == "http:":
+		try:
+			imdb = query.split("&imdb=")[1]
+			HostPage = query.split("&imdb=")[0]
+			IMDBurl = "http://www.imdb.com/title/" + imdb
+			IMDB_PAGE_HTML = HTML.ElementFromURL(IMDBurl)
+			thumb = IMDB_PAGE_HTML.xpath('//div[@class="image"]/a/img')[0].get('src')
+			title = IMDB_PAGE_HTML.xpath('//h1[@class="header"]/span')[0].text
+		except:
+			IMDBurl = ""
+			thumb = ""
+			HostPage = query
+
+		# List Host Sites for Playback
+		summary = "My Host Link Input."
+		oc.add(DirectoryObject(key=Callback(subInputHostURL, HostPage=HostPage, IMDBurl=IMDBurl, title=title, thumb=thumb, MOVIE2K_URL=MOVIE2K_URL), title=title, summary=summary, thumb=Callback(GetThumb, url=thumb)))
+
+
+		# Add Watchit Later Video Movie4k.to link
+		if HostVideoDownload.stop == None:
+			HostVideoDownload.stop = CheckForDownload()
+		ICON_ADDWATCHITLATER = "icon-add-watchit-later.png"
+		WATCHIT_THUMB = R(ICON_ADDWATCHITLATER)
+		summary = "Add \""+title+"\" as a watchit later video download from a Movie2k Host!"
+		WATCHIT_TITLE = "Add to My Watchit Later Videos"
+		oc.add(DirectoryObject(key=Callback(subInputHostURL, HostPage=HostPage, IMDBurl=IMDBurl, title=title, thumb=thumb, MOVIE2K_URL=MOVIE2K_URL, watchitlater=True), title=WATCHIT_TITLE, summary=summary, thumb=WATCHIT_THUMB))
+	else:
+		oc = ObjectContainer(header="We Apologize", message="Host link submitted is not a valid URL. Example Host Link: http://www.putlocker.com/file/ABCDEFGHIJKLMN or with IMDB number at the end. Example: http://www.putlocker.com/file/ABCDEFGHIJKLMN&imdb=tt1981115")
+
+	return oc
+
+
+####################################################################################################
+@route(PREFIX + '/subInputHostURL')
+def subInputHostURL(HostPage, IMDBurl, title, thumb, MOVIE2K_URL, watchitlater=False):
+	oc = ObjectContainer(title2=title)
+
+	GoodLink = None
+
+	if IMDBurl != "":
+		IMDB_PAGE_HTML = HTML.ElementFromURL(IMDBurl)
+
+		Host = "MyHostLink"
+		summary = IMDB_PAGE_HTML.xpath('//p[@itemprop="description"]')[0].text
+		show = "My Host Link"
+		rating = float(IMDB_PAGE_HTML.xpath('//div[@class="star-box-details"]/strong/span[@itemprop="ratingValue"]')[0].text)
+		season = 0
+		index = 0
+		type = 'Movies'
+		date =  IMDB_PAGE_HTML.xpath('//div[@class="infobar"]//meta[@itemprop="datePublished"]')[0].get('content')
+		date = Datetime.ParseDate(date)
+		duration = int(re.sub('[^0-9]', '', IMDB_PAGE_HTML.xpath('//div[@class="infobar"]/time[@itemprop="duration"]')[0].text))*60*1000
+		genre = ""
+		for getgenre in IMDB_PAGE_HTML.xpath('//div[@class="infobar"]/a/span[@itemprop="genre"]'):
+			genre = genre + getgenre.text +', '
+		genres = genre.split(',')
+		director = IMDB_PAGE_HTML.xpath('//div[@itemprop="director"]/a/span')[0].text
+		directors = [director]
+		actors = 'Actors Not Available'
+		try:
+			content_rating = IMDB_PAGE_HTML.xpath('//div[@class="infobar"]/span[@itemprop="contentRating"]')[0].get('title')
+			if content_rating == None or content_rating == "":
+				content_rating = 'NR'
+
+		except:
+			content_rating = 'NR'
+		Log("LIST MY INFO NOW: "+content_rating)
+	else:
 		Host = "MyHostLink"
 		summary = "Description not given..."
 		show = "My Host Link"
@@ -652,12 +719,21 @@ def InputHostURL(title, MOVIE2K_URL, query):
 		directors = [director]
 		actors = 'Actors Not Available'
 		content_rating = 'NR'
-		thumb = ""
-		url = "http://www.movie4k.to/index.php?title="+String.Quote(query, usePlus=True)+"&summary="+String.Quote(summary, usePlus=True)+"&show="+String.Quote(show, usePlus=True)+"&date="+String.Quote(str(date), usePlus=True)+"&thumb="+String.Quote(thumb, usePlus=True)+"&host="+Host+"&season="+str(season)+"&index="+str(index)+"&type="+String.Quote(type, usePlus=True)+"&genres="+String.Quote(genre, usePlus=True)+"&director="+String.Quote(director, usePlus=True)+"&actors="+String.Quote(actors, usePlus=True)+"&duration="+str(duration)+"&rating="+str(rating)+"&content_rating="+content_rating
-	
+
+	if watchitlater == "True":
+		LinkType = 4
+		url = "http://www.movie4k.to/index.php"
+		FindHost = HostPage.split('/')[2].split('.')
+		if len(FindHost) == 2:
+			Host = FindHost[0].capitalize()
+		elif len(FindHost) == 3:
+			Host = FindHost[1].capitalize()
+		(HostVideoDownload.MyDownloadPath, HostVideoDownload.MyDownloadRequest, GoodLink) = GetHostVideo(title=title, date=String.Quote(str(date), usePlus=True), DateAdded=String.Quote(str(DateAdded), usePlus=True), Quality=Quality, thumb=String.Quote(thumb, usePlus=True), type=String.Quote(type, usePlus=True), summary=String.Quote(summary, usePlus=True), directors=String.Quote(director, usePlus=True), guest_stars=String.Quote(actors, usePlus=True), genres=String.Quote(genre, usePlus=True), duration=str(duration), rating=str(rating), season=str(season), index=str(index), content_rating=content_rating, source_title=source_title, url=url, Host=Host, HostPage=HostPage, LinkType=LinkType)
+	else:
+		url = "http://www.movie4k.to/index.php?title="+String.Quote(HostPage, usePlus=True)+"&summary="+String.Quote(summary, usePlus=True)+"&show="+String.Quote(show, usePlus=True)+"&date="+String.Quote(str(date), usePlus=True)+"&thumb="+String.Quote(thumb, usePlus=True)+"&host="+Host+"&season="+str(season)+"&index="+str(index)+"&type="+String.Quote(type, usePlus=True)+"&genres="+String.Quote(genre, usePlus=True)+"&director="+String.Quote(director, usePlus=True)+"&actors="+String.Quote(actors, usePlus=True)+"&duration="+str(duration)+"&rating="+str(rating)+"&content_rating="+content_rating
 		oc.add(MovieObject(
 						url = url,
-						title = query,
+						title = title,
 						summary = summary,
 						directors = directors,
 						genres = genres,
@@ -667,8 +743,14 @@ def InputHostURL(title, MOVIE2K_URL, query):
 						source_title = show,
 						originally_available_at = date,
 						thumb = Callback(GetThumb, url=thumb)))
-	else:
-		oc = ObjectContainer(header="We Apologize", message="Host link submitted is not a valid URL. Example Host Link: http://www.putlocker.com/file/ABCDEFGHIJKLMN")
+
+	if GoodLink != None:
+		if GoodLink == True:
+			oc = ObjectContainer(header="Download Started", message="Please DO NOT shut down or restart Plex Media Server at this time or download will fail.  Go to Watchit Later to check on the status.")
+		else:
+			oc = ObjectContainer(header="We Apologize", message="There was a problem with the Host video.  Host video errored do to "+GoodLink+".  Please try again by clicking the OK button, choose another Host.")
+	elif len(oc) < 1:
+		oc = ObjectContainer(header="We Apologize", message="An error has occured processing Host site information.  Please try again.")
 
 	return oc
 	
@@ -2410,6 +2492,14 @@ def SubGroupMoviePageAdd(title, page, date, dateadd, thumbck, type, summary, MOV
 	summary = summary.split(" | ")[0] + " | " + summary.split(" | ")[1] + " | List the Host Sites from Movie2k."
 	oc.add(DirectoryObject(key=Callback(SubMoviePageAdd, title=title, page=page, date=date, dateadd=dateadd, thumbck=thumbck, type=type, MOVIE2K_URL=MOVIE2K_URL), title=title, summary=summary, thumb=Callback(GetThumb, url=thumbck)))
 
+	if type == "Movies":
+		# Lookup Trailer for Movie Title
+		ICON_TRAILERSEARCH = "icon-trailer-addict.png"
+		TRAILERSEARCH_TITLE = "List Trailers for " + title
+		TRAILERSEARCH_SUMMARY ="Find the Movie Trailer for "+title+" in the Trailer Addict database!"
+		TRAILERSEARCH_THUMB = R(ICON_TRAILERSEARCH)
+		oc.add(DirectoryObject(key=Callback(SearchTrailers, query=title.replace(" ", "%20")), title=TRAILERSEARCH_TITLE, summary=TRAILERSEARCH_SUMMARY, thumb=TRAILERSEARCH_THUMB))
+
 	# Add Favorite Movie4k.to link
 	ICON_ADDFAVORITE = "icon-add-favorite.png"
 	ADDFAVORITE_THUMB = R(ICON_ADDFAVORITE)
@@ -2593,7 +2683,7 @@ def SubMoviePageAdd(title, page, date, dateadd, thumbck, type, MOVIE2K_URL, watc
 
 			MOVIES_SUMMARY = "Page - " + str(i) + " | Host"+pl+": " + Hosts[:-2]
 			MOVIES_TITLE = title
-			if Client.Product == "Web Client" or Client.Platform in ('iOS', ) and not (Client.Platform == 'Safari' and Platform.OS == 'MacOSX'):
+			if Client.Product == "Android" or Client.Product == "Web Client" or Client.Platform in ('iOS', ) and not (Client.Platform == 'Safari' and Platform.OS == 'MacOSX'):
 				MOVIES_SUMMARY = title
 				MOVIES_TITLE = str(i) + ": " + Hosts[:-2]
 			oc.add(DirectoryObject(key=Callback(TheMovieListings, title=title, page=page, date=date, dateadd=dateadd, thumb=thumb, type=type, PageOfHosts=i, MOVIE2K_URL=MOVIE2K_URL, watchitlater=watchitlater), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=Callback(GetThumb, url=thumb)))
@@ -2770,7 +2860,7 @@ def TheMovieListings(title, page, date, dateadd, thumb, type, PageOfHosts, MOVIE
 
 		try:
 			content_rating = IMDB_PAGE_HTML.xpath('//div[@class="infobar"]/span')[0].get('title')
-			if content_rating == None or rating == "":
+			if content_rating == None or content_rating == "":
 				content_rating = 'NR'
 
 		except:
@@ -2876,7 +2966,7 @@ def TheMovieListings(title, page, date, dateadd, thumb, type, PageOfHosts, MOVIE
 
 						show = "ADDED: "+ DateAdded + " | HOST: " + Host + " | QUALITY: " + Quality
 						show_title = title
-						if Client.Product == "Web Client" or Client.Platform in ('iOS', ) and not (Client.Platform == 'Safari' and Platform.OS == 'MacOSX'):
+						if Client.Product == "Android" or Client.Product == "Web Client" or Client.Platform in ('iOS', ) and not (Client.Platform == 'Safari' and Platform.OS == 'MacOSX'):
 							show = title
 							show_title = "QUALITY: " + Quality +" | HOST: " + Host + " | ADDED: " + DateAdded
 
@@ -3281,7 +3371,7 @@ def TrailerResults(page, title, website):
 	if numPages > 1:
 		for Page in TrailerPages:
 			TrailerDesc = 'N/A'
-			if Client.Product == "Web Client" or Client.Platform in ('iOS', ) and not (Client.Platform == 'Safari' and Platform.OS == 'MacOSX'):
+			if Client.Product == "Android" or Client.Product == "Web Client" or Client.Platform in ('iOS', ) and not (Client.Platform == 'Safari' and Platform.OS == 'MacOSX'):
 				title = "Page " + str(i) + " : List of Trailers and Other Video Content"
 				summary1 = GetMovieTrailers.xpath('//div[@class="video_bar"]/h1')[0].text_content()
 			else:

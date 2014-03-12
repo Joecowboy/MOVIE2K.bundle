@@ -470,9 +470,10 @@ def ResumeMyDownload(Host, HostPage, url, LinkType, title=None, startByte="0", C
 
 
 ####################################################################################################
-def GetHostVideo(title, date, DateAdded, Quality, thumb, type, summary, directors, guest_stars, genres, duration, rating, season, index, content_rating, source_title, url, Host):
+def GetHostVideo(title, date, DateAdded, Quality, thumb, type, summary, directors, guest_stars, genres, duration, rating, season, index, content_rating, source_title, url, Host, HostPage=None, LinkType=None):
 
-	(HostPage, LinkType) = GetHostPageURL(Host=Host, url=url)
+	if HostPage == None:
+		(HostPage, LinkType) = GetHostPageURL(Host=Host, url=url)
 
 	#Check For Real Host
 	Host = HostPage.split('http://')[1].split('.')[0].capitalize()
