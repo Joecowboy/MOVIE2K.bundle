@@ -1,3 +1,5 @@
+[B]Version 1.7.38[/B]
+- Fix for check for Plex for Android
 [B]Version 1.7.37[/B]
 - Tweak Host info display for Android and Plex Home Theatre
 [B]Version 1.7.36[/B]

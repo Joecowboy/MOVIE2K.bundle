@@ -2618,7 +2618,7 @@ def SubMoviePageAdd(title, page, date, dateadd, thumbck, type, MOVIE2K_URL, watc
 
 			MOVIES_SUMMARY = "Page - " + str(i) + " | Host: " + Hosts
 			MOVIES_TITLE = title
-			if Client.Platform == "Plex Home Theater" or Client.Product == "Android" or Client.Product == "Web Client" or Client.Platform in ('iOS', ) and not (Client.Platform == 'Safari' and Platform.OS == 'MacOSX'):
+			if Client.Platform == "Plex Home Theater" or Client.Platform == "Android" or Client.Product == "Web Client" or Client.Platform in ('iOS', ) and not (Client.Platform == 'Safari' and Platform.OS == 'MacOSX'):
 				MOVIES_SUMMARY = title
 				MOVIES_TITLE = str(i) + ": " + Hosts
 			if Host == "Urmediazone":
@@ -2683,7 +2683,7 @@ def SubMoviePageAdd(title, page, date, dateadd, thumbck, type, MOVIE2K_URL, watc
 
 			MOVIES_SUMMARY = "Page - " + str(i) + " | Host"+pl+": " + Hosts[:-2]
 			MOVIES_TITLE = title
-			if Client.Platform == "Plex Home Theater" or Client.Product == "Android" or Client.Product == "Web Client" or Client.Platform in ('iOS', ) and not (Client.Platform == 'Safari' and Platform.OS == 'MacOSX'):
+			if Client.Platform == "Plex Home Theater" or Client.Platform == "Android" or Client.Product == "Web Client" or Client.Platform in ('iOS', ) and not (Client.Platform == 'Safari' and Platform.OS == 'MacOSX'):
 				MOVIES_SUMMARY = title
 				MOVIES_TITLE = str(i) + ": " + Hosts[:-2]
 			oc.add(DirectoryObject(key=Callback(TheMovieListings, title=title, page=page, date=date, dateadd=dateadd, thumb=thumb, type=type, PageOfHosts=i, MOVIE2K_URL=MOVIE2K_URL, watchitlater=watchitlater), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=Callback(GetThumb, url=thumb)))
@@ -2966,7 +2966,7 @@ def TheMovieListings(title, page, date, dateadd, thumb, type, PageOfHosts, MOVIE
 
 						show = "ADDED: "+ DateAdded + " | HOST: " + Host + " | QUALITY: " + Quality
 						show_title = title
-						if Client.Platform == "Plex Home Theater" or Client.Product == "Android" or Client.Product == "Web Client" or Client.Platform in ('iOS', ) and not (Client.Platform == 'Safari' and Platform.OS == 'MacOSX'):
+						if Client.Platform == "Plex Home Theater" or Client.Platform == "Android" or Client.Product == "Web Client" or Client.Platform in ('iOS', ) and not (Client.Platform == 'Safari' and Platform.OS == 'MacOSX'):
 							show = title
 							show_title = "QUALITY: " + Quality +" | HOST: " + Host + " | ADDED: " + DateAdded
 
@@ -3371,7 +3371,7 @@ def TrailerResults(page, title, website):
 	if numPages > 1:
 		for Page in TrailerPages:
 			TrailerDesc = 'N/A'
-			if Client.Platform == "Plex Home Theater" or Client.Product == "Android" or Client.Product == "Web Client" or Client.Platform in ('iOS', ) and not (Client.Platform == 'Safari' and Platform.OS == 'MacOSX'):
+			if Client.Platform == "Plex Home Theater" or Client.Platform == "Android" or Client.Product == "Web Client" or Client.Platform in ('iOS', ) and not (Client.Platform == 'Safari' and Platform.OS == 'MacOSX'):
 				title = "Page " + str(i) + " : List of Trailers and Other Video Content"
 				summary1 = GetMovieTrailers.xpath('//div[@class="video_bar"]/h1')[0].text_content()
 			else:
