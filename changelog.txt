@@ -1,3 +1,5 @@
+[B]Version 1.7.39[/B]
+- Changed Movie2k.sx to Movie2k.ga
 [B]Version 1.7.38[/B]
 - Fix for check for Plex for Android
 [B]Version 1.7.37[/B]

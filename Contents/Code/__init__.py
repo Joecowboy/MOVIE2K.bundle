@@ -170,11 +170,11 @@ def MainMenu():
 	oc.add(DirectoryObject(key=Callback(SubMainMenu, title=MOVIES_TITLE, MOVIE2K_URL=MOVIE2K_URL), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=MOVIES_THUMB))
 
 	#Add Movie2k.sx site
-	ICON_MOVIES2k_SX  = "icon-movie2k-sx.png"
-	MOVIES_TITLE = "Movie2k.sx"
+	ICON_MOVIES2k_SX  = "icon-movie2k-ga.png"
+	MOVIES_TITLE = "Movie2k.ga"
 	MOVIES_SUMMARY = "Your Movies, Blockbuster and TV Shows database!"
 	MOVIES_THUMB = R(ICON_MOVIES2k_SX)
-	MOVIE2K_URL = "www.movie2k.sx"
+	MOVIE2K_URL = "www.movie2k.ga"
 	oc.add(DirectoryObject(key=Callback(SubMainMenu, title=MOVIES_TITLE, MOVIE2K_URL=MOVIE2K_URL), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=MOVIES_THUMB))
 
 	#Add Movie8k.to site
@@ -380,8 +380,8 @@ def Search(query, title, MOVIE2K_URL):
 		payload = {'searchquery': query}
 		elm1 = 'body'
 		elm2 = '//table[@id="tablemoviesindex"]/tbody/tr'
-	elif MOVIE2K_URL == "www.movie2k.sx":
-		url = 'http://www.movie2k.sx/search'
+	elif MOVIE2K_URL == "www.movie2k.ga":
+		url = 'http://www.movie2k.ga/search'
 		payload = {'q': query}
 		elm1 = '//table[@id="tablemoviesindex"]'
 		elm2 = '//table[@id="tablemoviesindex"]/tr'
@@ -406,7 +406,7 @@ def Search(query, title, MOVIE2K_URL):
 		'User-Agent': UserAgent[UserAgentNum]
 		}
 
-	if MOVIE2K_URL == "www.movie2k.sx":
+	if MOVIE2K_URL == "www.movie2k.ga":
 		SEARCH_PAGE = requests.get(url, data=payload, headers=headers, allow_redirects=True, cookies=cookies)
 	else:
 		SEARCH_PAGE = requests.post(url, data=payload, headers=headers, allow_redirects=True, cookies=cookies)
@@ -443,7 +443,7 @@ def Search(query, title, MOVIE2K_URL):
 			except:
 				MOVIES_LANG = GetLang(lang=LANGUAGE_URL.split('/')[4].split('.')[0])
 		except:
-			if MOVIE2K_URL == "www.movie2k.sx":
+			if MOVIE2K_URL == "www.movie2k.ga":
 				MOVIES_LANG = MOVIES_TD[3].text
 				if MOVIES_LANG == None or MOVIES_LANG == "":
 					MOVIES_LANG = "N/A"
@@ -456,9 +456,9 @@ def Search(query, title, MOVIE2K_URL):
 		MOVIES_PAGE = MOVIES_TD[0].xpath('./a')[0].get('href')
 
 		try:
-			if MOVIE2K_URL == "www.movie2k.sx":
+			if MOVIE2K_URL == "www.movie2k.ga":
 				jj = i
-				SiteURL = "http://www.movie2k.sx"
+				SiteURL = "http://www.movie2k.ga"
 			else:
 				jj = 0
 				SiteURL = ""
@@ -790,7 +790,7 @@ def InputFavoriteURL(title, MOVIE2K_URL, query):
 	oc = ObjectContainer(title2=title)
 	try:
 		checkURL = query.split('/')[2]
-		if checkURL != 'www.movie4k.to' and checkURL != '91.202.63.145' and checkURL != 'www.movie.to' and checkURL != 'movie4k.co.in' and checkURL != 'movie4k.to.come.in' and checkURL != 'www.movie4kunblocked.co' and checkURL != 'www.movie2kproxy.org' and checkURL != 'www.movie2kproxy.com' and checkURL != 'www.movie2k.tv' and checkURL != '91.202.62.123' and checkURL != 'www.movie2k.sx' and checkURL != 'www.movie2k.tl':
+		if checkURL != 'www.movie4k.to' and checkURL != '91.202.63.145' and checkURL != 'www.movie.to' and checkURL != 'movie4k.co.in' and checkURL != 'movie4k.to.come.in' and checkURL != 'www.movie4kunblocked.co' and checkURL != 'www.movie2kproxy.org' and checkURL != 'www.movie2kproxy.com' and checkURL != 'www.movie2k.tv' and checkURL != '91.202.62.123' and checkURL != 'www.movie2k.ga' and checkURL != 'www.movie2k.tl':
 			return ObjectContainer(header="Not a Movie4k URL", message="The entered URL is not a valid Movie4k video URL. Example of a valid Movie4k video URL: http://www.movie4k.to/Oblivion-watch-movie-3777965.html  Please try again and click Ok to exit this screen.")
 	except:
 		return ObjectContainer(header="Not a Movie4k URL", message="The entered URL is not a valid Movie4k video URL. Example of a valid Movie4k video URL: http://www.movie4k.to/Oblivion-watch-movie-3777965.html  Please try again and click Ok to exit this screen.")
@@ -831,8 +831,8 @@ def InputFavoriteURL(title, MOVIE2K_URL, query):
 	except:
 		MOVIES_QUALITY = "DVDRip/BDRip"
 
-	if MOVIE2K_URL == "www.movie2k.sx":
-		SiteURL = "http://www.movie2k.sx"
+	if MOVIE2K_URL == "www.movie2k.ga":
+		SiteURL = "http://www.movie2k.ga"
 	else:
 		SiteURL = ""
 	MOVIES_THUMB = SiteURL + MOVIE_INFO[0].xpath("./a/img")[0].get('src')
@@ -1471,7 +1471,7 @@ def TVShows(title, type, MOVIE2K_URL):
 	TVSHOW_TITLE = "Featured TV Shows"
 	TVSHOW_SUMMARY = "Your Featured TV Shows in the Movie2k database!"
 	TVSHOW_THUMB = R(ICON_FEATURED)
-	if MOVIE2K_URL == "www.movie2k.sx":
+	if MOVIE2K_URL == "www.movie2k.ga":
 		TVSHOW_PAGE = "http://" + MOVIE2K_URL + "/series"
 	else:
 		TVSHOW_PAGE = "http://" + MOVIE2K_URL + "/tvshows_featured.php"
@@ -1484,7 +1484,7 @@ def TVShows(title, type, MOVIE2K_URL):
 	TVSHOW_SUMMARY = "Your Latest Updates to the TV Shows database!"
 	TVSHOW_THUMB = R(ICON_UPDATES)
 	TVSHOW_PAGE = "http://" + MOVIE2K_URL + "/tvshows-updates.html"
-	if MOVIE2K_URL == "www.movie2k.sx":
+	if MOVIE2K_URL == "www.movie2k.ga":
 		oc.add(DirectoryObject(key=Callback(DisabledScreen, title=TVSHOW_TITLE, MOVIE2K_URL=MOVIE2K_URL), title=TVSHOW_TITLE, summary=TVSHOW_SUMMARY, thumb=TVSHOW_THUMB))
 	elif MOVIE2K_URL == "www.movie8k.to" or MOVIE2K_URL == "www.movie8k.me":
 		oc.add(DirectoryObject(key=Callback(MovieGenres, title=TVSHOW_TITLE, page=TVSHOW_PAGE, genre=Genre_Type, thumb=TVSHOW_THUMB, type=type, MOVIE2K_URL=MOVIE2K_URL), title=TVSHOW_TITLE, summary=TVSHOW_SUMMARY, thumb=TVSHOW_THUMB))
@@ -1500,7 +1500,7 @@ def TVShows(title, type, MOVIE2K_URL):
 	TVSHOW_PAGE = "http://" + MOVIE2K_URL + "/tvshows-all.html"
 	if MOVIE2K_URL == "www.movie2k.tl":
 		oc.add(DirectoryObject(key=Callback(TVShowsList, title=TVSHOW_TITLE, page=TVSHOW_PAGE, genre=Genre_Type, type=type, MOVIE2K_URL=MOVIE2K_URL), title=TVSHOW_TITLE, summary=TVSHOW_SUMMARY, thumb=TVSHOW_THUMB))
-	elif MOVIE2K_URL == "www.movie2k.sx":
+	elif MOVIE2K_URL == "www.movie2k.ga":
 		oc.add(DirectoryObject(key=Callback(AlphabiticalPageAdd, title=TVSHOW_TITLE, page=TVSHOW_PAGE, type=type, MOVIE2K_URL=MOVIE2K_URL), title=TVSHOW_TITLE, summary=TVSHOW_SUMMARY, thumb=TVSHOW_THUMB))	
 	else:
 		oc.add(DirectoryObject(key=Callback(AlphabiticalTVShowsPageAdd, title=TVSHOW_TITLE, page=TVSHOW_PAGE, type=type, MOVIE2K_URL=MOVIE2K_URL), title=TVSHOW_TITLE, summary=TVSHOW_SUMMARY, thumb=TVSHOW_THUMB))
@@ -1521,7 +1521,7 @@ def TVShows(title, type, MOVIE2K_URL):
 		TVSHOW_SUMMARY = "Your Top TV Shows in the Movie2k database!"
 		TVSHOW_THUMB = R(ICON_UPDATES)
 		TVSHOW_PAGE = "http://" + MOVIE2K_URL + "/tvshows-top.html"
-		if MOVIE2K_URL == "www.movie2k.sx" or MOVIE2K_URL == "www.movie8k.to" or MOVIE2K_URL == "www.movie8k.me":
+		if MOVIE2K_URL == "www.movie2k.ga" or MOVIE2K_URL == "www.movie8k.to" or MOVIE2K_URL == "www.movie8k.me":
 			oc.add(DirectoryObject(key=Callback(DisabledScreen, title=TVSHOW_TITLE, MOVIE2K_URL=MOVIE2K_URL), title=TVSHOW_TITLE, summary=TVSHOW_SUMMARY, thumb=TVSHOW_THUMB))
 		else:
 			oc.add(DirectoryObject(key=Callback(MoviePageAdd, title=TVSHOW_TITLE, page=TVSHOW_PAGE, genre=Genre_Type, type=type, MOVIE2K_URL=MOVIE2K_URL), title=TVSHOW_TITLE, summary=TVSHOW_SUMMARY, thumb=TVSHOW_THUMB))
@@ -1577,7 +1577,7 @@ def GenreTVShowsPageAdd(title, page, type, MOVIE2K_URL):
 
 	if MOVIE2K_URL == "www.movie2k.tl":
 		return ObjectContainer(header="We Apologize", message="This section does not contain any Genre TVShows listings do to problem no content generation from www.movie2k.tl genre page.")
-	elif MOVIE2K_URL == "www.movie2k.sx":
+	elif MOVIE2K_URL == "www.movie2k.ga":
 		elm = 'div[@id="maincontent4"]/table[@id="tablemoviesindex"]'
 	elif MOVIE2K_URL == "www.movie8k.to" or MOVIE2K_URL == "www.movie8k.me":
 		elm = 'div[@id="content"]/table[@id="tablemovies"]/tbody'
@@ -1602,7 +1602,7 @@ def GenreTVShowsPageAdd(title, page, type, MOVIE2K_URL):
 			NotSkip = False
 
 		if NotSkip:
-			if MOVIE2K_URL == "www.movie2k.sx" or MOVIE2K_URL == "www.movie8k.to" or MOVIE2K_URL == "www.movie8k.me":
+			if MOVIE2K_URL == "www.movie2k.ga" or MOVIE2K_URL == "www.movie8k.to" or MOVIE2K_URL == "www.movie8k.me":
 				oc.add(DirectoryObject(key=Callback(MovieGenres, title=MOVIES_TITLE, page=MOVIES_PAGE, genre=Genre_Type, thumb=MOVIES_THUMB, type=type, MOVIE2K_URL=MOVIE2K_URL), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=MOVIES_THUMB))
 			else:
 				oc.add(DirectoryObject(key=Callback(TVShowsList, title=MOVIES_TITLE, page=MOVIES_PAGE, genre=Genre_Type, type=type, MOVIE2K_URL=MOVIE2K_URL), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=MOVIES_THUMB))
@@ -1663,8 +1663,8 @@ def FeaturedTVShowsPageAdd(title, page, type, MOVIE2K_URL):
 	dateadd = 'N/A'
 	TVSHOWS_DIV = FEATURED_TVSHOW_PAGE.xpath('//div[@id="maincontenttvshow"]/div')
 	TVShowsLength = len(TVSHOWS_DIV)
-	if MOVIE2K_URL == "www.movie2k.sx":
-		SiteURL = "http://www.movie2k.sx"
+	if MOVIE2K_URL == "www.movie2k.ga":
+		SiteURL = "http://www.movie2k.ga"
 	else:
 		SiteURL = ""
 
@@ -1674,7 +1674,7 @@ def FeaturedTVShowsPageAdd(title, page, type, MOVIE2K_URL):
 		TVSHOW_TITLE = TVSHOWS_DIV[i].xpath("./a/img")[0].get('title')
 		i += 1
 		TVSHOW_TITLE = TVSHOW_TITLE
-		if MOVIE2K_URL == "www.movie2k.sx":
+		if MOVIE2K_URL == "www.movie2k.ga":
 			TVSHOW_PAGE = SiteURL + TVSHOWS_DIV[i-1].xpath("./a")[0].get('href')
 		else:
 			TVSHOW_PAGE = TVSHOWS_DIV[i].xpath('./div[@class="beschreibung"]/table[@id="tablemoviesindex"]//a')[0].get('href')
@@ -1714,7 +1714,7 @@ def TVShowSeasons(title, page, genre, type, MOVIE2K_URL, thumb=None, MOVIES_LANG
 	req = requests.get(page, headers=headers, cookies=cookies)
 	MOVIE_PAGE = HTML.ElementFromString(req.content)
 
-	if MOVIE2K_URL == "www.movie2k.sx":
+	if MOVIE2K_URL == "www.movie2k.ga":
 		SEASON = '//select[@id="season"]/option'
 	else:
 		if MOVIE2K_URL == "www.movie2k.tl" or MOVIE2K_URL == "www.movie8k.to" or MOVIE2K_URL == "www.movie8k.me":
@@ -1762,7 +1762,7 @@ def TVShowSeasons(title, page, genre, type, MOVIE2K_URL, thumb=None, MOVIES_LANG
 			try:
 				try:
 					MOVIES_TITLE = title + ", " + Seasons.text.replace(' ', ': ')
-					MOVIES_PAGE = "http://www.movie2k.sx/seasons/" + Seasons.get('value') + "/get_episodes"
+					MOVIES_PAGE = "http://www.movie2k.ga/seasons/" + Seasons.get('value') + "/get_episodes"
 					CSRF_TOKEN = MOVIE_PAGE.xpath('//meta[@name="csrf-token"]')[0].get('content')
 					MOVIES_LANG_B = MOVIES_LANG
 					HasSeason = True
@@ -1827,7 +1827,7 @@ def TVShowEpisodes(title, page, genre, type, MOVIE2K_URL, thumb=None, MOVIES_LAN
 
 	if CSRF_TOKEN != None:
 		headers = {"Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8", "Accept-Charset": "ISO-8859-1,utf-8;q=0.7,*;q=0.3", "Accept-Encoding": "gzip,deflate,sdch", "Accept-Language": "en-US,en;q=0.8", "Connection": "keep-alive", "Host": MOVIE2K_URL, "Referer": "http://"+MOVIE2K_URL, "User-Agent": UserAgent[UserAgentNum]}
-		page = "http://www.movie2k.sx" + req.content.split("'")[1]
+		page = "http://www.movie2k.ga" + req.content.split("'")[1]
 		req = requests.get(page, headers=headers, cookies=cookies)
 
 	MOVIE_PAGE = HTML.ElementFromString(req.content)
@@ -1854,7 +1854,7 @@ def TVShowEpisodes(title, page, genre, type, MOVIE2K_URL, thumb=None, MOVIES_LAN
 					DATE_ADDED = 'N/A'
 					MOVIES_LANG = MOVIES_LANG_B
 					MOVIES_TITLE = title + ",  " + Episodes.text.replace(' ', ': ')
-					MOVIES_PAGE = "http://www.movie2k.sx/episodes/" + Episodes.get('value') + "/get_links"
+					MOVIES_PAGE = "http://www.movie2k.ga/episodes/" + Episodes.get('value') + "/get_links"
 					CSRF_TOKEN = MOVIE_PAGE.xpath('//meta[@name="csrf-token"]')[0].get('content')
 					HasEpisode = True
 				except:
@@ -1897,7 +1897,7 @@ def Movies(title, type, MOVIE2K_URL):
 		MOVIES_THUMB = R(ICON_CINEMA)
 		if MOVIE2K_URL == "www.movie2k.tl":
 			MOVIES_PAGE = "http://" + MOVIE2K_URL
-		elif MOVIE2K_URL == "www.movie2k.sx":
+		elif MOVIE2K_URL == "www.movie2k.ga":
 			MOVIES_PAGE = "http://" + MOVIE2K_URL + "/movies"
 		elif MOVIE2K_URL == "www.movie8k.to" or MOVIE2K_URL == "www.movie8k.me":
 			MOVIES_PAGE = "http://" + MOVIE2K_URL + "/index.php?lang=en"
@@ -1941,13 +1941,13 @@ def Movies(title, type, MOVIE2K_URL):
 			MOVIES_SUMMARY = "Your Top Movies in the Movie2k database!"
 			MOVIES_THUMB = R(ICON_TOP)
 			MOVIES_PAGE = "http://" + MOVIE2K_URL + "/movies-top.html"
-			if MOVIE2K_URL == "www.movie2k.sx" or MOVIE2K_URL == "www.movie8k.to" or MOVIE2K_URL == "www.movie8k.me":
+			if MOVIE2K_URL == "www.movie2k.ga" or MOVIE2K_URL == "www.movie8k.to" or MOVIE2K_URL == "www.movie8k.me":
 				oc.add(DirectoryObject(key=Callback(DisabledScreen, title=MOVIES_TITLE, MOVIE2K_URL=MOVIE2K_URL), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=MOVIES_THUMB))
 			else:
 				oc.add(DirectoryObject(key=Callback(MoviePageAdd, title=MOVIES_TITLE, page=MOVIES_PAGE, genre=Genre_Type, type=type, MOVIE2K_URL=MOVIE2K_URL), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=MOVIES_THUMB))
 
 	elif type == 'XXX Movies':
-		if MOVIE2K_URL == "www.movie2k.tl" or MOVIE2K_URL == "www.movie2k.sx" or MOVIE2K_URL == "www.movie8k.to" or MOVIE2K_URL == "www.movie8k.me":
+		if MOVIE2K_URL == "www.movie2k.tl" or MOVIE2K_URL == "www.movie2k.ga" or MOVIE2K_URL == "www.movie8k.to" or MOVIE2K_URL == "www.movie8k.me":
 			return ObjectContainer(header="We Apologize", message="This section has been disabled do to "+ MOVIE2K_URL +" disabling it on their site.")
 
 		ParentalLock = Prefs["parentallock"]
@@ -2128,7 +2128,7 @@ def AlphabiticalPageAdd(title, page, type, MOVIE2K_URL):
 	oc.add(DirectoryObject(key=Callback(MovieGenres, title=MOVIES_TITLE, page=page, genre=Alpha_Type, thumb=MOVIES_THUMB, type=type, MOVIE2K_URL=MOVIE2K_URL), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=MOVIES_THUMB))
 	if MOVIE2K_URL == "www.movie2k.tl" or MOVIE2K_URL == "www.movie8k.to" or MOVIE2K_URL == "www.movie8k.me":
 		Page = HTML.ElementFromString(req.content).xpath('//div[@id="content"]/div')[0]
-	elif MOVIE2K_URL == "www.movie2k.sx":
+	elif MOVIE2K_URL == "www.movie2k.ga":
 		Page = HTML.ElementFromString(req.content).xpath('//div[@id="content"]/div')[2]
 	else:
 		Page = HTML.ElementFromString(req.content).xpath('//div[@id="content"]/div[@id="content"]/div')[0]
@@ -2163,7 +2163,7 @@ def GenrePageAdd(title, page, type, MOVIE2K_URL):
 
 	if MOVIE2K_URL == "www.movie2k.tl" or MOVIE2K_URL == "www.movie8k.to" or MOVIE2K_URL == "www.movie8k.me":
 		elm = 'table[@id="tablemovies"]/tbody'
-	elif MOVIE2K_URL == "www.movie2k.sx":
+	elif MOVIE2K_URL == "www.movie2k.ga":
 		elm = 'div[@id="maincontent4"]/table[@id="tablemoviesindex"]'
 	else:
 		elm = 'table[@id="tablemovies"]'
@@ -2209,7 +2209,7 @@ def MovieGenres(title, page, genre, thumb, type, MOVIE2K_URL):
 		else:
 			elm = 'div[@id="maincontent4"]/div[@class="pagidnation"]'
 		SiteURL = ""
-	elif MOVIE2K_URL == "www.movie2k.sx":
+	elif MOVIE2K_URL == "www.movie2k.ga":
 		elm = 'div[@id="maincontent4"]/div[@id="pagination"]'
 		num = -1
 	else:
@@ -2263,8 +2263,8 @@ def CinemaMoviePageAdd(title, page, type, MOVIE2K_URL):
 	if MOVIE2K_URL == "www.movie2k.tl":
 		MOVIES_LANG = "German"
 		elm = "/font"
-	elif MOVIE2K_URL == "www.movie2k.sx":
-		SiteURL = "http://www.movie2k.sx"
+	elif MOVIE2K_URL == "www.movie2k.ga":
+		SiteURL = "http://www.movie2k.ga"
 	elif MOVIE2K_URL == "www.movie8k.to" or MOVIE2K_URL == "www.movie8k.me":
 		elm = '/div'
 		elm1 = ''
@@ -2341,8 +2341,8 @@ def RecomendedPageAdd(title, page, type, MOVIE2K_URL):
 	else:
 		CURRENT_MOVIE2K_URL = page.split('/')[2]
 	
-	if CURRENT_MOVIE2K_URL == "www.movie2k.sx":
-		elm = "http://www.movie2k.sx"
+	if CURRENT_MOVIE2K_URL == "www.movie2k.ga":
+		elm = "http://www.movie2k.ga"
 	else:
 		elm = ""
 		
@@ -2395,7 +2395,7 @@ def MoviePageAdd(title, page, genre, type, MOVIE2K_URL):
 	try:
 		if MOVIE2K_URL == "www.movie2k.tl" or MOVIE2K_URL == "www.movie8k.to" or MOVIE2K_URL == "www.movie8k.me":
 			GET_THUMB = GENRE_MOVIE_PAGE.xpath('//body/script')
-		elif MOVIE2K_URL == "www.movie2k.sx":
+		elif MOVIE2K_URL == "www.movie2k.ga":
 			GET_THUMB = GENRE_MOVIE_PAGE.xpath('//table[@id="tablemoviesindex"]/script')
 		else:
 			GET_THUMB = GENRE_MOVIE_PAGE.xpath('//div[@id="maincontent4"]/script')
@@ -2427,7 +2427,7 @@ def MoviePageAdd(title, page, genre, type, MOVIE2K_URL):
 		except:
 			MOVIES_YEAR = "N/A"
 		
-		if MOVIE2K_URL == "www.movie2k.sx":
+		if MOVIE2K_URL == "www.movie2k.ga":
 			try:
 				MOVIES_LANG = MOVIES_TD[3].text.capitalize()
 			except:
@@ -2452,9 +2452,9 @@ def MoviePageAdd(title, page, genre, type, MOVIE2K_URL):
 		MOVIES_SUMMARY = "Year: "+MOVIES_YEAR+" | Lang: "+MOVIES_LANG+" | Part of the "+genre+" "+type+" line up on Movie2k."
 		MOVIES_PAGE = MOVIES_TD[0].xpath("./a")[0].get('href')
 		try:
-			if MOVIE2K_URL == "www.movie2k.sx":
+			if MOVIE2K_URL == "www.movie2k.ga":
 				jj = i
-				SiteURL = "http://www.movie2k.sx"
+				SiteURL = "http://www.movie2k.ga"
 			else:
 				jj = 0
 				SiteURL = ""
@@ -2463,7 +2463,7 @@ def MoviePageAdd(title, page, genre, type, MOVIE2K_URL):
 			MOVIES_THUMB = None
 
 		if MOVIES_LANG == GetLanguage() or MOVIES_LANG == 'N/A' or GetLanguage() == 'All':
-			if MOVIE2K_URL == 'www.movie2k.sx' and type == 'TV Shows':
+			if MOVIE2K_URL == 'www.movie2k.ga' and type == 'TV Shows':
 				oc.add(DirectoryObject(key=Callback(TVShowSeasons, title=MOVIES_TITLE, page=MOVIES_PAGE, genre=genre, type=type, MOVIE2K_URL=MOVIE2K_URL, thumb=MOVIES_THUMB, MOVIES_LANG=MOVIES_LANG), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=Callback(GetThumb, url=MOVIES_THUMB)))
 			else:
 				oc.add(DirectoryObject(key=Callback(SubGroupMoviePageAdd, title=MOVIES_TITLE, page=MOVIES_PAGE, date=MOVIES_YEAR, dateadd=dateadd, thumbck=MOVIES_THUMB, type=type, summary=MOVIES_SUMMARY, MOVIE2K_URL=MOVIE2K_URL), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=Callback(GetThumb, url=MOVIES_THUMB)))
@@ -2486,7 +2486,7 @@ def SubGroupMoviePageAdd(title, page, date, dateadd, thumbck, type, summary, MOV
 		cookies = Dict['_movie2k_uid']
 		headers = {"Accept": "text/javascript, application/javascript", "Referer": "http://"+MOVIE2K_URL, "User-Agent": UserAgent[UserAgentNum], "X-CSRF-Token": CSRF_TOKEN, "X-Requested-With": "XMLHttpReques"}
 		req = requests.get(page, headers=headers, cookies=cookies)
-		page = "http://www.movie2k.sx" + req.content.split("'")[1]
+		page = "http://www.movie2k.ga" + req.content.split("'")[1]
 	
 	# List Host Sites for Playback
 	summary = summary.split(" | ")[0] + " | " + summary.split(" | ")[1] + " | List the Host Sites from Movie2k."
@@ -2642,7 +2642,7 @@ def SubMoviePageAdd(title, page, date, dateadd, thumbck, type, MOVIE2K_URL, watc
 							except:
 								Quality = "N/A"
 					except:
-						if MOVIE2K_URL == "www.movie2k.sx":
+						if MOVIE2K_URL == "www.movie2k.ga":
 							Host = Listing[Num1].xpath("./td/a")[2].text.partition('.')[0].capitalize()
 							if type == "Movies":
 								try:
@@ -2906,7 +2906,7 @@ def TheMovieListings(title, page, date, dateadd, thumb, type, PageOfHosts, MOVIE
 					try:
 						Host = Listing[num].xpath("./td/a/img")[0].get('title').split(' ')[0].partition('.')[0].capitalize()
 					except:
-						if MOVIE2K_URL == "www.movie2k.sx":
+						if MOVIE2K_URL == "www.movie2k.ga":
 							Host = Listing[num].xpath("./td/a")[2].text.partition('.')[0].capitalize()
 					if Host == None or Host == "":
 						Host = GetHost(url=page, HostPageInfo=MOVIE_PAGE_HTML)
