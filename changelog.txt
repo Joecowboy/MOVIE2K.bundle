@@ -1,3 +1,5 @@
+[B]Version 1.7.40[/B]
+- Tweaked code detection for video type and updated Requests
 [B]Version 1.7.39[/B]
 - Changed Movie2k.sx to Movie2k.ga
 [B]Version 1.7.38[/B]

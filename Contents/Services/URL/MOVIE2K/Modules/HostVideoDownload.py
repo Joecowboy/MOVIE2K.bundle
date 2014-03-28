@@ -483,7 +483,7 @@ def GetHostVideo(title, date, DateAdded, Quality, thumb, type, summary, director
 	(path, request, ContentLength, NoError, VideoStreamLink) = ResumeMyDownload(Host=Host, HostPage=HostPage, url=url, LinkType=LinkType, title=title)
 
 	if NoError == True:
-		videotype = path.split('/')[-1].split('.')[1]
+		videotype = path.split('/')[-1].split('.')[1].partition('?')[0]
 
 		hosts = LoadData(fp=WATCHIT_DATA, GetJson=3)
 		numHosts = len(hosts)

@@ -170,7 +170,7 @@ def GetItemInfo(url, itemInfo):
 				except:
 					video_url = VideoStream_URL[i]
 
-				if video_url.endswith('.mp4') or video_url.endswith('.mp4?start=0'):
+				if '.mp4' in video_url:
 					video_frame_rate = "30"
 					video_resolution = Prefs['video_resolution']
 					container = Container.MP4
@@ -179,12 +179,39 @@ def GetItemInfo(url, itemInfo):
 					audio_channels = 2
 					bitrate = None
 					optimized_for_streaming = True
-				elif video_url.endswith('.flv') or video_url.endswith('.flv?start=0'):
+				elif '.flv' in video_url:
 					video_frame_rate = "30"
 					video_resolution = Prefs['video_resolution']
 					container = Container.FLV
 					video_codec = VideoCodec.VP6
 					audio_codec = AudioCodec.MP3
+					bitrate = None
+					audio_channels = 2
+					optimized_for_streaming = True
+				elif '.avi' in video_url:
+					video_frame_rate = "30"
+					video_resolution = Prefs['video_resolution']
+					container = Container.AVI
+					video_codec = VideoCodec.H264
+					audio_codec = AudioCodec.AAC
+					bitrate = None
+					audio_channels = 2
+					optimized_for_streaming = True
+				elif '.mkv' in video_url:
+					video_frame_rate = "30"
+					video_resolution = Prefs['video_resolution']
+					container = Container.MKV
+					video_codec = VideoCodec.H264
+					audio_codec = AudioCodec.AAC
+					bitrate = None
+					audio_channels = 2
+					optimized_for_streaming = True
+				elif '.mov' in video_url:
+					video_frame_rate = "30"
+					video_resolution = Prefs['video_resolution']
+					container = Container.MOV
+					video_codec = VideoCodec.H264
+					audio_codec = AudioCodec.AAC
 					bitrate = None
 					audio_channels = 2
 					optimized_for_streaming = True
@@ -381,54 +408,6 @@ def GetMovieDebugger(Host, HostPage, url, LinkType):
 	import base64
 	import hashlib
 
-	if Host == "Billionuploads":
-		#try:
-			if LinkType == 1:
-				HostPage = "http://billionuploads.com/"+HostPage.split('-')[1]
 
-			cookies = {}
-			try:
-				headers = OrderedDict()
-				headers['Accept'] = 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
-				headers['Accept-Charset'] = 'ISO-8859-1,utf-8;q=0.7,*;q=0.3'
-				headers['Accept-Encoding'] = ''
-				headers['Accept-Language'] = 'en-US,en;q=0.8'
-				headers['Cache-Control'] = 'no-cache'
-				headers['Connection'] = 'keep-alive'
-				headers['Referer'] = url
-				headers['DNT'] = '1'
-				headers['Pragma'] = 'no-cache'
-				headers['User-Agent'] = UserAgent
-				headers['Host'] = 'billionuploads.com'
-				session = requests.session()
-				s = session.get(HostPage, headers=headers)
-				try:
-					IncapsulaPage = "http://billionuploads.com" + HTML.ElementFromString(s.content).xpath('//head/iframe')[0].get('src')
-					s = session.get(IncapsulaPage, headers=headers)
-				except:
-					VideoInfo = HTML.ElementFromString(s.content).xpath('//head/script')[1].text
-					IncapsulaPage = IncapsulaScript(DeString=VideoInfo)
-					s1 = session.get(IncapsulaPage, headers=headers)
-				cookies.update(CookieDict(cookies=session.cookies))
-			except:
-				pass
-
-			session1 = requests.session()
-			requests.utils.add_dict_to_cookiejar(session1.cookies, cookies)
-			VideoPage = session1.get(HostPage, headers=headers)
-			cookies = CookieDict(cookies=session1.cookies)
-			Log(VideoPage.content)
-			KeyValue = HTML.ElementFromString(VideoPage.content).xpath('//div[@class="dobox"]/textarea')[0].text
-			
-			VideoPage = SecondButtonPress(url=url, HostPage=HostPage, page=VideoPage, addkey={"submit_btn": "", "blader": KeyValue, "down_direct": "1", "airman": "toast"}, removekey=["rand", "sys", "gloss"], cookies=cookies)
-			
-			try:
-				VideoInfo = HTML.ElementFromString(VideoPage.content).xpath('//div [@id=\'inf\']/input[@id="dl"]')[0].get('value').split('GvaZu')[1]
-				VideoStream = VideoInfo.decode('base64', 'strict').decode('base64', 'strict')
-			except:
-				InputError = HTML.ElementFromString(VideoPage.content).xpath('//div[@class="container"]/div[@class="centered"]/div/div')[0].text.strip()
-				VideoStream = ErrorMessage(Host=Host, InputError=InputError, ErrorType="VideoRemoved")
-		#except:
-		#	VideoStream = ErrorMessage(Host=Host, LogError=1, ErrorType="HostDown")
 
 	return VideoStream

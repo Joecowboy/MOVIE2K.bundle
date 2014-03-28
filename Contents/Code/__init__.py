@@ -169,11 +169,11 @@ def MainMenu():
 		MOVIES_TITLE = "Movie2k.tv"
 	oc.add(DirectoryObject(key=Callback(SubMainMenu, title=MOVIES_TITLE, MOVIE2K_URL=MOVIE2K_URL), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=MOVIES_THUMB))
 
-	#Add Movie2k.sx site
-	ICON_MOVIES2k_SX  = "icon-movie2k-ga.png"
+	#Add Movie2k.ga site
+	ICON_MOVIES2k_GA  = "icon-movie2k-ga.png"
 	MOVIES_TITLE = "Movie2k.ga"
 	MOVIES_SUMMARY = "Your Movies, Blockbuster and TV Shows database!"
-	MOVIES_THUMB = R(ICON_MOVIES2k_SX)
+	MOVIES_THUMB = R(ICON_MOVIES2k_GA)
 	MOVIE2K_URL = "www.movie2k.ga"
 	oc.add(DirectoryObject(key=Callback(SubMainMenu, title=MOVIES_TITLE, MOVIE2K_URL=MOVIE2K_URL), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=MOVIES_THUMB))
 
@@ -1177,6 +1177,33 @@ def MediaObjectsForURL(path, videotype):
 		audio_codec = AudioCodec.MP3
 		bitrate = None
 		audio_channels = 2
+		optimized_for_streaming = True
+	elif videotype == 'avi':
+		video_frame_rate = "30"
+		video_resolution = Prefs['video_resolution']
+		container = Container.AVI
+		video_codec = VideoCodec.H264
+		audio_codec = AudioCodec.AAC
+		audio_channels = 2
+		bitrate = None
+		optimized_for_streaming = True
+	elif videotype == 'mkv':
+		video_frame_rate = "30"
+		video_resolution = Prefs['video_resolution']
+		container = Container.MKV
+		video_codec = VideoCodec.H264
+		audio_codec = AudioCodec.AAC
+		audio_channels = 2
+		bitrate = None
+		optimized_for_streaming = True
+	elif videotype == 'mov':
+		video_frame_rate = "30"
+		video_resolution = Prefs['video_resolution']
+		container = Container.MOV
+		video_codec = VideoCodec.H264
+		audio_codec = AudioCodec.AAC
+		audio_channels = 2
+		bitrate = None
 		optimized_for_streaming = True
 	else:
 		video_frame_rate = "30"
