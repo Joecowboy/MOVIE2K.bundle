@@ -2662,7 +2662,7 @@ def SubMoviePageAdd(title, page, date, dateadd, thumbck, type, MOVIE2K_URL, watc
 						Host = Listing[Num1].xpath("./td/a/img")[0].get('title').split(' ')[0].partition('.')[0].capitalize()
 						if type == "Movies":
 							try:
-								if MOVIE2K_URL == "www.movie4k.to":
+								if MOVIE2K_URL == "www.movie4k.to" or MOVIE2K_URL == "www.movie2k.tv":
 									Quality = GetQuality(imageNum=Listing[Num1].xpath("./td/img")[0].get('src').split('/')[-1].split('.')[0])
 								else:
 									Quality = Listing[Num1].xpath("./td/img")[0].get('title').split(' ')[2]
@@ -2689,7 +2689,7 @@ def SubMoviePageAdd(title, page, date, dateadd, thumbck, type, MOVIE2K_URL, watc
 					NumHosts = len(ScriptListing) - 2	
 					Host = ScriptListing[sll].split('title=\\"')[1].split('\\"')[0].split(' ')[0].partition('.')[0].capitalize()
 					if type == "Movies":
-						if MOVIE2K_URL == "www.movie4k.to":
+						if MOVIE2K_URL == "www.movie4k.to" or MOVIE2K_URL == "www.movie2k.tv":
 							Quality = GetQuality(imageNum=ScriptListing[sll].split('src=\\"')[2].split('\\"')[0].split('/')[-1].split('.')[0])
 						else:
 							Quality = ScriptListing[sll].split('title=\\"')[2].split('\\"')[0].split(' ')[2]
@@ -2835,12 +2835,12 @@ def TheMovieListings(title, page, date, dateadd, thumb, type, PageOfHosts, MOVIE
 
 		try:
 			try:
-				duration = int(float(re.sub('[^0-9]', '', MOVIE_INFO.split('Length:')[1].split('min')[0]))*60*1000)
+				duration = int(float(re.sub('[^0-9]', '', MOVIE_INFO.split('Length:')[1].split('min')[0].split('|')[0]))*60*1000)
 			except:
 				try:
-					duration = int(float(re.sub('[^0-9]', '', MOVIE_INFO.split('nge:')[1].split('min')[0]))*60*1000)
+					duration = int(float(re.sub('[^0-9]', '', MOVIE_INFO.split('nge:')[1].split('min')[0].split('|')[0]))*60*1000)
 				except:
-					duration = int(float(re.sub('[^0-9]', '', MOVIE_INFO.split('nge:')[1].split('Min')[0]))*60*1000)
+					duration = int(float(re.sub('[^0-9]', '', MOVIE_INFO.split('nge:')[1].split('Min')[0].split('|')[0]))*60*1000)
 		except:
 			duration = None
 
@@ -2945,7 +2945,7 @@ def TheMovieListings(title, page, date, dateadd, thumb, type, PageOfHosts, MOVIE
 						Quality = "DVDRip/BDRip"
 					else:
 						DateAdded = re.sub('\t\r\0', '',Listing[num].xpath("./td/a")[0].text).strip()
-						if MOVIE2K_URL == "www.movie4k.to":
+						if MOVIE2K_URL == "www.movie4k.to" or MOVIE2K_URL == "www.movie2k.tv":
 							Quality = GetQuality(imageNum=Listing[num].xpath("./td/img")[0].get('src').split('/')[-1].split('.')[0])
 						else:
 							Quality = Listing[num].xpath("./td/img")[0].get('title').split(' ')[2]
@@ -2961,7 +2961,7 @@ def TheMovieListings(title, page, date, dateadd, thumb, type, PageOfHosts, MOVIE
 						Quality = "DVDRip/BDRip"
 					else:
 						DateAdded = re.sub('\t\r\0', '',ScriptListing[out['sll']].split('href=\\"')[1].split('\\">')[1].split(' <')[0]).strip()
-						if MOVIE2K_URL == "www.movie4k.to":
+						if MOVIE2K_URL == "www.movie4k.to" or MOVIE2K_URL == "www.movie2k.tv":
 							Quality = GetQuality(imageNum=ScriptListing[out['sll']].split('src=\\"')[2].split('\\"')[0].split('/')[-1].split('.')[0])
 						else:
 							Quality = ScriptListing[out['sll']].split('title=\\"')[2].split('\\"')[0].split(' ')[2]
@@ -3373,7 +3373,10 @@ def TrailerResults(page, title, website):
 			thumb = GetMovieTrailers.xpath('//div[@class="poster"]/img')[0].get('pagespeed_high_res_src')
 
 	if thumb == None:
-		thumb = GetMovieTrailers.xpath('//div[@class="poster"]/a/img')[0].get('src')
+		try:
+			thumb = GetMovieTrailers.xpath('//div[@class="poster"]/a/img')[0].get('src')
+		except:
+			thumb = GetMovieTrailers.xpath('//div[@class="poster"]/img')[0].get('src')
 	if thumb.split('/')[0] != "http:":
 		thumb = website + thumb
 

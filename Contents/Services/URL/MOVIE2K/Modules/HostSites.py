@@ -485,15 +485,6 @@ def GetMovie(Host, HostPage, url, LinkType):
 			VideoStream = ErrorMessage(Host=Host, LogError=1, ErrorType="HostDown")
 	elif Host == "Filebox":
 		VideoStream = ErrorMessage(Host=Host, LogError=3, ErrorType="HostDown")
-	elif Host == "Filego":
-		try:
-			VideoPage = 'http://www.filego.org/fgflash.php?id=' + HostPage.split('=')[1]
-			VideoInfo = HTML.ElementFromURL(VideoPage).xpath('//body/script[@type="text/javascript"]')[0].text
-			VideoID = VideoInfo.split('function square()')[1].split('}')[0]
-			VideoURL = VideoID.split("='")
-			VideoStream = VideoURL[7].split("'")[0]
-		except:
-			VideoStream = ErrorMessage(Host=Host, LogError=1)
 	elif Host == "Fileflare":
 		try:
 			headers = {'User-Agent': UserAgent, 'Referer': HostPage}
@@ -512,6 +503,29 @@ def GetMovie(Host, HostPage, url, LinkType):
 					VideoStream = ErrorMessage(Host=Host, InputError=InputError, ErrorType="VideoRemoved")
 			except:
 				InputError = HTML.ElementFromString(VideoPage.content).xpath("//ul[@class='pageErrors']/li")[0].text.strip()
+				VideoStream = ErrorMessage(Host=Host, InputError=InputError, ErrorType="VideoRemoved")
+		except:
+			VideoStream = ErrorMessage(Host=Host, LogError=1, ErrorType="HostDown")
+	elif Host == "Filego":
+		try:
+			VideoPage = 'http://www.filego.org/fgflash.php?id=' + HostPage.split('=')[1]
+			VideoInfo = HTML.ElementFromURL(VideoPage).xpath('//body/script[@type="text/javascript"]')[0].text
+			VideoID = VideoInfo.split('function square()')[1].split('}')[0]
+			VideoURL = VideoID.split("='")
+			VideoStream = VideoURL[7].split("'")[0]
+		except:
+			VideoStream = ErrorMessage(Host=Host, LogError=1)
+	elif Host == "Filehoot":
+		try:
+			VideoPage = SecondButtonPress(url=url, HostPage=HostPage, addkey={"referer": url})
+			try:
+				try:
+					VideoInfo = HTML.ElementFromString(VideoPage.content).xpath('//div[@id="player_code"]/script')[1].text
+				except:
+					VideoInfo = HTML.ElementFromString(VideoPage.content).xpath('//div[@id="player_code"]/script')[0].text
+				VideoStream = ScriptConvert(script=VideoInfo)
+			except:
+				InputError = HTML.ElementFromString(VideoPage.content).xpath('//div[@class="col-lg-10 col-lg-offset-1"]/b')[0].text.strip()
 				VideoStream = ErrorMessage(Host=Host, InputError=InputError, ErrorType="VideoRemoved")
 		except:
 			VideoStream = ErrorMessage(Host=Host, LogError=1, ErrorType="HostDown")
@@ -1205,19 +1219,23 @@ def GetMovie(Host, HostPage, url, LinkType):
 				VideoStream = ErrorMessage(Host=Host, InputError=InputError, ErrorType="VideoRemoved")
 		except:
 			VideoStream = ErrorMessage(Host=Host, LogError=1, ErrorType="HostDown")
-	elif Host == "Putlocker" or Host == 'Firedrive':
+	elif Host == "Putlocker" or Host == "Firedrive":
 		try:
 			if Host == 'Putlocker':
 				HostPage = HostPage.replace('putlocker', 'firedrive')
 			HostPage = HostPage.replace('embed', 'file')
 			VideoPage = SecondButtonPress(url=url, HostPage=HostPage, wform=1)
 			try:
-				VideoPageXML = HTML.ElementFromString(VideoPage.content).xpath("//a[@id='external_download']")[0].get('href')
 				session = requests.session()
 				cookies = CookieDict(cookies=VideoPage.cookies)
 				requests.utils.add_dict_to_cookiejar(session.cookies, cookies)
 				headers = {'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8', 'Accept-Encoding': 'gzip, deflate', 'Accept-Language': 'en-US,en;q=0.5', 'Connection': 'keep-alive', 'User-Agent': UserAgent[UserAgentNum], 'Connection': 'keep-alive', 'Referer': HostPage, 'Host': 'dl.firedrive.com'}
-				VideoInfo = session.head(VideoPageXML.replace('key', 'stream')+"&em=1", headers=headers)
+				try:
+					VideoPageXML = HTML.ElementFromString(VideoPage.content).xpath("//a[@id='top_external_download']")[0].get('href')
+					VideoInfo = session.head(VideoPageXML.replace('key', 'stream')+"&em=1", headers=headers)
+				except:
+					VideoPageXML = HTML.ElementFromString(VideoPage.content).xpath('//div[@class="ad_button_wrap"]/a[@class="ad_button"]')[0].get('href')
+					VideoInfo = session.head(VideoPageXML, headers=headers)
 				VideoID = VideoInfo.headers['Location']
 				cookies = CookieDict(cookies=session.cookies)
 				VideoStream = VideoID + "?cookies="+String.Quote(str(cookies), usePlus=True)+"&headers="+String.Quote(str(headers), usePlus=True)
