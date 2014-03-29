@@ -1229,7 +1229,7 @@ def GetMovie(Host, HostPage, url, LinkType):
 				session = requests.session()
 				cookies = CookieDict(cookies=VideoPage.cookies)
 				requests.utils.add_dict_to_cookiejar(session.cookies, cookies)
-				headers = {'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8', 'Accept-Encoding': 'gzip, deflate', 'Accept-Language': 'en-US,en;q=0.5', 'Connection': 'keep-alive', 'User-Agent': UserAgent[UserAgentNum], 'Connection': 'keep-alive', 'Referer': HostPage, 'Host': 'dl.firedrive.com'}
+				headers = {'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8', 'Accept-Encoding': 'gzip, deflate', 'Accept-Language': 'en-US,en;q=0.5', 'Connection': 'keep-alive', 'User-Agent': UserAgent[UserAgentNum], 'Connection': 'keep-alive'}
 				try:
 					VideoPageXML = HTML.ElementFromString(VideoPage.content).xpath("//a[@id='top_external_download']")[0].get('href')
 					VideoInfo = session.head(VideoPageXML.replace('key', 'stream')+"&em=1", headers=headers)
@@ -1336,17 +1336,30 @@ def GetMovie(Host, HostPage, url, LinkType):
 			VideoStream = [vidstr, swfurl, rtmpurl[url_MO], 'rtmp', VideoPage, 'vod']
 		except:
 			VideoStream = ErrorMessage(Host=Host, LogError=3, ErrorType="HostDown")
+
 	elif Host == "Sockshare":
 		try:
 			NS = {'media':'http://search.yahoo.com/mrss/'}
 			VideoPage = SecondButtonPress(url=url, HostPage=HostPage)
 			try:
-				VideoInfo = HTML.ElementFromString(VideoPage.content).xpath('//div[@id="play"]/script')[0].text.split("playlist: '")[1].split("',")[0]
-				VideoPageXML = "http://www.sockshare.com" + VideoInfo
 				try:
-					VideoStream = XML.ElementFromURL(VideoPageXML).xpath('//item/media:content', namespaces=NS)[1].get('url').replace('&amp;', '&')
+					VideoInfo = HTML.ElementFromString(VideoPage.content).xpath('//div[@id="play"]/script')[0].text.split("playlist: '")[1].split("',")[0]
+					VideoPageXML = "http://www.sockshare.com" + VideoInfo
+					try:
+						VideoStream = XML.ElementFromURL(VideoPageXML).xpath('//item/media:content', namespaces=NS)[1].get('url').replace('&amp;', '&')
+					except:
+						VideoStream = XML.ElementFromURL(VideoPageXML).xpath('//item/media:content', namespaces=NS)[0].get('url').replace('&amp;', '&')
 				except:
-					VideoStream = XML.ElementFromURL(VideoPageXML).xpath('//item/media:content', namespaces=NS)[0].get('url').replace('&amp;', '&')
+					VideoInfo = VideoPage.content.split('/get_file.php?id=')[1].split('"')[0]
+					VideoPageXML = "http://www.sockshare.com/get_file.php?id=" + VideoInfo
+					session = requests.session()
+					cookies = CookieDict(cookies=VideoPage.cookies)
+					requests.utils.add_dict_to_cookiejar(session.cookies, cookies)
+					headers = {'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8', 'Accept-Encoding': 'gzip, deflate', 'Accept-Language': 'en-US,en;q=0.5', 'Connection': 'keep-alive', 'User-Agent': UserAgent[UserAgentNum], 'Connection': 'keep-alive'}
+					VideoInfo = session.head(VideoPageXML, headers=headers)
+					VideoID = VideoInfo.headers['Location']
+					VideoInfo = session.head(VideoID, headers=headers)
+					VideoStream = VideoInfo.headers['Location']
 			except:
 				InputError = HTML.ElementFromString(VideoPage.content).xpath('//div[@id="deleted"]')[0].text
 				VideoStream = ErrorMessage(Host=Host, InputError=InputError, ErrorType="VideoRemoved")
