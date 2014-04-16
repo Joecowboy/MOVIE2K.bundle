@@ -811,12 +811,22 @@ def GetHostPageURL(Host=None, url=None, HostPageInfo=None):
 	HostPageElm = HostPageInfo.xpath('//div[@id="maincontent5"]/div')[0]
 	try:
 		try:
-			if CURRENT_MOVIE2K_URL == "www.movie2k.sx":
+			LinkType = 1
+			if CURRENT_MOVIE2K_URL == "www.movie2k.ga":
 				GetDiv = HostPageElm.xpath('./div')[3]
 				HostPage = GetDiv.xpath('./iframe')[0].get('src')
 			else:
 				HostPage = HostPageElm.xpath('./iframe')[0].get('src')
-			LinkType = 1
+			if "clkrev" in HostPage:
+				if CURRENT_MOVIE2K_URL == "www.movie2k.ga":
+					GetDiv = HostPageElm.xpath('./div')[3]
+					HostPage = GetDiv.xpath('./a')[0].get('href')
+				else:
+					try:
+						HostPage = HostPageElm.xpath('./a')[0].get('href')
+					except:
+						HostPage = HostPageElm.xpath('./div[@id="emptydiv"]/a')[0].get('href')
+				LinkType = 4
 		except:
 			HostPage = HostPageElm.xpath('./embed')[0].get('src')
 			LinkType = 2
@@ -826,7 +836,7 @@ def GetHostPageURL(Host=None, url=None, HostPageInfo=None):
 				HostPage = HostPageInfo.xpath('//div[@id="emptydiv"]//script')[0].get('src')
 				LinkType = 3	
 			except:
-				if CURRENT_MOVIE2K_URL == "www.movie2k.sx":
+				if CURRENT_MOVIE2K_URL == "www.movie2k.ga":
 					GetDiv = HostPageElm.xpath('./div')[3]
 					HostPage = GetDiv.xpath('./a')[0].get('href')
 				else:

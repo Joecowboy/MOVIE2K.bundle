@@ -38,6 +38,8 @@ from HostServices import IncapsulaScript
 from HostServices import CookieDict
 from HostServices import LoadData
 from HostServices import JsonWrite
+import gledajfilmDecrypter
+from gledajfilmDecrypter import decryptKey
 
 
 ####################################################################################################
@@ -1336,7 +1338,6 @@ def GetMovie(Host, HostPage, url, LinkType):
 			VideoStream = [vidstr, swfurl, rtmpurl[url_MO], 'rtmp', VideoPage, 'vod']
 		except:
 			VideoStream = ErrorMessage(Host=Host, LogError=3, ErrorType="HostDown")
-
 	elif Host == "Sockshare":
 		try:
 			NS = {'media':'http://search.yahoo.com/mrss/'}
@@ -1410,6 +1411,21 @@ def GetMovie(Host, HostPage, url, LinkType):
 			VideoStream = VideoURL + "?cookies="+String.Quote(str(cookies), usePlus=True)+"&headers="+String.Quote(str(headers), usePlus=True)
 		except:
 			VideoStream = ErrorMessage(Host=Host, LogError=1)
+	elif Host == "Stream4k":
+		try:
+			headers = {'User-Agent': UserAgent[UserAgentNum], 'Connection': 'keep-alive'}
+			session = requests.session()
+			VideoInfo = session.get(HostPage, headers=headers)
+			VideoPage = HTML.ElementFromString(VideoInfo.content).xpath('//div[@class="embed_container"]/script')[0].text.split("('")[1].split("')")[0].decode('base64', 'strict')
+			VideoInfo = VideoPage.split('proxy.link=')[1].split('%2A')[1].split('"')[0]
+			x = gledajfilmDecrypter.gledajfilmDecrypter(198,128)  # create the object.split('\0')[0])
+			StreamPage = x.decrypt(VideoInfo, "TDSGNnjO44JCj65z2cJ6", "ECB").split('\0')[0]
+			VideoPage = session.get(StreamPage, headers=headers)
+			StreamLink = VideoPage.content.split('video/mpeg4')[0].split('"url":"')[2].split('"')[0]
+			VideoPage = session.head(StreamLink, headers=headers)
+			VideoStream = VideoPage.headers['location']
+		except:
+			VideoStream = ErrorMessage(Host=Host, LogError=1, ErrorType="HostDown")
 	elif Host == "Streamme":
 		try:
 			VideoPage = "http://streamme.cc/playerframe.php?Id="+HostPage.split('/')[4]

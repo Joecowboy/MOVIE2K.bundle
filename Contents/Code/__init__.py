@@ -2677,7 +2677,7 @@ def SubMoviePageAdd(title, page, date, dateadd, thumbck, type, MOVIE2K_URL, watc
 								except:
 									Quality = "N/A"
 					if Host == None or Host == "":
-						Host = GetHost(HostPageInfo=MOVIE_PAGE_HTML)
+						Host = GetHost(url=page, HostPageInfo=MOVIE_PAGE_HTML)
 						if type == "Movies":
 							try:
 								Quality = MOVIE_PAGE_HTML.xpath('//div[@id="maincontent5"]//span/span/img')[0].get('title').split(' ')[2].capitalize()

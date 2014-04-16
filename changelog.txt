@@ -1,3 +1,5 @@
+[B]Version 1.7.42[/B]
+- Fixed few code errors do to site changes and added new host
 [B]Version 1.7.41[/B]
 - Updated couple hosts and fixed couple bugs in code
 [B]Version 1.7.40[/B]
