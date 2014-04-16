@@ -1413,7 +1413,7 @@ def GetMovie(Host, HostPage, url, LinkType):
 			VideoStream = ErrorMessage(Host=Host, LogError=1)
 	elif Host == "Stream4k":
 		try:
-			headers = {'User-Agent': UserAgent[UserAgentNum], 'Connection': 'keep-alive'}
+			headers = {'User-Agent': UserAgent, 'Connection': 'keep-alive'}
 			session = requests.session()
 			VideoInfo = session.get(HostPage, headers=headers)
 			VideoPage = HTML.ElementFromString(VideoInfo.content).xpath('//div[@class="embed_container"]/script')[0].text.split("('")[1].split("')")[0].decode('base64', 'strict')
