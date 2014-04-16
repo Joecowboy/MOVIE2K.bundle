@@ -350,7 +350,7 @@ def GetHostPage(Host, url):
 
 	#Check For Real Host
 	Host = HostPage.split('http://')[1].split('.')[0].capitalize()
-	if Host == 'Www' or Host == 'Embed' or Host == 'Beta' or Host == 'Movie':
+	if Host == 'Www' or Host == 'Embed' or Host == 'Beta' or Host == 'Movie' or Host == 'Static':
 		Host = HostPage.split('http://')[1].split('.')[1].capitalize()
 
 	if EnableHostTesting():
@@ -403,11 +403,16 @@ def GetMovieDebugger(Host, HostPage, url, LinkType):
 	from ordereddict import OrderedDict
 	from HostServices import zDecrypt
 	#from HostServices import decodeurl
+	import gledajfilmDecrypter
+	from gledajfilmDecrypter import decryptKey
 	import time
 	import random
 	import urllib
 	import base64
 	import hashlib
+
+	gledajfilmDecrypter.Log = Log
+
 
 
 	return VideoStream

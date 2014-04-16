@@ -1393,11 +1393,19 @@ def GetMovie(Host, HostPage, url, LinkType):
 			VideoStream = ErrorMessage(Host=Host, LogError=1, ErrorType="HostDown")
 	elif Host == "Stream2k":
 		try:
-			headers = {'User-Agent': UserAgent, 'Referer': url}
-			req = requests.get(HostPage, headers=headers)
-			VideoStream = urllib.unquote(HTML.ElementFromString(req.content).xpath('//div[@id="player"]/object/param[@name="flashvars"]')[0].get('value').split('file=')[1].split('&')[0])
+			headers = {'User-Agent': UserAgent, 'Connection': 'keep-alive'}
+			session = requests.session()
+			VideoInfo = session.get(HostPage, headers=headers)
+			VideoPage = HTML.ElementFromString(VideoInfo.content).xpath('//div[@class="embed_container"]/object/param[@name="FlashVars"]')[0].get('value').split("*")[1].split("&")[0]
+			x = gledajfilmDecrypter.gledajfilmDecrypter(198,128)  # create the object
+			Key = "SnBQZzBLT1AwN3FNaFJGNWY3Wkg="
+			StreamPage = x.decrypt(VideoPage, Key.decode('base64', 'strict'), "ECB").split('\0')[0]
+			VideoPage = session.get(StreamPage, headers=headers)
+			StreamLink = VideoPage.content.split('video/mpeg4')[0].split('"url":"')[2].split('"')[0]
+			VideoPage = session.head(StreamLink, headers=headers)
+			VideoStream = VideoPage.headers['location']
 		except:
-			VideoStream = ErrorMessage(Host=Host, LogError=3, ErrorType="HostDown")
+			VideoStream = ErrorMessage(Host=Host, LogError=1, ErrorType="HostDown")
 	elif Host == "Stream2k.eu":
 		try:
 			session = requests.session()
@@ -1418,8 +1426,9 @@ def GetMovie(Host, HostPage, url, LinkType):
 			VideoInfo = session.get(HostPage, headers=headers)
 			VideoPage = HTML.ElementFromString(VideoInfo.content).xpath('//div[@class="embed_container"]/script')[0].text.split("('")[1].split("')")[0].decode('base64', 'strict')
 			VideoInfo = VideoPage.split('proxy.link=')[1].split('%2A')[1].split('"')[0]
-			x = gledajfilmDecrypter.gledajfilmDecrypter(198,128)  # create the object.split('\0')[0])
-			StreamPage = x.decrypt(VideoInfo, "TDSGNnjO44JCj65z2cJ6", "ECB").split('\0')[0]
+			x = gledajfilmDecrypter.gledajfilmDecrypter(198,128)  # create the object
+			Key = "VERTR05uak80NEpDajY1ejJjSjY="
+			StreamPage = x.decrypt(VideoPage, Key.decode('base64', 'strict'), "ECB").split('\0')[0]
 			VideoPage = session.get(StreamPage, headers=headers)
 			StreamLink = VideoPage.content.split('video/mpeg4')[0].split('"url":"')[2].split('"')[0]
 			VideoPage = session.head(StreamLink, headers=headers)
