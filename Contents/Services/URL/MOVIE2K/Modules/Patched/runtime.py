@@ -710,14 +710,14 @@ class Runtime(BaseComponent):
     self._core.log.critical("Private handlers are no longer supported; couldn't register %s", str(f))
     self._core.log.debug("Registering Stream Handler")
     self._stream_handlers.append(f)
-    
+
   def _handle_stream_request(self, pathNouns, kwargs, context):
     for handler in self._stream_handlers:
       result = handler(pathNouns, kwargs, context)
       if result != None:
         return result
     return None
-
+    
   def handle_request(self, request): #path, headers, method='GET', body=None):
     """
       Handles a given path & set of headers, directing a request to the relevant plug-in or
@@ -774,8 +774,6 @@ class Runtime(BaseComponent):
       if path[-1] == '/': path = path[:-1]
       pathNouns = [urllib.unquote(p) for p in path.split('/')]
       pathNouns.pop(0)
-      self._core.log.debug("LIST PATHNOUNS")
-      self._core.log.debug(pathNouns)
 
       # Return simple OK for requests for root
       if len(pathNouns) == 0:
@@ -839,7 +837,10 @@ class Runtime(BaseComponent):
               
           # Backwards compatibility: Parse media info sent via the URL.
           if 'mediaInfo' in d:
-            context.media_info = self._core.data.json.from_string(urllib.unquote(d['mediaInfo']))
+            try:
+              context.media_info = self._core.data.json.from_string(urllib.unquote(d['mediaInfo']))
+            except:
+              pass
             del d['mediaInfo']
 
           # Flag the context as indirect if specified by a querystring arg.
@@ -914,6 +915,7 @@ class Runtime(BaseComponent):
           el.append(self._core.data.xml.element('Traceback', e.traceback))
         
         body = self._core.data.xml.to_string(el)
+        headers['Content-Type'] = 'application/xml'
     
     finally:
       # If the status code was set manually, override the code that was set automatically
