@@ -256,6 +256,7 @@
 				<string>http://www\.movie8k\.me/tvshows-genre+</string>
 				<string>http://www\.movie8k\.me/tvshows-season+</string>
 				<string>http://www\.movie8k\.me/+</string>
+				<string>/:/stream/token/+</string>
 			</array>
 		</dict>
 	</dict>

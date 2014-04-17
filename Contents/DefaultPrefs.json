@@ -3,8 +3,8 @@
 		"id": "version",
 		"type": "enum",
 		"label": "Version",
-		"values": ["1.7.43"],
-		"default": "1.7.43"
+		"values": ["1.7.44"],
+		"default": "1.7.44"
 	},
 	{
 		"id": "video_resolution",
@@ -117,6 +117,19 @@
 			"Enabled"
 		],
 		"default": "Disabled" 
+	},
+	{
+		"id": "winusername",
+		"type": "text",
+		"label": "MS Windows Username",
+		"default": ""
+	},
+	{
+		"id": "winpassword",
+		"type": "text",
+		"label": "MS Windows Password",
+		"default": "",
+		"option": "hidden"
 	},
 	{
 		"id": "videoerror",

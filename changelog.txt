@@ -1,3 +1,5 @@
+[B]Version 1.7.44[/B]
+- Updated code for Watchit Later/Auto Patcher
 [B]Version 1.7.43[/B]
 - Added new Host
 [B]Version 1.7.42[/B]

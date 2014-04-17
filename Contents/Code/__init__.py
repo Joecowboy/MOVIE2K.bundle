@@ -72,6 +72,8 @@ HostVideoDownload.UserAgent        = UserAgent[UserAgentNum]
 HostVideoDownload.Prefs            = Prefs
 HostVideoDownload.Hash             = Hash
 HostVideoDownload.Core             = Core
+HostVideoDownload.WinUserName      = Prefs['winusername']
+HostVideoDownload.WinPassword      = Prefs['winpassword']
 
 PREFIX            = "/video/movie2k"
 NAME              = "Movie2k"

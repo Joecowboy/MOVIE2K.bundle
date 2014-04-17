@@ -58,7 +58,7 @@ What this does if you go to Watchit Later videos and a video download has failed
 
 ###Autopatch Runtime.py:
 
-What this does is update the runtime.py and docutils.py files so Watchit Later will play your downloaded videos.  You will need to leave it enabled to continually update the files since Plex Media Server will write over them once a hour.  You do not need to restart the Plex Media Server with the auto patcher it resets the Cor Services in the background on update.
+What this does is update the runtime.py and docutils.py files so Watchit Later will play your downloaded videos.  You will need to leave it enabled to continually update the files since Plex Media Server will write over them once a hour.  You do not need to restart the Plex Media Server with the auto patcher it resets the Cor Services in the background on update.  If you have MS Windows - User Account Control (UAC) enabled this will not copy over the patched files.  You will need to put your MS Windows Username and MS Windows Password for your Windows user account to allow the copy into the this plugins preference fields.
 
 ###FLV Download Skip:
 
@@ -163,7 +163,7 @@ To enter My Favorite Movie4k URL, Parental Lock password or Captcha text, Roku u
 
 2. SolveMedia Captcha image might not show up all the time.  Need feed back and or ideas to why this could be happening.
 
-3. Need a way to redirect the transcoder for OS X and Linux to the Tor network same way Proxifier does when it's set up to use Tor network.  Because nearly all the sebsites check the IP address for the video that is being played and so if it does not match will not stream.
+3. Need a way to redirect the transcoder for Linux to the Tor network same way Proxifier does when it's set up to use Tor network.  Because nearly all the sebsites check the IP address for the video that is being played and so if it does not match will not stream.
 
 4. Not sure if it's an issue or not but need a way to launch these apps before the transcoder kicks up to redirect transcoder traffic to Tor network.
 
@@ -181,7 +181,7 @@ To enter My Favorite Movie4k URL, Parental Lock password or Captcha text, Roku u
 
 3.  With the latest version of Plex Media Server.  Plexconnect now works with Apple TV with this RTMP channel and you can also search.  Also, for timeout issues in Movie2k Plugin Preferences change Number of Hosts Per Page from the default of 5 to 1.  You currently cannot set preferences in any of the Channel plugins on Plexconnect. That input functionality has not been added. You have to do all that on another client/device.
 
-4. LG TV needs the file Info.plist edited found in MOVIE2k.bundle/content folder (This will impact the RTMP Host sites):
+4. LG and Samsung TVs needs the file Info.plist edited found in MOVIE2k.bundle/content folder (This will impact the RTMP Host sites):
 	<key>PlexFrameworkFlags</key>
 	<array>
 		<string>UseRealRTMP</string>

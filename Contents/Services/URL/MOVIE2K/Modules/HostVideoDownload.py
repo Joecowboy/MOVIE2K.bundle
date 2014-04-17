@@ -113,8 +113,8 @@ def CheckforRuntimeUpdate():
 			except IOError as e:
 				if sys.platform.startswith('win'):
 					import subprocess
-					subprocess.call(['runas', '/user:Administrator', 'attrib -R -S -A -H %s' % NonPatchedFile[i]], shell=True) 
-					subprocess.call(['runas', '/user:Administrator', 'xcopy /Y /R %s %s' % (PatchedFile[i], FrameworkPath[i])], shell=True) 
+					subprocess.call(['runas', '/user:%s' % WinUserName, '"attrib -R -S -A -H %s" < %s' % (NonPatchedFile[i], WinPassword)], shell=True) 
+					subprocess.call(['runas', '/user:%s' % WinUserName, '"xcopy /Y /R %s %s" < %s' % (PatchedFile[i], FrameworkPath[i], WinPassword)], shell=True) 
 					#os.system('attrib -R -S -A -H %s' % NonPatchedFile[i])
 					#os.system('xcopy /Y /R %s %s' % (PatchedFile[i], FrameworkPath[i]))
 					Log("Error Occured Windows Platform trying to copy patched file version.  Using alternative method.")
