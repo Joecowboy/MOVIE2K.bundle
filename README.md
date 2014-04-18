@@ -71,11 +71,11 @@ If enabled it will allow you to convert your non MP4 downloaded Movies and TV Sh
 -**Download FFmpeg from [FFmpeg Link:][ffmpeglink]http://ffmpeg.org
 
 -**In the plugin preferences put the full path to ffmpeg.exe in the field Path to FFMPEG.
-   Example For MS Windows path c:\ffmpeg\bin\ffmpeg.exe but you will need to escape the back slash to c:\\ffmpeg\\bin\\ffmpeg.exe
+   Example For MS Windows path c:\ffmpeg\bin\ffmpeg.exe but you will need to escape the back slash to c:\\\ffmpeg\\\bin\\\ffmpeg.exe
    OSX and Linux use forward slash so no need to escape the slash.
 
 -**In the plugin preferences put the full path to ffprobe.exe in the field Path to FFPROBE.
-   Example For MS Windows path c:\ffmpeg\bin\ffprobe.exe but you will need to escape the back slash to c:\\ffmpeg\\bin\\ffprobe.exe
+   Example For MS Windows path c:\ffmpeg\bin\ffprobe.exe but you will need to escape the back slash to c:\\\ffmpeg\\\bin\\\ffprobe.exe
    OSX and Linux use forward slash so no need to escape the slash.
 
 ###Play Error Video:
