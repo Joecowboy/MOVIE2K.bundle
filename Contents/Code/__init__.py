@@ -37,6 +37,8 @@ from HostVideoDownload import CheckForDownload
 from HostVideoDownload import KillMyDownloadThread
 from HostVideoDownload import ResumeMyDownload
 from HostVideoDownload import StitchFilesTogether
+from HostVideoDownload import IsFFMpegSet
+from HostVideoDownload import ConvertFiles
 from HostVideoDownload import CheckFailedFileDeletions
 from HostVideoDownload import CheckPrefsEnabled
 
@@ -222,7 +224,7 @@ def MainMenu():
 ###################################################################################################
 @route(PREFIX + '/SubMainMenu')
 def SubMainMenu(title, MOVIE2K_URL):
-	#HTTP.Request('http://127.0.0.1:32400/:/plugins/com.plexapp.plugins.movie2k/reloadServices', cacheTime=0, immediate=True)
+	HTTP.Request('http://127.0.0.1:32400/:/plugins/com.plexapp.plugins.movie2k/reloadServices', cacheTime=0, immediate=True)
 	# INitialize My Movie2k Login
 	loginResult = Movie2kLogin(MOVIE2K_URL=MOVIE2K_URL)
 	Log("Login success: " + str(loginResult))
@@ -922,6 +924,7 @@ def PlaybackDownloads(title):
 	oc = ObjectContainer(title2=L(title), no_cache = True)
 
 	hosts = LoadData(fp=WATCHIT_DATA, GetJson=3)
+	NoConverting = "True"
 
 	if HostVideoDownload.isAwake == True:
 		IamAwake = True
@@ -941,6 +944,7 @@ def PlaybackDownloads(title):
 		directors = StripArray(arraystrings=String.Unquote(gethost[i]['Directors'], usePlus=True).split(','))
 		guest_stars = StripArray(arraystrings=String.Unquote(gethost[i]['GuestStars'], usePlus=True).split(','))
 		duration = gethost[i]['Duration']
+		timecode = gethost[i]['ConvertingTimeCode']
 		rating = float(gethost[i]['Rating'])
 		index = int(gethost[i]['Index'])
 		season = int(gethost[i]['Season'])
@@ -960,6 +964,8 @@ def PlaybackDownloads(title):
 		resumecontentlength = gethost[i]['ResumeContentLength']
 		resumecount = gethost[i]['ResumeCount']
 		isStitchingFiles = gethost[i]['isStitchingFiles']
+		isConvertingFiles = gethost[i]['isConvertingFiles']
+		isConverted = gethost[i]['isConverted']
 		show = "ADDED: "+ dateadded + " | HOST: " + host + " | QUALITY: " + quality
 
 		if duration != "None" and duration != "":
@@ -974,8 +980,16 @@ def PlaybackDownloads(title):
 					percent = 100 * float(part)/float(contentlength)
 					
 					if percent == 100.00:
-							gethost[i]['isStitchingFiles'] = "False"
-							isStitchingFiles = "False"
+						gethost[i]['isStitchingFiles'] = "False"
+						isStitchingFiles = "False"
+				elif isConvertingFiles == "True":
+					percent = 100 * float(timecode)/float(duration)
+					NoConverting = "False"
+
+					if percent == 100.00:
+						gethost[i]['isConvertingFiles'] = "False"
+						isConvertingFiles = "False"
+						NoConverting = "True"
 				elif resumecontentlength == "":
 					part = os.stat(path).st_size
 					percent = 100 * float(part)/float(contentlength)
@@ -983,6 +997,20 @@ def PlaybackDownloads(title):
 					LastTimeFileWrite = os.path.getmtime(path)
 					LocalTime = time.time()
 					ElapseTime = LocalTime - LastTimeFileWrite
+
+					if percent == 100.00 and isConvertingFiles == "False" and NoConverting == "True" and Prefs['videoconverter'] == "Enabled" and not path.endswith(".mp4") and IsFFMpegSet():
+						gethost[i]['isConvertingFiles'] = "True"
+						isConvertingFiles = "True"
+						NoConverting = "False"
+						HostVideoDownload.ConvertingHost = i
+						HostVideoDownload.ConvertPath = path
+						if HostVideoDownload.stopConverting == None:
+							HostVideoDownload.stopConverting = ConvertFiles()
+							JsonWrite(fp=WATCHIT_DATA, jsondata=hosts)
+					elif percent != 100.00 and isConverted == "True":
+						gethost[i]['ContentLength'] = part
+						JsonWrite(fp=WATCHIT_DATA, jsondata=hosts)
+						percent = 100.00
 				else:
 					part = os.stat(path).st_size 
 					for getPaths in resumepath:
@@ -992,6 +1020,10 @@ def PlaybackDownloads(title):
 					if percent == 100.0:
 						gethost[i]['isStitchingFiles'] = "True"
 						isStitchingFiles = "True"
+						if Prefs['videoconverter'] == "Enabled" and not path.endswith(".mp4") and IsFFMpegSet():
+							gethost[i]['isConvertingFiles'] = "True"
+							isConvertingFiles = "True"
+							HostVideoDownload.ConvertingHost = i
 						gethost[i]['Path'] = path.replace('Part1.', '')
 						gethost[i]['ResumePath'] = []
 						gethost[i]['ResumeContentLength'] = ""
@@ -1011,12 +1043,17 @@ def PlaybackDownloads(title):
 				percent = 0.0
 				ElapseTime = 120.0
 				isStitchingFiles = "False"
+				isConvertingFiles = "False"
 				gethost[i]['isStitchingFiles'] = "False"
+				gethost[i]['isConvertingFiles'] = "False"
+				gethost[i]['isConverted'] = "False"
 				gethost[i]['ResumePath'] = []
 				gethost[i]['ResumeContentLength'] = ""
 				
 			if isStitchingFiles == "True":
 				oc.add(DirectoryObject(key=Callback(WatchitDownloadInfo, title=title, percent=percent, isStitchingFiles=isStitchingFiles), title=title, summary=show, thumb=Callback(GetThumb, url=thumb)))
+			elif isConvertingFiles == "True":
+				oc.add(DirectoryObject(key=Callback(WatchitDownloadInfo, title=title, percent=percent, isConvertingFiles=isConvertingFiles), title=title, summary=show, thumb=Callback(GetThumb, url=thumb)))
 			elif percent == 100.0:
 				path = os.path.abspath(path)
 				if type == "TV Shows":
@@ -1258,9 +1295,11 @@ def CreateLocalURL(path, *argparams, **kwparams):
 
 ####################################################################################################
 @route(PREFIX + '/WatchitDownloadInfo')
-def WatchitDownloadInfo(title, percent=None, GoodLink=True, ManualResume=False, ResumeCount="1", isStitchingFiles=False):
+def WatchitDownloadInfo(title, percent=None, GoodLink=True, ManualResume=False, ResumeCount="1", isStitchingFiles=False, isConvertingFiles=False):
 	if isStitchingFiles == "True":
 		oc = ObjectContainer(header=title+" Finished Downloading", message="Your video "+title+" download has finished downloading.  However, the video file is being processed.  Please check back later.  DOWNLOAD PERCENTAGE: %.2f %%" % float(percent))
+	elif isConvertingFiles == "True":
+		oc = ObjectContainer(header=title+" Finished Downloading", message="Your video "+title+" download has finished downloading.  However, the video file is being converted to MP4 format.  Please check back later because this may take a while.  CONVERT PERCENTAGE: %.2f %%" % float(percent))
 	elif percent != None:
 		oc = ObjectContainer(header=title+" Still Downloading", message="Your video download is still in progress.  Please check back later.  DOWNLOAD PERCENTAGE: %.2f %%" % float(percent))
 	elif GoodLink != True:
@@ -1350,6 +1389,10 @@ def DeleteVideo(title, path, resumepath=[]):
 			KillMyDownloadThread(MyThread=gethost[i]['Thread'])
 			gethost[i]['Thread'] = ""
 			gethost[i]['isStitchingFiles'] = "False"
+			gethost[i]['isConvertingFiles'] = "False"
+			gethost[i]['isConverted'] = "False"
+			gethost[i]['ConvertingTimeCode'] = "0"
+
 			break
 		else:
 			i += 1

@@ -14,6 +14,7 @@ from HostServices import GetHostPageURL
 from HostServices import LoadData
 from HostServices import JsonWrite
 from HostServices import setInterval
+from converter import Converter
 
 try:
 	path = os.getcwd().split("?\\")[1].split('Plug-in Support')[0]+"Plug-ins\MOVIE2K.bundle\Contents\Services\URL\MOVIE2K\Modules"
@@ -34,13 +35,16 @@ except:
 threadList        = []
 ResumeParts       = []
 ResumePath        = None
+ConvertPath       = None
 MyDownloadPath    = None
 MyDownloadRequest = None
 stopAutoResume    = None
 stopAutoPatcher   = None
 stopStitching     = None
+stopConverting    = None
 stop              = None
 isAwake           = False
+ConvertingHost    = None
 
 WATCHIT_DATA      = "watchit.data.json"
 
@@ -73,6 +77,22 @@ def StitchFilesTogether():
 		ResumePath = None
 		stopStitching.set() # stop the timer loop
 		stopStitching = None
+
+
+####################################################################################################
+@setInterval(.5)
+def ConvertFiles():
+	global ConvertPath
+	global stopConverting
+	global ConvertingHost
+
+	if ConvertPath != None:
+		convert_files(path=ConvertPath)
+		ConvertPath = None
+		stopConverting.set() # stop the timer loop
+		stopConverting = None
+		ConvertingHost = None
+
 		
 ####################################################################################################
 @setInterval(10)
@@ -164,10 +184,14 @@ def AutoCheckMyDownload():
 	global MyDownloadPath
 	global MyDownloadRequest
 	global stopStitching
+	global stopConverting
 	global ResumeParts
 	global ResumePath
+	global ConvertPath
+	global ConvertingHost
 	global isAwake
 	global stop
+	NoConverting = "True"
 	i = 1
 
 	hosts = LoadData(fp=WATCHIT_DATA, GetJson=3)
@@ -184,6 +208,8 @@ def AutoCheckMyDownload():
 			
 		path = gethost[i]['Path']
 		host = gethost[i]['Host']
+		duration = gethost[i]['Duration']
+		timecode = gethost[i]['ConvertingTimeCode']
 		videostreamlink = String.Unquote(gethost[i]['VideoStreamLink'], usePlus=True)
 		HostPage = String.Unquote(gethost[i]['HostPage'], usePlus=True)
 		url = String.Unquote(gethost[i]['URL'], usePlus=True)
@@ -195,6 +221,8 @@ def AutoCheckMyDownload():
 		resumecontentlength = gethost[i]['ResumeContentLength']
 		resumecount = gethost[i]['ResumeCount']
 		isStitchingFiles = gethost[i]['isStitchingFiles']
+		isConvertingFiles = gethost[i]['isConvertingFiles']
+		isConverted = gethost[i]['isConverted']
 
 		if path != "":
 			try:
@@ -203,8 +231,16 @@ def AutoCheckMyDownload():
 					percent = 100 * float(part)/float(contentlength)
 					
 					if percent == 100.00:
-							gethost[i]['isStitchingFiles'] = "False"
-							isStitchingFiles = "False"
+						gethost[i]['isStitchingFiles'] = "False"
+						isStitchingFiles = "False"
+				elif isConvertingFiles == "True":
+					percent = 100 * float(timecode)/float(duration)
+					NoConverting = "False"
+
+					if percent == 100.00:
+						gethost[i]['isConvertingFiles'] = "False"
+						isConvertingFiles = "False"
+						NoConverting = "True"
 				elif resumecontentlength == "":
 					part = os.stat(path).st_size
 					percent = 100 * float(part)/float(contentlength)
@@ -212,6 +248,20 @@ def AutoCheckMyDownload():
 					LastTimeFileWrite = os.path.getmtime(path)
 					LocalTime = time.time()
 					ElapseTime = LocalTime - LastTimeFileWrite
+
+					if percent == 100.00 and isConvertingFiles == "False" and NoConverting == "True" and Prefs['videoconverter'] == "Enabled" and not path.endswith(".mp4") and IsFFMpegSet():
+						gethost[i]['isConvertingFiles'] = "True"
+						isConvertingFiles = "True"
+						NoConverting = "False"
+						ConvertingHost = i
+						ConvertPath = path
+						if stopConverting == None:
+							stopConverting = ConvertFiles()
+							JsonWrite(fp=WATCHIT_DATA, jsondata=hosts)
+					elif percent != 100.00 and isConverted == "True":
+						gethost[i]['ContentLength'] = part
+						JsonWrite(fp=WATCHIT_DATA, jsondata=hosts)
+						percent = 100.00
 				else:
 					part = os.stat(path).st_size 
 					for getPaths in resumepath:
@@ -221,6 +271,10 @@ def AutoCheckMyDownload():
 					if percent == 100.0:
 						gethost[i]['isStitchingFiles'] = "True"
 						isStitchingFiles = "True"
+						if Prefs['videoconverter'] == "Enabled" and not path.endswith(".mp4") and IsFFMpegSet():
+							gethost[i]['isConvertingFiles'] = "True"
+							isConvertingFiles = "True"
+							ConvertingHost = i
 						gethost[i]['Path'] = path.replace('Part1.', '')
 						gethost[i]['ResumePath'] = []
 						gethost[i]['ResumeContentLength'] = ""
@@ -240,11 +294,14 @@ def AutoCheckMyDownload():
 				percent = 0.0
 				ElapseTime = 120.0
 				isStitchingFiles = "False"
+				isConvertingFiles = "False"
 				gethost[i]['isStitchingFiles'] = "False"
+				gethost[i]['isConvertingFiles'] = "False"
+				gethost[i]['isConverted'] = "False"
 				gethost[i]['ResumePath'] = []
 				gethost[i]['ResumeContentLength'] = ""
 
-			if percent == 100.0 or isStitchingFiles == "True":
+			if percent == 100.0 or isStitchingFiles == "True" or isConvertingFiles == "True":
 				pass
 			elif ElapseTime >= 120.0 and int(FileCheckSize) == part:
 				if stop == None:
@@ -291,11 +348,74 @@ def combine_files(parts, path):
 	@param parts: List of file paths.
 	@param path: Destination path.
 	'''
+	global ConvertPath
+	global stopConverting
+	
 	with open(path,'wb') as output:
 		for part in parts:
 			with open(part,'rb') as f:
 				output.writelines(f.readlines())
 			os.remove(part)
+
+	if Prefs['videoconverter'] == "Enabled" and not path.endswith(".mp4") and IsFFMpegSet():
+		ConvertPath = path
+		if stopConverting == None:
+			stopConverting = ConvertFiles()
+
+
+####################################################################################################
+def convert_files(path):
+	global ConvertingHost
+	global WATCHIT_DATA 
+
+	hosts = LoadData(fp=WATCHIT_DATA, GetJson=3)
+	c = Converter(Prefs['FFMPEG_PATH'], Prefs['FFPROBE_PATH'])
+
+	info = c.probe(path)
+
+	options = {
+		'format': 'mp4',
+		'audio': {0: {
+			'map': 0,
+			'codec': 'aac',
+			'bitrate': 512,
+			'samplerate': 48000,
+			'channels': 2,
+			'language': 'eng'
+			}},
+		'video': {
+      			'codec': 'h264',
+			'map': info.video.index,
+			'width': info.video.video_width,
+        		'height': info.video.video_height,
+			'bitrate': info.format.bitrate,
+        		'fps': info.video.video_fps 
+    			}
+		}
+	conv = c.convert(path, path.replace(path[-4:], ".mp4"), options=options, timeout=None)
+
+	i = 0
+	hosts[ConvertingHost-1][ConvertingHost]['Duration'] = info.format.duration
+	hosts[ConvertingHost-1][ConvertingHost]['ConvertingTimeCode'] = 0
+	JsonWrite(fp=WATCHIT_DATA, jsondata=hosts)
+
+	for timecode in conv:
+		if i != int(timecode):
+			i = int(timecode)
+			hosts[ConvertingHost-1][ConvertingHost]['ConvertingTimeCode'] = timecode
+			JsonWrite(fp=WATCHIT_DATA, jsondata=hosts)
+
+	hosts[ConvertingHost-1][ConvertingHost]['Path'] = path.replace(path[-4:], ".mp4")
+	hosts[ConvertingHost-1][ConvertingHost]['isConverted'] = "True"
+	JsonWrite(fp=WATCHIT_DATA, jsondata=hosts)
+	DeleteFile(path=path)
+
+
+####################################################################################################
+def IsFFMpegSet():
+    if Prefs['FFMPEG_PATH'] and Prefs['FFPROBE_PATH']:
+        return True
+    return False
 
 
 ####################################################################################################
@@ -521,12 +641,24 @@ def GetHostVideo(title, date, DateAdded, Quality, thumb, type, summary, director
 					i += 1
 					jj += 1
 			except:
-				hosts.append({i : {'Type': type, 'Path': path, 'Host': Host, 'DateAdded': DateAdded, 'Quality': Quality, 'ThumbURL': thumb, 'Title': title, 'Summary':summary, 'Genres': genres, 'Directors': directors, 'GuestStars':guest_stars, 'Duration': duration, 'Rating': rating, 'Index': index, 'Season': season, 'ContentRating': content_rating, 'SourceTitle': source_title, 'Date': date, 'VideoType': videotype, 'VideoStreamLink': VideoStreamLink, 'HostPage': HostPage, 'URL': url, 'LinkType': LinkType, 'ContentLength': ContentLength, 'FileCheckSize': '0', 'ResumePath': [], 'ResumeContentLength': '', 'ResumeCount': '0', 'Thread': '', 'FailedFileDeletion': '', 'isStitchingFiles': 'False'}})
+				hosts.append({i : {'Type': type, 'Path': path, 'Host': Host, 'DateAdded': DateAdded, 'Quality': Quality, 'ThumbURL': thumb, 'Title': title, 'Summary':summary, 'Genres': genres, 'Directors': directors, 'GuestStars':guest_stars, 'Duration': duration, 'Rating': rating, 'Index': index, 'Season': season, 'ContentRating': content_rating, 'SourceTitle': source_title, 'Date': date, 'VideoType': videotype, 'VideoStreamLink': VideoStreamLink, 'HostPage': HostPage, 'URL': url, 'LinkType': LinkType, 'ContentLength': ContentLength, 'FileCheckSize': '0', 'ResumePath': [], 'ResumeContentLength': '', 'ResumeCount': '0', 'Thread': '', 'FailedFileDeletion': '', 'isStitchingFiles': 'False', 'isConvertingFiles': 'False', 'isConvered': 'False', 'ConvertingTimeCode': '0'}})
 				break
 
 		JsonWrite(fp=WATCHIT_DATA, jsondata=hosts)
 
 	return (path, request, NoError)
+
+
+####################################################################################################
+def DeleteFile(path):
+	if os.path.isfile(path):
+		try:
+			os.remove(path)
+			gethost[i]['FailedFileDeletion'] = ""
+		except OSError:
+            		Log("Unable to remove file: %s" % path)
+	else:
+		Log("Error: %s file not found to remove." % path)
 
 		
 ####################################################################################################
@@ -542,14 +674,7 @@ def CheckFailedFileDeletions():
 			path = ""
 
 		if path != "":
-			if os.path.isfile(path):
-				try:
-					os.remove(path)
-					gethost[i]['FailedFileDeletion'] = ""
-				except OSError:
-            				Log("Unable to remove file: %s" % path)
-			else:
-				Log("Error: %s file not found to remove." % path)
+			DeleteFile(path=path)
 
 		#Fix any patch issues between plugin updates if dictionary has changed.
 		try:
@@ -674,6 +799,18 @@ def CheckFailedFileDeletions():
 			gethost[i]['isStitchingFiles']
 		except:
 			gethost[i].update({'isStitchingFiles': 'False'})
+		try:			
+			gethost[i]['isConvertingFiles']
+		except:
+			gethost[i].update({'isConvertingFiles': 'False'})
+		try:
+			gethost[i]['isConverted']
+		except:
+			gethost[i].update({'isConverted': 'False'})
+		try:
+			gethost[i]['ConvertingTimeCode']
+		except:
+			gethost[i].update({'ConvertingTimeCode': '0'})
 			
 		i += 1
 

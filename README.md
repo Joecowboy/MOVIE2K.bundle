@@ -64,6 +64,20 @@ What this does is update the runtime.py and docutils.py files so Watchit Later w
 
 If enabled it will prompt you if you are trying to download an FLV file from a Host site and tell you to choose another Host.  Also, supports selecting MP4, AVI or MKV for download only.
 
+###Video Converter
+
+If enabled it will allow you to convert your non MP4 downloaded Movies and TV Shows into MP4 format.  It uses the [FFmpeg multimedia framework] for actual file processing.  It will convert one of your Movies or TV Shows at a time.  So if you have multiple downloads going and one finishes you will be able to watch the video if another video is being converted.
+
+-**Download FFmpeg from [FFmpeg Link:][ffmpeglink]http://ffmpeg.org
+
+-**In the plugin preferences put the full path to ffmpeg.exe in the field Path to FFMPEG.
+   Example For MS Windows path c:\ffmpeg\bin\ffmpeg.exe but you will need to escape the back slash to c:\\ffmpeg\\bin\\ffmpeg.exe
+   OSX and Linux use forward slash so no need to escape the slash.
+
+-**In the plugin preferences put the full path to ffprobe.exe in the field Path to FFPROBE.
+   Example For MS Windows path c:\ffmpeg\bin\ffprobe.exe but you will need to escape the back slash to c:\\ffmpeg\\bin\\ffprobe.exe
+   OSX and Linux use forward slash so no need to escape the slash.
+
 ###Play Error Video:
 
 Play Error Video is to play error video instead of the the default ERROR screen when a video file can't be played.
@@ -199,3 +213,4 @@ To enter My Favorite Movie4k URL, Parental Lock password or Captcha text, Roku u
 [proxifierlink]: http://www.proxifier.com/
 [vidalialink]: https://people.torproject.org/~erinn/vidalia-standalone-bundles/
 [changeiplink]: http://www.bloomgeek.com/featured/how-to-change-the-ip-address-in-tor-to-a-specific-countrys-ip
+[ffmpeglink]: http://ffmpeg.org

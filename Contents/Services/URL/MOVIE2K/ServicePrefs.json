@@ -3,8 +3,8 @@
 		"id": "version",
 		"type": "enum",
 		"label": "Version",
-		"values": ["1.7.44"],
-		"default": "1.7.44"
+		"values": ["1.8.0"],
+		"default": "1.8.0"
 	},
 	{
 		"id": "video_resolution",
@@ -107,6 +107,28 @@
 			"MKV"
 		],
 		"default": "Disabled" 
+	},
+	{
+		"id": "videoconverter",
+		"type": "enum",
+		"label": "Video Converter",
+		"values": [
+			"Disabled",
+			"Enabled"
+		],
+		"default": "Disabled" 
+	},
+	{
+		"id": "FFMPEG_PATH",
+		"type": "text",
+		"label": "Path to FFMPEG",
+		"default": ""
+	},
+	{
+		"id": "FFPROBE_PATH",
+		"type": "text",
+		"label": "Path to FFPROBE",
+		"default": ""
 	},
 	{
 		"id": "autopatcher",
