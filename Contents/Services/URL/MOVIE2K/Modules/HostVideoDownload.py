@@ -85,9 +85,10 @@ def ConvertFiles():
 	global ConvertPath
 	global stopConverting
 	global ConvertingHost
+	global WATCHIT_DATA 
 
 	if ConvertPath != None:
-		convert_files(path=ConvertPath)
+		MyConvertFilesThread(path=ConvertPath, ConvertingHost=ConvertingHost, WATCHIT_DATA=WATCHIT_DATA)
 		ConvertPath = None
 		stopConverting.set() # stop the timer loop
 		stopConverting = None
@@ -234,7 +235,8 @@ def AutoCheckMyDownload():
 						gethost[i]['isStitchingFiles'] = "False"
 						isStitchingFiles = "False"
 				elif isConvertingFiles == "True":
-					percent = 100 * float(timecode)/float(duration)
+					#percent = 100 * float(timecode)/float(duration)
+					percent = float(timecode)
 					NoConverting = "False"
 
 					if percent == 100.00:
@@ -253,6 +255,7 @@ def AutoCheckMyDownload():
 						gethost[i]['isConvertingFiles'] = "True"
 						isConvertingFiles = "True"
 						NoConverting = "False"
+						percent = 0.0
 						ConvertingHost = i
 						ConvertPath = path
 						if stopConverting == None:
@@ -364,10 +367,7 @@ def combine_files(parts, path):
 
 
 ####################################################################################################
-def convert_files(path):
-	global ConvertingHost
-	global WATCHIT_DATA 
-
+def convert_files(path, ConvertingHost, WATCHIT_DATA):
 	hosts = LoadData(fp=WATCHIT_DATA, GetJson=3)
 	c = Converter(Prefs['FFMPEG_PATH'], Prefs['FFPROBE_PATH'])
 
@@ -409,6 +409,24 @@ def convert_files(path):
 	hosts[ConvertingHost-1][ConvertingHost]['isConverted'] = "True"
 	JsonWrite(fp=WATCHIT_DATA, jsondata=hosts)
 	DeleteFile(path=path)
+
+
+####################################################################################################
+def MyConvertFilesThread(path, ConvertingHost, WATCHIT_DATA):
+	thread = threading.Thread(target=convert_files, args=(path, ConvertingHost, WATCHIT_DATA,))
+	threadList.append(thread)
+
+	hosts = LoadData(fp=WATCHIT_DATA, GetJson=3)
+	i = 1
+	for gethost in hosts:
+		if gethost[i]['Path'] == path:
+			gethost[i]['Thread'] = str(thread)
+			break
+		else:
+			i += 1
+	JsonWrite(fp=WATCHIT_DATA, jsondata=hosts)
+
+	thread.start()
 
 
 ####################################################################################################
@@ -507,7 +525,18 @@ def MyDownload(VideoStreamLink, title=None, startByte="0", OldContentLength="0")
 	(request, ContentLength, NoError, extension) = downloads(VideoStreamLink, startByte, endByte, extension)
 
 	if startByte == "0":
-		path = "Videos%s%s_%s.%s" % (DownloadPath, re.sub('\W', '_', str(title), flags=re.UNICODE), str(time.time()), extension)
+		try:
+			showname_pt1 = re.sub('\W', ' ', str(title), flags=re.UNICODE).split(', Season ')[0].strip()
+			showname_pt2 = re.sub('\W', ' ', str(title), flags=re.UNICODE).split(', Season ')[1].split(', Episode ')[0].strip()
+			if len(showname_pt2) == 1:
+				showname_pt2 = "0" + showname_pt2
+			showname_pt3 = re.sub('\W', ' ', str(title), flags=re.UNICODE).split(', Season ')[1].split(', Episode ')[1].strip()
+			if len(showname_pt3) == 1:
+				showname_pt3 = "0" + showname_pt3
+			showname = showname_pt1 + " - s" + showname_pt2 + "e" + showname_pt3
+		except:
+			showname = re.sub('\W', ' ', str(title), flags=re.UNICODE)
+		path = "Videos%s%s - %s.%s" % (DownloadPath, showname, str(time.time()), extension)
 
 	return (path, request, ContentLength, NoError, extension)
 

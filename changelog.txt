@@ -1,3 +1,5 @@
+[B]Version 1.8.1[/B]
+- Fixed issue with percentage conversion to MP4
 [B]Version 1.8.0[/B]
 - Added Video File conversion to MP4 if enabled in plugin preferences
 [B]Version 1.7.44[/B]

@@ -983,7 +983,8 @@ def PlaybackDownloads(title):
 						gethost[i]['isStitchingFiles'] = "False"
 						isStitchingFiles = "False"
 				elif isConvertingFiles == "True":
-					percent = 100 * float(timecode)/float(duration)
+					#percent = 100 * float(timecode)/float(duration)
+					percent = float(timecode)
 					NoConverting = "False"
 
 					if percent == 100.00:
@@ -1002,6 +1003,7 @@ def PlaybackDownloads(title):
 						gethost[i]['isConvertingFiles'] = "True"
 						isConvertingFiles = "True"
 						NoConverting = "False"
+						percent = 0.0
 						HostVideoDownload.ConvertingHost = i
 						HostVideoDownload.ConvertPath = path
 						if HostVideoDownload.stopConverting == None:
