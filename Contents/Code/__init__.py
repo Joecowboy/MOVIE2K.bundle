@@ -1973,10 +1973,10 @@ def Movies(title, type, MOVIE2K_URL):
 			MOVIES_PAGE = "http://" + MOVIE2K_URL
 		elif MOVIE2K_URL == "www.movie2k.ga":
 			MOVIES_PAGE = "http://" + MOVIE2K_URL + "/movies"
-		elif MOVIE2K_URL == "www.movie8k.to" or MOVIE2K_URL == "www.movie8k.me":
-			MOVIES_PAGE = "http://" + MOVIE2K_URL + "/index.php?lang=en"
 		elif GetLanguage() == "German":
 			MOVIES_PAGE = "http://" + MOVIE2K_URL + "/index.php?lang=de"
+		elif MOVIE2K_URL == "www.movie8k.to" or MOVIE2K_URL == "www.movie8k.me":
+			MOVIES_PAGE = "http://" + MOVIE2K_URL + "/index.php?lang=en"
 		else:
 			MOVIES_PAGE = "http://" + MOVIE2K_URL + "/index.php?lang=us"
 		oc.add(DirectoryObject(key=Callback(CinemaMoviePageAdd, title=MOVIES_TITLE, page=MOVIES_PAGE, type=type, MOVIE2K_URL=MOVIE2K_URL), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=MOVIES_THUMB))
@@ -2340,6 +2340,8 @@ def CinemaMoviePageAdd(title, page, type, MOVIE2K_URL):
 	elif MOVIE2K_URL == "www.movie2k.ga":
 		SiteURL = "http://www.movie2k.ga"
 	elif MOVIE2K_URL == "www.movie8k.to" or MOVIE2K_URL == "www.movie8k.me":
+		if GetLanguage() == "German":
+			MOVIES_LANG = "German"
 		elm = '/div'
 		elm1 = ''
 	elif GetLanguage() == "German":

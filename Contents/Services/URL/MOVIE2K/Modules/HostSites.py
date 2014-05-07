@@ -1300,7 +1300,7 @@ def GetMovie(Host, HostPage, url, LinkType):
 		try:
 			VideoPage = SecondButtonPress(url=url, HostPage=HostPage)
 			try:
-				VideoInfo = HTML.ElementFromString(VideoPage.content).xpath('//div[@id="player_code"]/script')[1].text
+				VideoInfo = HTML.ElementFromString(VideoPage.content).xpath('//div[@id="player_code"]/script')[0].text
 				VideoStream = ScriptConvert(script=VideoInfo)
 			except:
 				InputError = HTML.ElementFromString(VideoPage.content).xpath('//div[@id="content"]/b')[0].text.strip()
@@ -1311,13 +1311,10 @@ def GetMovie(Host, HostPage, url, LinkType):
 		try:
 			VideoPage = SecondButtonPress(url=url, HostPage=HostPage, addkey={'method_free': 'Free'})
 			try:
-				try:
-					VideoInfo = HTML.ElementFromString(VideoPage.content).xpath('//div[@id="player_code"]/script')[1].text
-				except:
-					VideoInfo = HTML.ElementFromString(VideoPage.content).xpath('//div[@id="player_code"]/script')[0].text
-				VideoStream = ScriptConvert(script=VideoInfo)
+				VideoInfo = HTML.ElementFromString(VideoPage.content).xpath('//div[@class="embed-area"]/script')[1].text
+				VideoStream = VideoInfo.split('file      : "')[1].split('"')[0]
 			except:
-				InputError = HTML.ElementFromString(VideoPage.content).xpath('//div[@id="progress_div"]/b')[0].text.strip()
+				InputError = HTML.ElementFromString(VideoPage.content).xpath('//div[@class="cont_block"]/h1')[0].text.strip()
 				VideoStream = ErrorMessage(Host=Host, InputError=InputError, ErrorType="VideoRemoved")
 		except:
 			VideoStream = ErrorMessage(Host=Host, LogError=1, ErrorType="HostDown")

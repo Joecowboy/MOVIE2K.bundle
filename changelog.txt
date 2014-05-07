@@ -1,3 +1,5 @@
+[B]Version 1.8.2[/B]
+- If select German now will display Movie8k on cinema, updated two host sites
 [B]Version 1.8.1[/B]
 - Fixed issue with percentage conversion to MP4
 [B]Version 1.8.0[/B]
