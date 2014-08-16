@@ -224,7 +224,7 @@ def MainMenu():
 ###################################################################################################
 @route(PREFIX + '/SubMainMenu')
 def SubMainMenu(title, MOVIE2K_URL):
-	HTTP.Request('http://127.0.0.1:32400/:/plugins/com.plexapp.plugins.movie2k/reloadServices', cacheTime=0, immediate=True)
+	#HTTP.Request('http://127.0.0.1:32400/:/plugins/com.plexapp.plugins.movie2k/reloadServices', cacheTime=0, immediate=True)
 	# INitialize My Movie2k Login
 	loginResult = Movie2kLogin(MOVIE2K_URL=MOVIE2K_URL)
 	Log("Login success: " + str(loginResult))
