@@ -94,7 +94,7 @@ def JsonFavoriteOpen(fp):
 #The JSON file is saved in the data cache for this plugin setup by Plex
 def JsonFavoriteStruct(fp):
 	jsondata = '[\n'
-	jsondata = jsondata + '{1 : {SiteURL: "", ThumbURL: "", Title: "", Summary:"", Date: ""}},\n'
+	jsondata = jsondata + '{1 : {SiteURL: "", ThumbURL: "", Title: "", Summary:"", Date: "", Type: ""}},\n'
 	jsondata = jsondata + ']'
 	
 	JsonWrite(fp=fp, jsondata=jsondata)
@@ -119,7 +119,7 @@ def JsonWatchLaterOpen(fp):
 #The JSON file is saved in the data cache for this plugin setup by Plex
 def JsonWatchLaterStruct(fp):
 	jsondata = '[\n'
-	jsondata = jsondata + '{1 : {Type: "", Path: "", Host: "", DateAdded: "", Quality: "", ThumbURL: "", Title: "", Summary:"", Genres: "", Directors: "", GuestStars: "", Duration: "None", Rating: "0.0", Index: "0", Season: "0", ContentRating: "", SourceTitle: "", Date: "", VideoType: "", VideoStreamLink: "", HostPage: "", URL: "", LinkType: "", ContentLength: "", FileCheckSize: "0", ResumePath: [], ResumeContentLength: "", ResumeCount: "0", Thread: "", FailedFileDeletion: "",  isStitchingFiles: "False"}},\n'
+	jsondata = jsondata + '{1 : {Type: "", Path: "", Host: "", DateAdded: "", Quality: "", ThumbURL: "", Title: "", Summary:"", Genres: "", Directors: "", GuestStars: "", Duration: "None", Rating: "0.0", Index: "0", Season: "0", ContentRating: "", SourceTitle: "", Date: "", VideoType: "", VideoStreamLink: "", HostPage: "", URL: "", LinkType: "", ContentLength: "", FileCheckSize: "0", ResumePath: [], ResumeContentLength: "", ResumeCount: "0", Thread: "", FailedFileDeletion: "",  isStitchingFiles: "False", isConvertingFiles: "False", isConvered: "False", ConvertingTimeCode: "0"}},\n'
 	jsondata = jsondata + ']'
 	
 	JsonWrite(fp=fp, jsondata=jsondata)
@@ -131,7 +131,7 @@ def JsonWatchLaterStruct(fp):
 #The JSON file is saved in the data cache for this plugin setup by Plex
 def JsonWrite(fp, jsondata):
 	f = open(fp, "w+")
-	f.write(str(jsondata).replace(", u'", ", '").replace(": u'", ": '").replace("{u'", "{'").replace("}},", "}},\n").replace("[", "[\n ").replace("]", "\n]").replace("[\n \n]", "[]").replace("[\n u'", "['").replace("[\n '", "['").replace("'\n]", "']"))
+	f.write(str(jsondata).replace(", u'", ", '").replace(": u'", ": '").replace(': u"', ': "').replace("{u'", "{'").replace("}},", "}},\n").replace("[", "[\n ").replace("]", "\n]").replace("[\n \n]", "[]").replace("[\n u'", "['").replace("[\n '", "['").replace("'\n]", "']"))
 	f.close()
 
 	return True
@@ -816,7 +816,10 @@ def GetHostPageURL(Host=None, url=None, HostPageInfo=None):
 				GetDiv = HostPageElm.xpath('./div')[3]
 				HostPage = GetDiv.xpath('./iframe')[0].get('src')
 			else:
-				HostPage = HostPageElm.xpath('./iframe')[0].get('src')
+				try:
+					HostPage = HostPageElm.xpath('./iframe')[0].get('src')
+				except:
+					HostPage = HostPageElm.xpath('./div[@id="emptydiv"]/iframe')[0].get('src')
 			if "clkrev" in HostPage:
 				if CURRENT_MOVIE2K_URL == "www.movie2k.ga":
 					GetDiv = HostPageElm.xpath('./div')[3]
@@ -928,7 +931,7 @@ def Transcoder_process_exists():
 		except:
 			pass
 			
-	if	TranscoderRunning == True:
+	if TranscoderRunning == True:
 		pass
 	elif TranscoderRunning == False:
 		#os.kill(pid, 0)

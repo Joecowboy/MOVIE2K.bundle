@@ -61,11 +61,12 @@ def GetMovie(Host, HostPage, url, LinkType):
 		headers = {'User-Agent': UserAgent, 'Referer': HostPage}
 		session = requests.session()
 		req = session.get(HostPage, headers=headers)
-		trailerurlID = req.content.split('videojs.options.flash.swf="')[1].split('"')[0].split('=')[1]
+		cookies = CookieDict(cookies=session.cookies)
+		trailerurlID = req.content.split('videojs.options.flash.swf = "')[1].split('"')[0].split('=')[1]
 		token = hashlib.md5(trailerurlID).hexdigest()
 		trailerurlCFG = 'http://beta.traileraddict.com/js/flash/fv-secure.php?tid='+trailerurlID+'&token='+token[2:7]
 		trailer_url = session.get(trailerurlCFG, headers=headers).content.split('fileurl=')[1].split('&')[0]
-		VideoStream = trailer_url.replace("%3F", "?")
+		VideoStream = trailer_url.replace("%3F", "?") + "?cookies="+String.Quote(str(cookies), usePlus=True)+"&headers="+String.Quote(str(headers), usePlus=True)
 
 	#################################
 	#Select Movide2k Video Hoster
@@ -1168,7 +1169,7 @@ def GetMovie(Host, HostPage, url, LinkType):
 			try:
 				VideoStream = VideoPage.content.split('file: "')[1].split('"')[0]
 			except:
-				InputError = HTML.ElementFromString(VideoPage.content).xpath('//font[@class="err"]')[0].text.strip()
+				InputError = HTML.ElementFromString(VideoPage.content).xpath('//b[@class="err"]')[0].text.strip()
 				VideoStream = ErrorMessage(Host=Host, InputError=InputError, ErrorType="VideoRemoved")
 		except:
 			VideoStream = ErrorMessage(Host=Host, LogError=1, ErrorType="HostDown")
@@ -1400,7 +1401,9 @@ def GetMovie(Host, HostPage, url, LinkType):
 			VideoPage = session.get(StreamPage, headers=headers)
 			StreamLink = VideoPage.content.split('video/mpeg4')[0].split('"url":"')[2].split('"')[0]
 			VideoPage = session.head(StreamLink, headers=headers)
-			VideoStream = VideoPage.headers['location']
+			headers = {'User-Agent': UserAgent, 'Connection': 'keep-alive', 'Range': 'bytes=0-'}
+			cookies = CookieDict(cookies=session.cookies)
+			VideoStream = VideoPage.headers['location'] + "?cookies="+String.Quote(str(cookies), usePlus=True)+"&headers="+String.Quote(str(headers), usePlus=True)
 		except:
 			VideoStream = ErrorMessage(Host=Host, LogError=1, ErrorType="HostDown")
 	elif Host == "Stream2k.eu":
@@ -1418,18 +1421,24 @@ def GetMovie(Host, HostPage, url, LinkType):
 			VideoStream = ErrorMessage(Host=Host, LogError=1)
 	elif Host == "Stream4k":
 		try:
-			headers = {'User-Agent': UserAgent, 'Connection': 'keep-alive'}
+			headers = {'User-Agent': UserAgent, 'Connection': 'keep-alive', 'Range': 'bytes=0-'}
 			session = requests.session()
 			VideoInfo = session.get(HostPage, headers=headers)
-			VideoPage = HTML.ElementFromString(VideoInfo.content).xpath('//div[@class="embed_container"]/script')[0].text.split("('")[1].split("')")[0].decode('base64', 'strict')
-			VideoInfo = VideoPage.split('proxy.link=')[1].split('%2A')[1].split('"')[0]
-			x = gledajfilmDecrypter.gledajfilmDecrypter(198,128)  # create the object
-			Key = "VERTR05uak80NEpDajY1ejJjSjY="
-			StreamPage = x.decrypt(VideoPage, Key.decode('base64', 'strict'), "ECB").split('\0')[0]
-			VideoPage = session.get(StreamPage, headers=headers)
-			StreamLink = VideoPage.content.split('video/mpeg4')[0].split('"url":"')[2].split('"')[0]
-			VideoPage = session.head(StreamLink, headers=headers)
-			VideoStream = VideoPage.headers['location']
+			try:
+				VideoPage = HTML.ElementFromString(VideoInfo.content).xpath('//div[@class="embed_container"]/script')[0].text.split("('")[1].split("')")[0].decode('base64', 'strict')
+				VideoInfo = VideoPage.split('proxy.link=')[1].split('%2A')[1].split('"')[0]
+				x = gledajfilmDecrypter.gledajfilmDecrypter(198,128)  # create the object
+				Key = "VERTR05uak80NEpDajY1ejJjSjY="
+				StreamPage = x.decrypt(VideoPage, Key.decode('base64', 'strict'), "ECB").split('\0')[0]
+				VideoPage = session.get(StreamPage, headers=headers)
+				StreamLink = VideoPage.content.split('video/mpeg4')[0].split('"url":"')[2].split('"')[0]
+				VideoPage = session.head(StreamLink, headers=headers)
+				headers = {'User-Agent': UserAgent, 'Connection': 'keep-alive', 'Range': 'bytes=0-'}
+				cookies = CookieDict(cookies=session.cookies)
+				VideoStream = VideoPage.headers['location'] + "?cookies="+String.Quote(str(cookies), usePlus=True)+"&headers="+String.Quote(str(headers), usePlus=True)
+			except:
+				InputError = HTML.ElementFromString(VideoPage.content).xpath('//div[@class="page-header"]/h1')[0].text.strip()
+				VideoStream = ErrorMessage(Host=Host, InputError=InputError, ErrorType="GeolocationLockout")
 		except:
 			VideoStream = ErrorMessage(Host=Host, LogError=1, ErrorType="HostDown")
 	elif Host == "Streamme":
@@ -1591,7 +1600,9 @@ def GetMovie(Host, HostPage, url, LinkType):
 	elif Host == "Veehd":
 		try:
 			headers = {'User-Agent': UserAgent, 'Host': 'veehd.com'}
+			cookies = {'nsfw': '1'}
 			session = requests.session()
+			requests.utils.add_dict_to_cookiejar(session.cookies, cookies)
 			VideoPage = session.get(HostPage, headers=headers)
 			try:
 				InputError = HTML.ElementFromString(VideoPage.content).xpath('//div[@class="contentColumnLeft"]//a/div/b')[0].text.strip()
@@ -1701,7 +1712,7 @@ def GetMovie(Host, HostPage, url, LinkType):
 			try:
 				VideoStream = VideoPage.content.split('u":"')[2].split('"')[0].replace("\\", "").decode('base64', 'strict')
 			except:
-				InputError = VideoPage.content.split('messages":["')[1].split('"')[0]
+				InputError = HTML.ElementFromString(VideoPage.content).xpath('//div[@class="error_alert"]/b/font')[0].text.strip()
 				VideoStream = ErrorMessage(Host=Host, InputError=InputError, ErrorType="VideoRemoved")
 		except:
 			VideoStream = ErrorMessage(Host=Host, LogError=1, ErrorType="HostDown")

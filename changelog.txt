@@ -1,3 +1,5 @@
+[B]Version 1.8.3[/B]
+- Fixed issue with Movie8k, Movie2k.tl and Movie Trailers.  Split up Movie and TV Shows now in favoriates and worked on captcha for watchit later.
 [B]Version 1.8.2[/B]
 - If select German now will display Movie8k on cinema, updated two host sites
 [B]Version 1.8.1[/B]

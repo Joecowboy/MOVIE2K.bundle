@@ -595,6 +595,8 @@ def ResumeMyDownload(Host, HostPage, url, LinkType, title=None, startByte="0", C
 		NoError = "Video Removed was returned"
 	elif "Geolocation_Lockout" in VideoStreamLink:
 		NoError = "Geolocation Lockout was returned"
+	elif "Wrong_Captcha" in VideoStreamLink:
+		NoError = "Wrong Captcha was returned"
 	else:
 		(path, request, ContentLength, NoError, extension) = MyDownload(VideoStreamLink=VideoStreamLink, title=title, startByte=startByte, OldContentLength=ContentLength)
 

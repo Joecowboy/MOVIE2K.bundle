@@ -507,7 +507,7 @@ def MyMovie2k(title, MOVIE2K_URL):
 	ICON_MYFAVORITES = "icon-my-favorites.png"
 	MYFAVORITES_THUMB = R(ICON_MYFAVORITES)
 	title = "My Favorite Links"
-	summary = "Show my favorite links from Movie4k.to, Movie2k.tv, Movie2k.sx and Movie2k.tl!"
+	summary = "Show my favorite links from Movie4k.to, Movie2k.tv, Movie2k.ga, Movie8k.to and Movie2k.tl!"
 	WhichSection = "MyFavorites"
 	oc.add(DirectoryObject(key = Callback(SubMyMovie2k, title=title, MOVIE2K_URL=MOVIE2K_URL, WhichSection=WhichSection), title=title, summary=summary, thumb=MYFAVORITES_THUMB))
 
@@ -523,7 +523,7 @@ def MyMovie2k(title, MOVIE2K_URL):
 	ICON_MYHOSTLINK = "icon-my-host-link.png"
 	MYHOSTLINK_THUMB = R(ICON_MYHOSTLINK)
 	title = "My Host Link Input"
-	summary = "Input and watch alternative Host links not included in Movie4k.to, Movie2k.tv, Movie2k.sx and Movie2k.tl!"
+	summary = "Input and watch alternative Host links not included in Movie4k.to, Movie2k.tv, Movie2k.ga, Movie8k.to and Movie2k.tl!"
 	WhichSection = "MyHostLink"
 	oc.add(DirectoryObject(key = Callback(SubMyMovie2k, title=title, MOVIE2K_URL=MOVIE2K_URL, WhichSection=WhichSection), title=title, summary=summary, thumb=MYHOSTLINK_THUMB))
 	
@@ -562,27 +562,21 @@ def SubMyMovie2k(title, MOVIE2K_URL, WhichSection):
 		summary = "Click here to see special instructions necessary for Roku Users for Add Favorite."
 		oc.add(DirectoryObject(key=Callback(RokuUsersMyFavorites, title=title), title=title, summary=summary, thumb=INSTRUCTIONS_THUMB))
 
-		# My Favorite Movie4k.to links
-		ICON_MYFAVORITES = "icon-my-favorites.png"
+		# My Favorite Movie Movie4k.to links
+		ICON_MYFAVORITES = "icon-my-favorite-movies.png"
 		MYFAVORITES_THUMB = R(ICON_MYFAVORITES)
-		title = "My Favorite Links"
-		summary = "Show my favorite links from Movie4k.to, Movie2k.tv, Movie2k.sx and Movie2k.tl!"
-		oc.add(DirectoryObject(key = Callback(MyFavoriteURL, title=title, MOVIE2K_URL=MOVIE2K_URL), title=title, summary=summary, thumb=MYFAVORITES_THUMB))
+		type = "Movies"
+		title = "My "+type+" Favorite Links"
+		summary = "Show my favorite "+type+" links from Movie4k.to, Movie2k.tv, Movie2k.ga, Movie8k.to and Movie2k.tl!"
+		oc.add(DirectoryObject(key = Callback(SubFavorites, title=title, MOVIE2K_URL=MOVIE2K_URL, type=type), title=title, summary=summary, thumb=MYFAVORITES_THUMB))
 
-		# Add Favorite Movie4k.to link
-		ICON_ADDFAVORITE = "icon-add-favorite.png"
-		ADDFAVORITE_THUMB = R(ICON_ADDFAVORITE)
-		title = "Add Favorite Link"
-		summary = "Add a favorite link from Movie4k.to, Movie2k.tv, Movie2k.sx and Movie2k.tl!"
-		prompt = "Add a favorite link from Movie2k!"
-		oc.add(InputDirectoryObject(key=Callback(InputFavoriteURL, title=title, MOVIE2K_URL=MOVIE2K_URL), title=title, summary=summary, thumb=ADDFAVORITE_THUMB, prompt=prompt))
-
-		# Delete Favorite Movie4k.to link
-		ICON_DELETEFAVORITE = "icon-delete-favorite.png"
-		DELETEFAVORITE_THUMB = R(ICON_DELETEFAVORITE)
-		title = "Delete Favorite Links"
-		summary = "Delete my favorite links from Movie2k!"
-		oc.add(DirectoryObject(key = Callback(DeleteFavoriteURL, title=title), title=title, summary=summary, thumb=DELETEFAVORITE_THUMB))
+		# My Favorite TV Shows Movie4k.to links
+		ICON_MYFAVORITES = "icon-my-favorite-tv-shows.png"
+		MYFAVORITES_THUMB = R(ICON_MYFAVORITES)
+		type = "TV Shows"
+		title = "My "+type+" Favorite Links"
+		summary = "Show my favorite "+type+" links from Movie4k.to, Movie2k.tv, Movie2k.ga, Movie8k.to and Movie2k.tl!"
+		oc.add(DirectoryObject(key = Callback(SubFavorites, title=title, MOVIE2K_URL=MOVIE2K_URL, type=type), title=title, summary=summary, thumb=MYFAVORITES_THUMB))
 
 	elif WhichSection == "MyWatchitLater":
 		#Add My Watchit Later Videos
@@ -615,6 +609,39 @@ def SubMyMovie2k(title, MOVIE2K_URL, WhichSection):
 		prompt = "Input and watch alternative host link!"
 		oc.add(InputDirectoryObject(key = Callback(InputHostURL, title=title, MOVIE2K_URL=MOVIE2K_URL), title=title, summary=summary, thumb=MYHOSTLINK_THUMB, prompt=prompt))
 
+	return oc
+
+
+####################################################################################################
+@route(PREFIX + '/SubFavorites')
+def SubFavorites(title, MOVIE2K_URL, type):
+
+	oc = ObjectContainer(title2=title)
+
+	# My Favorite Movie4k.to links
+	if type == "Movies":
+		ICON_MYFAVORITES = "icon-my-favorite-movies.png"
+	else:
+		ICON_MYFAVORITES = "icon-my-favorite-tv-shows.png"
+	MYFAVORITES_THUMB = R(ICON_MYFAVORITES)
+	title = "My "+type+" Favorite Links"
+	summary = "Show my favorite "+type+" links from Movie4k.to, Movie2k.tv, Movie2k.ga, Movie8k.to and Movie2k.tl!"
+	oc.add(DirectoryObject(key = Callback(MyFavoriteURL, title=title, MOVIE2K_URL=MOVIE2K_URL, type=type), title=title, summary=summary, thumb=MYFAVORITES_THUMB))
+
+	# Add Favorite Movie4k.to link
+	ICON_ADDFAVORITE = "icon-add-favorite.png"
+	ADDFAVORITE_THUMB = R(ICON_ADDFAVORITE)
+	title = "Add "+type+" Favorite Link"
+	summary = "Add a favorite link from Movie4k.to, Movie2k.tv, Movie2k.ga, Movie8k.to and Movie2k.tl!"
+	prompt = "Add a favorite "+type+" link from Movie2k!"
+	oc.add(InputDirectoryObject(key=Callback(InputFavoriteURL, title=title, MOVIE2K_URL=MOVIE2K_URL, type=type), title=title, summary=summary, thumb=ADDFAVORITE_THUMB, prompt=prompt))
+
+	# Delete Favorite Movie4k.to link
+	ICON_DELETEFAVORITE = "icon-delete-favorite.png"
+	DELETEFAVORITE_THUMB = R(ICON_DELETEFAVORITE)
+	title = "Delete "+type+" Favorite Links"
+	summary = "Delete my favorite "+type+" links from Movie2k!"
+	oc.add(DirectoryObject(key = Callback(DeleteFavoriteURL, title=title, type=type), title=title, summary=summary, thumb=DELETEFAVORITE_THUMB))
 
 	return oc
 
@@ -761,7 +788,7 @@ def subInputHostURL(HostPage, IMDBurl, title, thumb, MOVIE2K_URL, watchitlater=F
 	
 ####################################################################################################
 @route(PREFIX + '/MyFavoriteURL')
-def MyFavoriteURL(title, MOVIE2K_URL):
+def MyFavoriteURL(title, MOVIE2K_URL, type):
 
 	oc = ObjectContainer(title2=title)
 
@@ -773,12 +800,21 @@ def MyFavoriteURL(title, MOVIE2K_URL):
 		MOVIES_TITLE = gethost[i]['Title']
 		MOVIES_SUMMARY = gethost[i]['Summary']
 		MOVIES_YEAR = gethost[i]['Date']
+		try:
+			MOVIES_TYPE = gethost[i]['Type']
+		except:
+			MOVIES_TYPE = ""
 		dateadd = 'N/A'
-		type = 'N/A'
 		i += 1
 
 		if MOVIES_PAGE != "":
-			oc.add(DirectoryObject(key=Callback(SubMoviePageAdd, title=MOVIES_TITLE, page=MOVIES_PAGE, date=MOVIES_YEAR, dateadd=dateadd, thumbck=MOVIES_THUMB, type=type, MOVIE2K_URL=MOVIE2K_URL), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=Callback(GetThumb, url=MOVIES_THUMB)))
+			if MOVIE2K_URL != MOVIES_PAGE.split('/')[2]:
+				MOVIE2K_URL = MOVIES_PAGE.split('/')[2]
+			if (MOVIES_TYPE == type and type == "Movies") or (MOVIES_TYPE == "" and type == "Movies"):
+				oc.add(DirectoryObject(key=Callback(SubGroupMoviePageAdd, title=MOVIES_TITLE, page=MOVIES_PAGE, date=MOVIES_YEAR, dateadd=dateadd, thumbck=MOVIES_THUMB, type=type, summary=MOVIES_SUMMARY, MOVIE2K_URL=MOVIE2K_URL, genre="My Favorites"), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=Callback(GetThumb, url=MOVIES_THUMB)))
+			elif MOVIES_TYPE == type and type == "TV Shows":
+				MOVIES_LANG = MOVIES_SUMMARY.split('Lang:')[1].split('|')[0].strip()
+				oc.add(DirectoryObject(key=Callback(TVShowSeasons, title=MOVIES_TITLE, page=MOVIES_PAGE, genre="My Favorites", type=type, MOVIE2K_URL=MOVIE2K_URL, thumb=MOVIES_THUMB, MOVIES_LANG=MOVIES_LANG), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=Callback(GetThumb, url=MOVIES_THUMB)))
 	
 	if len(oc) < 1:
 		oc = ObjectContainer(header="We Apologize", message="This section does not contain any My Favorite videos.  Please add a video to view.")
@@ -789,12 +825,12 @@ def MyFavoriteURL(title, MOVIE2K_URL):
 
 ####################################################################################################
 @route(PREFIX + '/InputFavoriteURL')
-def InputFavoriteURL(title, MOVIE2K_URL, query):
+def InputFavoriteURL(title, MOVIE2K_URL, query, type):
 
 	oc = ObjectContainer(title2=title)
 	try:
 		checkURL = query.split('/')[2]
-		if checkURL != 'www.movie4k.to' and checkURL != '91.202.63.145' and checkURL != 'www.movie.to' and checkURL != 'movie4k.co.in' and checkURL != 'movie4k.to.come.in' and checkURL != 'www.movie4kunblocked.co' and checkURL != 'www.movie2kproxy.org' and checkURL != 'www.movie2kproxy.com' and checkURL != 'www.movie2k.tv' and checkURL != '91.202.62.123' and checkURL != 'www.movie2k.ga' and checkURL != 'www.movie2k.tl':
+		if checkURL != 'www.movie4k.to' and checkURL != '91.202.63.145' and checkURL != 'www.movie.to' and checkURL != 'movie4k.co.in' and checkURL != 'movie4k.to.come.in' and checkURL != 'www.movie4kunblocked.co' and checkURL != 'www.movie2kproxy.org' and checkURL != 'www.movie2kproxy.com' and checkURL != 'www.movie2k.tv' and checkURL != '91.202.62.123' and checkURL != 'www.movie2k.ga' and checkURL != 'www.movie2k.tl' and checkURL != 'www.movie8k.to' and checkURL != 'www.movie8k.me':
 			return ObjectContainer(header="Not a Movie4k URL", message="The entered URL is not a valid Movie4k video URL. Example of a valid Movie4k video URL: http://www.movie4k.to/Oblivion-watch-movie-3777965.html  Please try again and click Ok to exit this screen.")
 	except:
 		return ObjectContainer(header="Not a Movie4k URL", message="The entered URL is not a valid Movie4k video URL. Example of a valid Movie4k video URL: http://www.movie4k.to/Oblivion-watch-movie-3777965.html  Please try again and click Ok to exit this screen.")
@@ -826,10 +862,17 @@ def InputFavoriteURL(title, MOVIE2K_URL, query):
 	except:
 		MOVIES_LANG = "N/A"
 
-	try:
-		MOVIES_TITLE = MOVIE_INFO[1].xpath("./span/h1/a")[0].text.strip()
-	except:
-		MOVIES_TITLE = MOVIE_INFO[1].xpath("./h1/span/a")[0].text.strip()
+	if type == "Movies":
+		try:
+			MOVIES_TITLE = MOVIE_INFO[1].xpath("./span/h1/a")[0].text.strip()
+		except:
+			MOVIES_TITLE = MOVIE_INFO[1].xpath("./h1/span/a")[0].text.strip()
+	else:
+		try:
+			MOVIES_TITLE = MOVIE_INFO[1].xpath("./span/h1/a")[0].text.split('Episode')[0].split(',')[0].strip()
+		except:
+			MOVIES_TITLE = MOVIE_INFO[1].xpath("./h1/span/a")[0].text.split('Episode')[0].split(',')[0].strip()
+
 	try:
 		MOVIES_QUALITY = MOVIE_INFO[1].xpath("./span/span/img")[0].get('title').split(' ')[2]
 	except:
@@ -855,12 +898,13 @@ def InputFavoriteURL(title, MOVIE2K_URL, query):
 				hosts[jj][i]['Title'] = MOVIES_TITLE
 				hosts[jj][i]['Summary'] = MOVIES_SUMMARY
 				hosts[jj][i]['Date'] = date
+				hosts[jj][i]['Type'] = type
 				break
 			else:
 				i += 1
 				jj += 1
 		except:
-			hosts.append({i : {'SiteURL': query, 'ThumbURL': MOVIES_THUMB, 'Title': MOVIES_TITLE, 'Summary': MOVIES_SUMMARY, 'Date': date}})
+			hosts.append({i : {'SiteURL': query, 'ThumbURL': MOVIES_THUMB, 'Title': MOVIES_TITLE, 'Summary': MOVIES_SUMMARY, 'Date': date, 'Type': type}})
 			break
 
 	JsonWrite(fp=FAVORITES_DATA, jsondata=hosts)
@@ -869,7 +913,7 @@ def InputFavoriteURL(title, MOVIE2K_URL, query):
 
 ####################################################################################################
 @route(PREFIX + '/DeleteFavoriteURL')
-def DeleteFavoriteURL(title):
+def DeleteFavoriteURL(title, type):
 
 	oc = ObjectContainer(title2=title)
 
@@ -881,10 +925,15 @@ def DeleteFavoriteURL(title):
 		MOVIES_TITLE = gethost[i]['Title']
 		MOVIES_SUMMARY = gethost[i]['Summary']
 		MOVIES_YEAR = gethost[i]['Date']
+		try:
+			MOVIES_TYPE = gethost[i]['Type']
+		except:
+			MOVIES_TYPE = ""
 		i += 1
 
 		if MOVIES_PAGE != "":
-			oc.add(DirectoryObject(key=Callback(DeleteURL, title=MOVIES_TITLE, page=MOVIES_PAGE), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=Callback(GetThumb, url=MOVIES_THUMB)))
+			if MOVIES_TYPE == type or (MOVIES_TYPE == "" and type == "Movies"):
+				oc.add(DirectoryObject(key=Callback(DeleteURL, title=MOVIES_TITLE, page=MOVIES_PAGE), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=Callback(GetThumb, url=MOVIES_THUMB)))
 
 	if len(oc) < 1:
 		oc = ObjectContainer(header="We Apologize", message="This section does not contain any My Favorite videos to delete.")
@@ -909,6 +958,7 @@ def DeleteURL(title, page):
 			gethost[i]['Title'] = ""
 			gethost[i]['Summary'] = ""
 			gethost[i]['Date'] = ""
+			gethost[i]['Type'] = ""
 			break
 		else:
 			i += 1
@@ -1949,7 +1999,7 @@ def TVShowEpisodes(title, page, genre, type, MOVIE2K_URL, thumb=None, MOVIES_LAN
 
 		if HasEpisode == True:
 			MOVIES_SUMMARY = "Added: "+DATE_ADDED+" | Lang: "+MOVIES_LANG+" | Part of the "+genre+" TV Shows episode line up on Movie2k."
-			oc.add(DirectoryObject(key=Callback(SubGroupMoviePageAdd, title=MOVIES_TITLE, page=MOVIES_PAGE, date=DATE_ADDED, dateadd=DATE_ADDED, thumbck=MOVIES_THUMB, type=type, summary=MOVIES_SUMMARY, MOVIE2K_URL=MOVIE2K_URL, CSRF_TOKEN=CSRF_TOKEN), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=Callback(GetThumb, url=MOVIES_THUMB)))
+			oc.add(DirectoryObject(key=Callback(SubGroupMoviePageAdd, title=MOVIES_TITLE, page=MOVIES_PAGE, date=DATE_ADDED, dateadd=DATE_ADDED, thumbck=MOVIES_THUMB, type=type, summary=MOVIES_SUMMARY, MOVIE2K_URL=MOVIE2K_URL, CSRF_TOKEN=CSRF_TOKEN, genre=genre), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=Callback(GetThumb, url=MOVIES_THUMB)))
 
 	return oc
 
@@ -2277,7 +2327,7 @@ def MovieGenres(title, page, genre, thumb, type, MOVIE2K_URL):
 		else:
 			elm = 'div[@id="maincontent4"]/div[@class="pagidnation"]'
 		SiteURL = ""
-	if MOVIE2K_URL == "www.movie8k.to" or MOVIE2K_URL == "www.movie8k.me":
+	elif MOVIE2K_URL == "www.movie8k.to" or MOVIE2K_URL == "www.movie8k.me":
 		if page.split('/')[3] == "tvshows-updates.html":
 			elm = 'div[@class="pagidnation"]'
 		else:
@@ -2553,7 +2603,7 @@ def MoviePageAdd(title, page, genre, type, MOVIE2K_URL):
 
 ####################################################################################################
 @route(PREFIX + '/TVandMovieGroupPage')
-def SubGroupMoviePageAdd(title, page, date, dateadd, thumbck, type, summary, MOVIE2K_URL, CSRF_TOKEN=None):
+def SubGroupMoviePageAdd(title, page, date, dateadd, thumbck, type, summary, MOVIE2K_URL, CSRF_TOKEN=None, genre=None):
 
 	title = unicode(title, errors='replace')
 	oc = ObjectContainer(title2=title)
@@ -2576,14 +2626,15 @@ def SubGroupMoviePageAdd(title, page, date, dateadd, thumbck, type, summary, MOV
 		TRAILERSEARCH_THUMB = R(ICON_TRAILERSEARCH)
 		oc.add(DirectoryObject(key=Callback(SearchTrailers, query=title.replace(" ", "%20")), title=TRAILERSEARCH_TITLE, summary=TRAILERSEARCH_SUMMARY, thumb=TRAILERSEARCH_THUMB))
 
-	# Add Favorite Movie4k.to link
-	ICON_ADDFAVORITE = "icon-add-favorite.png"
-	ADDFAVORITE_THUMB = R(ICON_ADDFAVORITE)
-	summary = "Add \""+title+"\" as a favorite link from Movie2k!"
-	ADDFAVORITE_TITLE = "Add to My Favorite Links"
-	if page.split('/')[0] != "http:":
-		page = "http://"+MOVIE2K_URL+"/"+page
-	oc.add(DirectoryObject(key=Callback(InputFavoriteURL, title=ADDFAVORITE_TITLE, MOVIE2K_URL=MOVIE2K_URL, query=page), title=ADDFAVORITE_TITLE, summary=summary, thumb=ADDFAVORITE_THUMB))
+	if genre != "My Favorites":
+		# Add Favorite Movie4k.to link
+		ICON_ADDFAVORITE = "icon-add-favorite.png"
+		ADDFAVORITE_THUMB = R(ICON_ADDFAVORITE)
+		summary = "Add \""+title+"\" as a favorite link from Movie2k!"
+		ADDFAVORITE_TITLE = "Add to My Favorite Links"
+		if page.split('/')[0] != "http:":
+			page = "http://"+MOVIE2K_URL+"/"+page
+		oc.add(DirectoryObject(key=Callback(InputFavoriteURL, title=ADDFAVORITE_TITLE, MOVIE2K_URL=MOVIE2K_URL, query=page, type=type), title=ADDFAVORITE_TITLE, summary=summary, thumb=ADDFAVORITE_THUMB))
 
 	# Add Watchit Later Video Movie4k.to link
 	if HostVideoDownload.stop == None:
@@ -3051,7 +3102,7 @@ def TheMovieListings(title, page, date, dateadd, thumb, type, PageOfHosts, MOVIE
 						if Host == '180upload' or Host == 'Clicktoview' or Host == 'Fileloby' or Host == 'Grifthost' or Host == 'Lemuploads' or Host == 'Megarelease' or Host == 'Vidbux' or Host == 'Vidplay' or Host == 'Vidxden':
 							show_update = "Click here if you want OCR to try and decode Captcha text."
 							show_title = show_title +  " - [USES CAPTCHA]"
-							oc.add(DirectoryObject(key=Callback(CaptchaSection, title=title, page=page, date=date, thumb=thumb, type=type, summary=summary, directors=directors, guest_stars=guest_stars, genres=genres, duration=duration, rating=float(rating), season=season, index=index, show=show_update, content_rating=content_rating, source_title=source_title, url=url, Host=Host), title=show_title, thumb=Callback(GetThumb, url=thumb), summary=show))
+							oc.add(DirectoryObject(key=Callback(CaptchaSection, title=title, page=page, date=date, DateAdded=DateAdded, thumb=thumb, type=type, summary=summary, directors=directors, guest_stars=guest_stars, genres=genres, duration=duration, rating=float(rating), season=season, index=index, show=show_update, content_rating=content_rating, source_title=source_title, url=url, Host=Host, director=director, actors=actors, MOVIE_PAGE=MOVIE_PAGE, Quality=Quality, watchitlater=watchitlater), title=show_title, thumb=Callback(GetThumb, url=thumb), summary=show))
 						elif watchitlater == "True":
 							(HostVideoDownload.MyDownloadPath, HostVideoDownload.MyDownloadRequest, GoodLink) = GetHostVideo(title=title, date=String.Quote(str(date), usePlus=True), DateAdded=String.Quote(str(DateAdded), usePlus=True), Quality=Quality, thumb=String.Quote(thumb, usePlus=True), type=String.Quote(type, usePlus=True), summary=String.Quote(summary, usePlus=True), directors=String.Quote(director, usePlus=True), guest_stars=String.Quote(actors, usePlus=True), genres=String.Quote(genre, usePlus=True), duration=str(duration), rating=str(rating), season=str(season), index=str(index), content_rating=content_rating, source_title=source_title, url=MOVIE_PAGE, Host=Host)
 						else:
@@ -3112,7 +3163,7 @@ def TheMovieListings(title, page, date, dateadd, thumb, type, PageOfHosts, MOVIE
 #####################################################################################################
 # This is the section for Host sites using Captcha
 @route(PREFIX + '/CaptchaSection')
-def CaptchaSection(title, page, date, thumb, type, summary, directors, guest_stars, genres, duration, rating, season, index, show, content_rating, source_title, url, Host):
+def CaptchaSection(title, page, date, DateAdded, thumb, type, summary, directors, guest_stars, genres, duration, rating, season, index, show, content_rating, source_title, url, Host, director, actors, MOVIE_PAGE, Quality, watchitlater):
 
 	oc = ObjectContainer(title2=title)
 
@@ -3174,7 +3225,7 @@ def CaptchaSection(title, page, date, thumb, type, summary, directors, guest_sta
 		else:
 			i += 1
 
-	oc.add(InputDirectoryObject(key=Callback(CaptchaInput, title=title, page=page, date=date, thumb=thumb, type=type, summary=summary, directors=directors, guest_stars=guest_stars, genres=genres, duration=duration, rating=rating, season=season, index=index, content_rating=content_rating, source_title=source_title, url=url, Host=Host), title=title, summary="Click here to use input screen for Captcha image.", thumb=Callback(GetThumb, url=captchathumb, HostPage=HostPage, GetUserAgent=GetUserAgent, cookies=cookies), prompt="Enter the text from the Captcha image."))
+	oc.add(InputDirectoryObject(key=Callback(CaptchaInput, title=title, page=page, date=date, DateAdded=DateAdded, thumb=thumb, type=type, summary=summary, directors=directors, guest_stars=guest_stars, genres=genres, duration=duration, rating=rating, season=season, index=index, content_rating=content_rating, source_title=source_title, url=url, Host=Host, director=director, actors=actors, MOVIE_PAGE=MOVIE_PAGE, Quality=Quality, watchitlater=watchitlater), title=title, summary="Click here to use input screen for Captcha image.", thumb=Callback(GetThumb, url=captchathumb, HostPage=HostPage, GetUserAgent=GetUserAgent, cookies=cookies), prompt="Enter the text from the Captcha image."))
 
 	return oc
 
@@ -3182,7 +3233,7 @@ def CaptchaSection(title, page, date, thumb, type, summary, directors, guest_sta
 #####################################################################################################
 # This is captcha input for Roku users
 @route(PREFIX + '/CaptchaInput')
-def CaptchaInput(title, page, date, thumb, type, summary, directors, guest_stars, genres, duration, rating, season, index, content_rating, source_title, url, Host, query):
+def CaptchaInput(title, page, date, DateAdded, thumb, type, summary, directors, guest_stars, genres, duration, rating, season, index, content_rating, source_title, url, Host, director, actors, Quality, MOVIE_PAGE, watchitlater, query):
 
 	oc = ObjectContainer(title2=title)
 
@@ -3196,6 +3247,7 @@ def CaptchaInput(title, page, date, thumb, type, summary, directors, guest_stars
 	rating = float(rating)
 	season = int(season)
 	index = int(index)
+	global GoodLink
 
 	i = 1
 	for gethost in hosts:
@@ -3207,36 +3259,48 @@ def CaptchaInput(title, page, date, thumb, type, summary, directors, guest_stars
 
 	JsonWrite(fp=CAPTCHA_DATA, jsondata=hosts)
 
-	if type == 'TV Shows':
-		oc.add(EpisodeObject(
-				url = url,
-				title = title,
-				summary = summary,
-				directors = directors,
-				guest_stars = guest_stars,
-				#genres = genres,
-				duration = duration,
-				rating = rating,
-				season = season,
-				index = index,
-				show = show,
-				content_rating = content_rating,
-				source_title = source_title,
-				originally_available_at = date,
-				thumb = Callback(GetThumb, url=thumb)))
+	Log("Watchitlater: "+watchitlater)
+
+	if watchitlater == "True":
+		(HostVideoDownload.MyDownloadPath, HostVideoDownload.MyDownloadRequest, GoodLink) = GetHostVideo(title=title, date=String.Quote(str(date), usePlus=True), DateAdded=String.Quote(str(DateAdded), usePlus=True), Quality=Quality, thumb=String.Quote(thumb, usePlus=True), type=String.Quote(type, usePlus=True), summary=String.Quote(summary, usePlus=True), directors=String.Quote(str(director), usePlus=True), guest_stars=String.Quote(str(actors), usePlus=True), genres=String.Quote(str(genres), usePlus=True), duration=str(duration), rating=str(rating), season=str(season), index=str(index), content_rating=content_rating, source_title=source_title, url=MOVIE_PAGE, Host=Host)
 	else:
-		oc.add(MovieObject(
-				url = url,
-				title = title,
-				summary = summary,
-				directors = directors,
-				genres = genres,
-				duration = duration,
-				rating = rating,
-				content_rating = content_rating,
-				source_title = show,
-				originally_available_at = date,
-				thumb = Callback(GetThumb, url=thumb)))
+		if type == 'TV Shows':
+			oc.add(EpisodeObject(
+					url = url,
+					title = title,
+					summary = summary,
+					directors = directors,
+					guest_stars = guest_stars,
+					#genres = genres,
+					duration = duration,
+					rating = rating,
+					season = season,
+					index = index,
+					show = show,
+					content_rating = content_rating,
+					source_title = source_title,
+					originally_available_at = date,
+					thumb = Callback(GetThumb, url=thumb)))
+		else:
+			oc.add(MovieObject(
+					url = url,
+					title = title,
+					summary = summary,
+					directors = directors,
+					genres = genres,
+					duration = duration,
+					rating = rating,
+					content_rating = content_rating,
+					source_title = show,
+					originally_available_at = date,
+					thumb = Callback(GetThumb, url=thumb)))
+
+	if GoodLink != None:
+		if GoodLink == True:
+			oc = ObjectContainer(header="Download Started", message="Please DO NOT shut down or restart Plex Media Server at this time or download will fail.  Go to Watchit Later to check on the status.")
+		else:
+			oc = ObjectContainer(header="We Apologize", message="There was a problem with the Host video.  Host video errored do to "+GoodLink+".  Please try again by clicking the OK button, choose another Host.")
+		GoodLink = None
 
 	return oc
 
@@ -3426,7 +3490,10 @@ def TrailerResults(page, title, website):
 			thumb = GetMovieTrailers.xpath('//div[@class="poster"]/a/img')[0].get('src')
 		except:
 			thumb = GetMovieTrailers.xpath('//div[@class="poster"]/img')[0].get('src')
-	if thumb.split('/')[0] != "http:":
+
+	if (thumb.split('/')[0] != "http:") and ("//" in thumb):
+		thumb = "http:" + thumb
+	elif thumb.split('/')[0] != "http:":
 		thumb = website + thumb
 
 	directors = []

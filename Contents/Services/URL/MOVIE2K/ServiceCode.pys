@@ -413,6 +413,35 @@ def GetMovieDebugger(Host, HostPage, url, LinkType):
 
 	gledajfilmDecrypter.Log = Log
 
-
+	if Host == "Putlocker" or Host == "Firedrive":
+		#try:
+		if Host == 'Putlocker':
+			HostPage = HostPage.replace('putlocker', 'firedrive')
+		HostPage = HostPage.replace('embed', 'file')
+		VideoPage = SecondButtonPress(url=url, HostPage=HostPage, wform=1)
+			#try:
+		session = requests.session()
+		cookies = CookieDict(cookies=VideoPage.cookies)
+		requests.utils.add_dict_to_cookiejar(session.cookies, cookies)
+		headers = {'Accept': '*/*', 'Accept-Encoding': 'gzip, deflate', 'Accept-Language': 'en-US,en;q=0.5', 'Connection': 'keep-alive', 'User-Agent': UserAgent[UserAgentNum], 'Connection': 'keep-alive', 'Referer': HostPage, 'Origin': 'http://www.firedrive.com'}
+		try:
+			VideoPageXML = HTML.ElementFromString(VideoPage.content).xpath("//a[@id='top_external_download']")[0].get('href')
+			Hostpage = "http://dl.firedrive.com/"
+			payload = {'stream': VideoPageXML.split('=')[1].strip()+'=='}
+			Log(payload)
+			time.sleep(5)
+			VideoInfo = session.post(Hostpage, data=payload, headers=headers, allow_redirects=True)
+		except:
+			VideoPageXML = HTML.ElementFromString(VideoPage.content).xpath('//div[@class="ad_button_wrap"]/a[@class="ad_button"]')[0].get('href')
+			VideoInfo = session.head(VideoPageXML, headers=headers)
+		Log(VideoInfo.content)
+		VideoID = VideoInfo.headers['Location']
+		cookies = CookieDict(cookies=session.cookies)
+		VideoStream = VideoID + "?cookies="+String.Quote(str(cookies), usePlus=True)+"&headers="+String.Quote(str(headers), usePlus=True)
+			#except:
+			#	InputError = HTML.ElementFromString(VideoPage.content).xpath('//div[@class="file_error_container"]')[0].text_content().strip()
+			#	VideoStream = ErrorMessage(Host=Host, InputError=InputError, ErrorType="VideoRemoved")
+		#except:
+		#	VideoStream = ErrorMessage(Host=Host, LogError=1, ErrorType="HostDown")
 
 	return VideoStream
