@@ -2724,11 +2724,13 @@ def SubMoviePageAdd(title, page, date, dateadd, thumbck, type, MOVIE2K_URL, watc
 	Hosts = ""
 
 	while nsl < NumStringListing:
-		NumHosts = len(StringListing[nsl].text.split('links[')) - 2
-		Log("Len"+str(nsl)+": "+str(NumHosts)+" "+StringListing[nsl].text.split('links[')[1].split(']')[0]+" "+StringListing[nsl].text.split('links[')[2].split(']')[0]+" "+StringListing[nsl].text.split('links[')[3].split(']')[0])
-		NumHostListing2 = NumHostListing2 + NumHosts
+		try:
+			NumHosts = len(StringListing[nsl].text.split('links[')) - 2
+			Log("Len"+str(nsl)+": "+str(NumHosts)+" "+StringListing[nsl].text.split('links[')[1].split(']')[0]+" "+StringListing[nsl].text.split('links[')[2].split(']')[0]+" "+StringListing[nsl].text.split('links[')[3].split(']')[0])
+			NumHostListing2 = NumHostListing2 + NumHosts
+		except:
+			pass
 		nsl += 1
-
 	p = (float(NumHostListing1)+float(NumHostListing2))/float(host_count) - (NumHostListing1+NumHostListing2)/host_count
 	jj = (NumHostListing1+NumHostListing2)/host_count
 	if p > 0:
@@ -3007,8 +3009,11 @@ def TheMovieListings(title, page, date, dateadd, thumb, type, PageOfHosts, MOVIE
 		out = {'CreatePage': True, 'CurrentPage': 1, 'HostCountTotal': 1, 'sll': 1, 'k': 0}
 
 		while nsl < NumStringListing:
-			NumHosts = len(StringListing[nsl].text.split('links[')) - 2
-			NumHostListing2 = NumHostListing2 + NumHosts
+			try:
+				NumHosts = len(StringListing[nsl].text.split('links[')) - 2
+				NumHostListing2 = NumHostListing2 + NumHosts
+			except:
+				pass
 			nsl += 1
 
 		p = (float(NumHostListing1)+float(NumHostListing2))/float(host_count) - (NumHostListing1+NumHostListing2)/host_count
