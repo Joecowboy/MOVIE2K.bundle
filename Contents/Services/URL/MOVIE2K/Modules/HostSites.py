@@ -99,9 +99,10 @@ def GetMovie(Host, HostPage, url, LinkType):
 			if TestLink == "v":
 				HostPage = HostPage.replace("/v/", "/videos/")
 					
-			VideoPage = SecondButtonPress(url=url, HostPage=HostPage)
+			VideoPage = SecondButtonPress(url=url, HostPage=HostPage, wform=4)
 			try:
-				VideoStream = HTML.ElementFromString(VideoPage.content).xpath('//div[@class="container"]/div/div/video/source')[0].get('src')
+				VideoID = HTML.ElementFromString(VideoPage.content).xpath('//div[@class="container"]/div/script')[0].text
+				VideoStream = VideoID.split("file: '")[1].split("'")[0]
 			except:
 				InputError = HTML.ElementFromString(VideoPage.content).xpath('//div[@class="alert alert-danger"]')[0].text
 				VideoStream = ErrorMessage(Host=Host, InputError=InputError, ErrorType="VideoRemoved")
