@@ -1297,6 +1297,19 @@ def GetMovie(Host, HostPage, url, LinkType):
 			VideoStream = VideoURL + "?cookies="+String.Quote(str(cookies), usePlus=True)+"&headers="+String.Quote(str(headers), usePlus=True)
 		except:
 			VideoStream = ErrorMessage(Host=Host, LogError=1)
+	elif Host == "Shared":
+		try:
+			VideoPage = SecondButtonPress(url=url, HostPage=HostPage)
+			try:
+				cookies = CookieDict(cookies=VideoPage.cookies)
+				headers = {'Accept': '*/*', 'Accept-Encoding': 'gzip, deflate', 'Accept-Language': 'en-US,en;q=0.5', 'Connection': 'keep-alive', 'User-Agent': UserAgent[UserAgentNum], 'Connection': 'keep-alive', 'Referer': HostPage}
+				VideoID = HTML.ElementFromString(VideoPage.content).xpath('//div[@class="stream-content"]')[0].get('data-url')
+				VideoStream = VideoID + "?cookies="+String.Quote(str(cookies), usePlus=True)+"&headers="+String.Quote(str(headers), usePlus=True)
+			except:
+				InputError = HTML.ElementFromString(VideoPage.content).xpath('//div[@class="jumbotron text-center"]')[0].text_content().strip()
+				VideoStream = ErrorMessage(Host=Host, InputError=InputError, ErrorType="VideoRemoved")
+		except:
+			VideoStream = ErrorMessage(Host=Host, LogError=1, ErrorType="HostDown")
 	elif Host == "Sharerepo":
 		try:
 			VideoPage = SecondButtonPress(url=url, HostPage=HostPage)
@@ -2117,7 +2130,7 @@ def GetMovie(Host, HostPage, url, LinkType):
 			VideoStream = ErrorMessage(Host=Host, LogError=1, ErrorType="HostDown")
 	elif Host == "Zalaa":
 		try:
-			VideoPage = SecondButtonPress(url=url, HostPage=HostPage, addkey={"method_free": "Slow access", "referer": url})
+			VideoPage = SecondButtonPress(url=url, HostPage=HostPage, addkey={"method_free": "Continue", "referer": url})
 			VideoInfo = HTML.ElementFromString(VideoPage.content)
 			try:
 				VideoScript = VideoInfo.xpath('//div[@id="player_code"]/script')[0].text

@@ -820,7 +820,7 @@ def GetHostPageURL(Host=None, url=None, HostPageInfo=None):
 					HostPage = HostPageElm.xpath('./iframe')[0].get('src')
 				except:
 					HostPage = HostPageElm.xpath('./div[@id="emptydiv"]/iframe')[0].get('src')
-			if "clkrev" in HostPage:
+			if "clkrev" in HostPage  or "creative" in HostPage:
 				if CURRENT_MOVIE2K_URL == "www.movie2k.ga":
 					GetDiv = HostPageElm.xpath('./div')[3]
 					HostPage = GetDiv.xpath('./a')[0].get('href')

@@ -1,3 +1,5 @@
+[B]Version 1.8.5[/B]
+- Fixed few host sites
 [B]Version 1.8.4[/B]
 - Fixed issue with Movie2k.tl not pulling up Host list.
 [B]Version 1.8.3[/B]
