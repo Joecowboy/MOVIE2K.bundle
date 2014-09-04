@@ -1,3 +1,5 @@
+[B]Version 1.8.6[/B]
+- Fixed a few host sites
 [B]Version 1.8.5[/B]
 - Fixed few host sites
 [B]Version 1.8.4[/B]

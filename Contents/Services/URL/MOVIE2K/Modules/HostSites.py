@@ -565,14 +565,14 @@ def GetMovie(Host, HostPage, url, LinkType):
 			VideoStream = ErrorMessage(Host=Host, LogError=1, ErrorType="HostDown")
 	elif Host == "Filenuke":
 		try:
-			VideoPage = SecondButtonPress(url=url, HostPage=HostPage, elm='div[@id="content"]//', addkey={'method_free': 'Free'}, cookies={'cf_use_ob': '0'})
+			VideoPage = SecondButtonPress(url=url, HostPage=HostPage)
 			try:
 				try:
-					VideoInfo = HTML.ElementFromString(VideoPage.content).xpath('//div[@id="player_code"]/script')[1].text
+					VideoInfo = HTML.ElementFromString(VideoPage.content).xpath('//div[@class="embed-area"]/script')[1].text
 				except:
-					VideoInfo = HTML.ElementFromString(VideoPage.content).xpath('//div[@id="player_code"]/script')[0].text
-				VideoURL = ScriptConvert(script=VideoInfo)
-				cookies = {'cf_use_ob': '0', 'lang': 'english', 'ref_ur': urllib.quote_plus(url)}
+					VideoInfo = HTML.ElementFromString(VideoPage.content).xpath('//div[@class="embed-area"]/script')[0].text
+				VideoURL = VideoInfo.split("lnk1 = '")[1].split("'")[0]
+				cookies = CookieDict(cookies=VideoPage.cookies)
 				headers = {'User-Agent': UserAgent, 'Host': VideoURL.split('/')[2], 'Referer': 'http://filenuke.com/player/player.swf', 'Connection': 'keep-alive'}
 				VideoStream = VideoURL + "?cookies="+String.Quote(str(cookies), usePlus=True)+"&headers="+String.Quote(str(headers), usePlus=True)
 			except:
@@ -1234,7 +1234,7 @@ def GetMovie(Host, HostPage, url, LinkType):
 				session = requests.session()
 				cookies = CookieDict(cookies=VideoPage.cookies)
 				requests.utils.add_dict_to_cookiejar(session.cookies, cookies)
-				headers = {'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8', 'Accept-Encoding': 'gzip, deflate', 'Accept-Language': 'en-US,en;q=0.5', 'Connection': 'keep-alive', 'User-Agent': UserAgent[UserAgentNum], 'Connection': 'keep-alive'}
+				headers = {'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8', 'Accept-Encoding': 'gzip, deflate', 'Accept-Language': 'en-US,en;q=0.5', 'Connection': 'keep-alive', 'User-Agent': UserAgent, 'Connection': 'keep-alive'}
 				try:
 					VideoPageXML = HTML.ElementFromString(VideoPage.content).xpath("//a[@id='top_external_download']")[0].get('href')
 					VideoInfo = session.head(VideoPageXML.replace('key', 'stream')+"&em=1", headers=headers)
@@ -1304,7 +1304,7 @@ def GetMovie(Host, HostPage, url, LinkType):
 			VideoPage = SecondButtonPress(url=url, HostPage=HostPage)
 			try:
 				cookies = CookieDict(cookies=VideoPage.cookies)
-				headers = {'Accept': '*/*', 'Accept-Encoding': 'gzip, deflate', 'Accept-Language': 'en-US,en;q=0.5', 'Connection': 'keep-alive', 'User-Agent': UserAgent[UserAgentNum], 'Connection': 'keep-alive', 'Referer': HostPage}
+				headers = {'Accept': '*/*', 'Accept-Encoding': 'gzip, deflate', 'Accept-Language': 'en-US,en;q=0.5', 'Connection': 'keep-alive', 'User-Agent': UserAgent, 'Connection': 'keep-alive', 'Referer': HostPage}
 				VideoID = HTML.ElementFromString(VideoPage.content).xpath('//div[@class="stream-content"]')[0].get('data-url')
 				VideoStream = VideoID + "?cookies="+String.Quote(str(cookies), usePlus=True)+"&headers="+String.Quote(str(headers), usePlus=True)
 			except:
@@ -1369,7 +1369,7 @@ def GetMovie(Host, HostPage, url, LinkType):
 					session = requests.session()
 					cookies = CookieDict(cookies=VideoPage.cookies)
 					requests.utils.add_dict_to_cookiejar(session.cookies, cookies)
-					headers = {'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8', 'Accept-Encoding': 'gzip, deflate', 'Accept-Language': 'en-US,en;q=0.5', 'Connection': 'keep-alive', 'User-Agent': UserAgent[UserAgentNum], 'Connection': 'keep-alive'}
+					headers = {'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8', 'Accept-Encoding': 'gzip, deflate', 'Accept-Language': 'en-US,en;q=0.5', 'Connection': 'keep-alive', 'User-Agent': UserAgent, 'Connection': 'keep-alive'}
 					VideoInfo = session.head(VideoPageXML, headers=headers)
 					VideoID = VideoInfo.headers['Location']
 					VideoInfo = session.head(VideoID, headers=headers)
