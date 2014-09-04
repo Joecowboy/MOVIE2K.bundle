@@ -366,7 +366,8 @@ def GetMovie(Host, HostPage, url, LinkType):
 		try:
 			VideoPage = SecondButtonPress(url=url, HostPage=HostPage, addkey={"goto": "divx"})
 			try:
-				VideoStream = HTML.ElementFromString(VideoPage.content).xpath('//div[@id="video"]/object/param')[3].get('value')
+				VideoID = HTML.ElementFromString(VideoPage.content).xpath('//div[@id="video"]/script')[0].text
+				VideoStream = VideoID.split('file: "')[1].split('"')[0]
 			except:
 				InputError = HTML.ElementFromString(VideoPage.content).xpath('//div[@class="alert alert-error span8"]')[0].text_content().strip()
 				VideoStream = ErrorMessage(Host=Host, InputError=InputError, ErrorType="VideoRemoved")
