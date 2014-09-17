@@ -1,3 +1,5 @@
+[B]Version 1.8.7[/B]
+- Fixed a couple host sites and fixed if Host name was missing or not correct
 [B]Version 1.8.6[/B]
 - Fixed a few host sites
 [B]Version 1.8.5[/B]

@@ -2778,7 +2778,7 @@ def SubMoviePageAdd(title, page, date, dateadd, thumbck, type, MOVIE2K_URL, watc
 									Quality = Listing[Num1].xpath("./td/img")[0].get('title').split(' ')[2].capitalize()
 								except:
 									Quality = "N/A"
-					if Host == None or Host == "":
+					if Host == None or Host == "" or Host == 'Divx' or Host == 'DivX Hoster' or Host == 'Flash' or Host == 'Flash Hoster' or Host == 'Embed':
 						Host = GetHost(url=page, HostPageInfo=MOVIE_PAGE_HTML)
 						if type == "Movies":
 							try:
@@ -2790,6 +2790,11 @@ def SubMoviePageAdd(title, page, date, dateadd, thumbck, type, MOVIE2K_URL, watc
 					ScriptListing = StringListing[k].text.split('links[')
 					NumHosts = len(ScriptListing) - 2	
 					Host = ScriptListing[sll].split('title=\\"')[1].split('\\"')[0].split(' ')[0].partition('.')[0].capitalize()
+					MOVIE_PAGE = ScriptListing[sll].split('href=\\"')[1].split('\\"')[0]
+					if MOVIE_PAGE.split('/')[0] != "http:":
+						MOVIE_PAGE = "http://" + CURRENT_MOVIE2K_URL + "/" + MOVIE_PAGE
+					if Host == None or Host == "" or Host == 'N/a' or Host == 'Divx' or Host == 'DivX Hoster' or Host == 'Flash' or Host == 'Flash Hoster' or Host == 'Embed':
+						Host = GetHost(Host=Host, url=MOVIE_PAGE)
 					if type == "Movies":
 						if MOVIE2K_URL == "www.movie4k.to" or MOVIE2K_URL == "www.movie2k.tv":
 							Quality = GetQuality(imageNum=ScriptListing[sll].split('src=\\"')[2].split('\\"')[0].split('/')[-1].split('.')[0])
@@ -3093,7 +3098,7 @@ def TheMovieListings(title, page, date, dateadd, thumb, type, PageOfHosts, MOVIE
 
 				if CreatePage:
 					if CurrentPage == int(PageOfHosts):
-						if Host == 'N/a' or Host == 'Divx' or Host == 'DivX Hoster' or Host == 'Flash' or Host == 'Flash Hoster' or Host == 'Embed':
+						if Host == None or Host == "" or Host == 'N/a' or Host == 'Divx' or Host == 'DivX Hoster' or Host == 'Flash' or Host == 'Flash Hoster' or Host == 'Embed':
 							Host = GetHost(Host=Host, url=MOVIE_PAGE)
 
 						show = "ADDED: "+ DateAdded + " | HOST: " + Host + " | QUALITY: " + Quality

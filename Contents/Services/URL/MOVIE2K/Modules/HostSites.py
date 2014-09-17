@@ -118,9 +118,9 @@ def GetMovie(Host, HostPage, url, LinkType):
 				VideoPage = session.get(HostPage, headers=headers)
 			try:
 				try:
-					VideoStream = HTML.ElementFromString(VideoPage.content).xpath('//div[@id="player_code"]/script')[3].text.split('"file" : "')[2].split('"')[0]
+					VideoStream = HTML.ElementFromString(VideoPage.content).xpath('//div[@id="player_code"]/script')[3].text.split('"file" : "')[3].split('"')[0]
 				except:
-					VideoStream = HTML.ElementFromString(VideoPage.content).xpath('//div[@id="player_code"]/script')[3].text.split('"file" : "')[1].split('"')[0]
+					VideoStream = HTML.ElementFromString(VideoPage.content).xpath('//div[@id="player_code"]/script')[3].text.split('"file" : "')[2].split('"')[0]
 			except:
 				try:
 					InputError = HTML.ElementFromString(VideoPage.content).xpath('//div[@id="content"]/b')[0].text.strip()
@@ -1025,36 +1025,40 @@ def GetMovie(Host, HostPage, url, LinkType):
 			VideoStream = ErrorMessage(Host=Host, LogError=1, ErrorType="HostDown")
 	elif Host == "Movshare":
 		try:
-			if LinkType == 4:
-				VideoInfo = HTML.ElementFromURL(HostPage).xpath('//div[@id="content_block"]/table/tr/td/script[@type="text/javascript"]')[5].text
-			elif LinkType == 1:
-				VideoInfo = HTML.ElementFromURL(HostPage).xpath('//body/script[@type="text/javascript"]')[5].text
 			try:
-				CodeString = VideoInfo.split("eval")[1].split(";}('")[1].split("'));")[0]
-				CharSrc = CharConvert(w=CodeString.split("','")[0],i=CodeString.split("','")[1],s=CodeString.split("','")[2],e=CodeString.split("','")[3])
-				CodeString = CharSrc.split("eval")[1].split(";}('")[1].split("'));")[0]
-				CharSrc = CharConvert(w=CodeString.split("','")[0],i=CodeString.split("','")[1],s=CodeString.split("','")[2],e=CodeString.split("','")[3])
-				CodeString = CharSrc.split("eval")[2].split(";}('")[1].split("'));")[0]
-				CharSrc = CharConvert(w=CodeString.split("','")[0],i=CodeString.split("','")[1],s=CodeString.split("','")[2],e=CodeString.split("','")[3])
-				VideoKey = urllib.quote(ScriptConvert(script=CharSrc))
-				VideoID = HostPage.split('/')[4]
-			except:
-				VideoID = VideoInfo.split('flashvars.file="')[1].split('"')[0]
+				if LinkType == 4:
+					VideoInfo = HTML.ElementFromURL(HostPage).xpath('//div[@id="content_block"]/table/tr/td/script[@type="text/javascript"]')[5].text
+				elif LinkType == 1:
+					VideoInfo = HTML.ElementFromURL(HostPage).xpath('//body/script[@type="text/javascript"]')[5].text
 				try:
-					VideoKey = VideoInfo.split('fkzd="')[1].split('"')[0]
+					CodeString = VideoInfo.split("eval")[1].split(";}('")[1].split("'));")[0]
+					CharSrc = CharConvert(w=CodeString.split("','")[0],i=CodeString.split("','")[1],s=CodeString.split("','")[2],e=CodeString.split("','")[3])
+					CodeString = CharSrc.split("eval")[1].split(";}('")[1].split("'));")[0]
+					CharSrc = CharConvert(w=CodeString.split("','")[0],i=CodeString.split("','")[1],s=CodeString.split("','")[2],e=CodeString.split("','")[3])
+					CodeString = CharSrc.split("eval")[2].split(";}('")[1].split("'));")[0]
+					CharSrc = CharConvert(w=CodeString.split("','")[0],i=CodeString.split("','")[1],s=CodeString.split("','")[2],e=CodeString.split("','")[3])
+					VideoKey = urllib.quote(ScriptConvert(script=CharSrc))
+					VideoID = HostPage.split('/')[4]
 				except:
-					VideoKey = VideoInfo.split('flashvars.filekey="')[1].split('"')[0]
-			url = "http://www.movshare.net/api/player.api.php?cid2=undefined&cid=1&key="+VideoKey+"&cid3=movie2k%2Etl&numOfErrors=0&file="+VideoID+"&user=undefined&pass=undefined"
-			headers = {'User-Agent': UserAgent, 'Host': 'www.movshare.net', 'Referer': 'http://www.movshare.net/player/movshare-v5.swf'}
-			session = requests.session()
-			VideoInfo =  session.get(url, headers=headers)
-			VideoStream = VideoInfo.content.split('=')[1].split('&')[0]
-			if VideoStream == "1":
-				InputError = VideoInfo.content.split('=')[2]
-				if InputError == "Incorrect IP. Please refresh!!":
-					VideoStream = ErrorMessage(Host=Host, InputError=InputError, ErrorType="WrongIP")
-				else:
-					VideoStream = ErrorMessage(Host=Host, InputError=InputError, ErrorType="VideoRemoved")
+					VideoID = VideoInfo.split('flashvars.file="')[1].split('"')[0]
+					try:
+						VideoKey = VideoInfo.split('fkzd="')[1].split('"')[0]
+					except:
+						VideoKey = VideoInfo.split('flashvars.filekey="')[1].split('"')[0]
+				url = "http://www.movshare.net/api/player.api.php?cid2=undefined&cid=1&key="+VideoKey+"&cid3=movie2k%2Etl&numOfErrors=0&file="+VideoID+"&user=undefined&pass=undefined"
+				headers = {'User-Agent': UserAgent, 'Host': 'www.movshare.net', 'Referer': 'http://www.movshare.net/player/movshare-v5.swf'}
+				session = requests.session()
+				VideoInfo =  session.get(url, headers=headers)
+				VideoStream = VideoInfo.content.split('=')[1].split('&')[0]
+				if VideoStream == "1":
+					InputError = VideoInfo.content.split('=')[2]
+					if InputError == "Incorrect IP. Please refresh!!":
+						VideoStream = ErrorMessage(Host=Host, InputError=InputError, ErrorType="WrongIP")
+					else:
+						VideoStream = ErrorMessage(Host=Host, InputError=InputError, ErrorType="VideoRemoved")
+			except:
+				InputError = HTML.ElementFromURL(HostPage).xpath('//p[@class="error_message"]')[0].text
+				VideoStream = ErrorMessage(Host=Host, InputError=InputError, ErrorType="VideoRemoved")
 		except:
 			VideoStream = ErrorMessage(Host=Host, LogError=1, ErrorType="HostDown")
 	elif Host == "Muchshare":
