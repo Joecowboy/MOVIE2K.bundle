@@ -1679,7 +1679,6 @@ def AlphabiticalTVShowsPageAdd(title, page, type, MOVIE2K_URL):
 	MOVIES_PAGE = "http://" + MOVIE2K_URL + MOVIES_PAGE_PART
 
 	oc.add(DirectoryObject(key=Callback(TVShowsList, title=MOVIES_TITLE, page=MOVIES_PAGE, genre=Alpha_Type, type=type, MOVIE2K_URL=MOVIE2K_URL), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=MOVIES_THUMB))
-	Log(req.content)
 	for AlphNumeric in HTML.ElementFromString(req.content).xpath('//div[@id="content"]/'+elm+'div[@id="boxgrey"]'):
 		Alpha_Type = AlphNumeric.xpath('./a')[0].text
 		ICON_MOVIES = "icon-"+Alpha_Type.lower()+".png"
@@ -1687,7 +1686,8 @@ def AlphabiticalTVShowsPageAdd(title, page, type, MOVIE2K_URL):
 		MOVIES_SUMMARY = "Your "+Alpha_Type+" list of the "+type+" database!"
 		MOVIES_THUMB = R(ICON_MOVIES)
 		MOVIES_PAGE = AlphNumeric.xpath('./a')[0].get('href')
-
+		if MOVIE2K_URL not in MOVIES_PAGE:
+			MOVIES_PAGE = "http://" + MOVIE2K_URL + MOVIES_PAGE
 		oc.add(DirectoryObject(key=Callback(TVShowsList, title=MOVIES_TITLE, page=MOVIES_PAGE, genre=Alpha_Type, type=type, MOVIE2K_URL=MOVIE2K_URL), title=MOVIES_TITLE, summary=MOVIES_SUMMARY, thumb=MOVIES_THUMB))
 
 	return oc
@@ -2930,8 +2930,10 @@ def TheMovieListings(title, page, date, dateadd, thumb, type, PageOfHosts, MOVIE
 				date = re.sub('[^0-9]', '', MOVIE_INFO.split('Land/Jahr:')[1])
 				if date == "":
 					date =  "0001"
-
-		date = Datetime.ParseDate(date[:4], "%Y")
+		try:
+			date = Datetime.ParseDate(date[:4], "%Y")
+		except:
+			date = Datetime.ParseDate(date, "%d %b %Y")
 
 		try:
 			if type == "Movies":

@@ -630,21 +630,20 @@ def GetMovie(Host, HostPage, url, LinkType):
 					VideoStream = ErrorMessage(Host=Host, InputError=InputError, ErrorType="VideoRemoved")
 			elif LinkType == 1:
 				VideoInfo = HostPage
+				if "/video/" in VideoInfo:
+					VideoInfo = "http://www.flashx.tv/" + VideoInfo.split('/')[4] + ".html"
 
 			if Removed == False:
-				v = SecondButtonPress(url=url, HostPage=VideoInfo, elm='span[@class="auto-style6"]/', cookies=cookies)
+				v = SecondButtonPress(url=url, HostPage=VideoInfo, cookies=cookies)
 				try:
-					VideoLink = HTML.ElementFromString(v.content).xpath('//head/script')[2].text.split('config=')[1].split('"')[0]
-					headers['Host'] = 'play.flashx.tv'
-					headers['Referer'] = HTML.ElementFromString(v.content).xpath('//head/script')[2].text.split('data="')[1].split('"')[0]
-					xmlreq = session.get(VideoLink, headers=headers)
-					if xmlreq.content.split('<config>')[1].strip() == "wrong user/ip 1":
-						InputError = xmlreq.content.split('<config>')[1].strip()
-						VideoStream = ErrorMessage(Host=Host, InputError=InputError, ErrorType="WrongIP")
-					else:
-						VideoStream = XML.ElementFromString(xmlreq.content).xpath('//file')[0].text + "?start=0"
+					VideoStream = HTML.ElementFromString(v.content).xpath('//div[@id="main"]/center/script')[0].text.split('file:"')[1].split('"')[0]
+					#VideoID = session.head(VideoStream, headers=headers)
+					#VideoInfo = VideoID.headers['Content-Type']
+					#if "text/html" in VideoInfo:
+					#	InputError = "Wrong IP"
+					#	VideoStream = ErrorMessage(Host=Host, InputError=InputError, ErrorType="WrongIP")
 				except:
-					InputError = HTML.ElementFromString(v.content).xpath('//font[@class="red"]')[0].text.strip()
+					InputError = HTML.ElementFromString(v.content).xpath('//div[@id="main"]/center/b')[0].text_content().strip()
 					VideoStream = ErrorMessage(Host=Host, InputError=InputError, ErrorType="VideoRemoved")
 		except:
 			VideoStream = ErrorMessage(Host=Host, LogError=1, ErrorType="HostDown")
@@ -1445,7 +1444,7 @@ def GetMovie(Host, HostPage, url, LinkType):
 			VideoInfo = session.get(HostPage, headers=headers)
 			try:
 				VideoPage = HTML.ElementFromString(VideoInfo.content).xpath('//div[@class="embed_container"]/script')[0].text.split("('")[1].split("')")[0].decode('base64', 'strict')
-				VideoInfo = VideoPage.split('proxy.link=')[1].split('%2A')[1].split('"')[0]
+				VideoInfo = urllib.unquote(VideoPage.split('proxy.link=')[1].split('"')[0]).split("*")[1]
 				x = gledajfilmDecrypter.gledajfilmDecrypter(198,128)  # create the object
 				Key = "VERTR05uak80NEpDajY1ejJjSjY="
 				StreamPage = x.decrypt(VideoPage, Key.decode('base64', 'strict'), "ECB").split('\0')[0]
