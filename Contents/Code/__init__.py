@@ -3523,7 +3523,7 @@ def TrailerResults(page, title, website):
 	actors = ','
 	i = 1
 
-	TrailerPages = GetMovieTrailers.xpath('//div[@id="new_additions_nav"]/span/ul[@id="pagination"]/li')
+	TrailerPages = GetMovieTrailers.xpath('//div[@id="popular_nav"]/span/ul[@id="pagination"]/li')
 	numPages = len(TrailerPages)
 
 	if numPages > 1:

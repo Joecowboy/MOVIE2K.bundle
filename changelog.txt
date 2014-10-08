@@ -1,3 +1,5 @@
+[B]Version 1.8.9[/B]
+- Fixed issue with multi page on trailers and added Host site Skyvids
 [B]Version 1.8.8[/B]
 - Few minor fixes
 [B]Version 1.8.7[/B]

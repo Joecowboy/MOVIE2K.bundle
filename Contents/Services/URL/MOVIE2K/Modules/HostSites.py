@@ -1354,6 +1354,20 @@ def GetMovie(Host, HostPage, url, LinkType):
 			VideoStream = [vidstr, swfurl, rtmpurl[url_MO], 'rtmp', VideoPage, 'vod']
 		except:
 			VideoStream = ErrorMessage(Host=Host, LogError=3, ErrorType="HostDown")
+	elif Host == "Skyvids":
+		try:
+			VideoPage = SecondButtonPress(url=url, HostPage=HostPage, wait=5, addkey={'referer': HostPage})
+			try:
+				VideoInfo = HTML.ElementFromString(VideoPage.content).xpath('//div[@id="player_code"]/script')[1].text
+				VideoStream = ScriptConvert(script=VideoInfo)
+			except:
+				InputError = HTML.ElementFromString(VideoPage.content).xpath('//div[@class="err"]')[0].text.strip()
+				if "Wrong IP" in InputError:
+					VideoStream = ErrorMessage(Host=Host, InputError=InputError, ErrorType="WrongIP")
+				else:
+					VideoStream = ErrorMessage(Host=Host, InputError=InputError, ErrorType="VideoRemoved")
+		except:
+			VideoStream = ErrorMessage(Host=Host, LogError=1, ErrorType="HostDown")
 	elif Host == "Sockshare":
 		try:
 			NS = {'media':'http://search.yahoo.com/mrss/'}
